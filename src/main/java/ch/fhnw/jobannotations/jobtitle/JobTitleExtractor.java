@@ -42,7 +42,7 @@ public class JobTitleExtractor {
         List<IntStringPair> ratedStrings = jobTitleStringRatingManager.extractRatedStringsFromHtml(htmlLines);
 
         // adjust rating based on job title indicators and clean strings
-        jobTitleStringRatingManager.cleanAndAdjustRatingsByJobTitleIndicator(ratedStrings);
+        jobTitleStringRatingManager.adjustRatingsByJobTitleIndicator(ratedStrings, cleanJobTitle);
 
         if (cleanJobTitle) {
             // clean all entries and remove entries with empty strings
@@ -101,6 +101,5 @@ public class JobTitleExtractor {
 
     public void setCleanJobTitle(boolean cleanJobTitle) {
         this.cleanJobTitle = cleanJobTitle;
-        jobTitleStringRatingManager.setCleanJobTitle(cleanJobTitle);
     }
 }
