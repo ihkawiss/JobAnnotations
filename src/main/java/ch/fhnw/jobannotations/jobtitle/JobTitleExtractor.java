@@ -20,6 +20,12 @@ public class JobTitleExtractor {
             "link"
     };
 
+    private JobTitleStringRatingManager jobTitleStringRatingManager;
+
+    public JobTitleExtractor() {
+        jobTitleStringRatingManager = new JobTitleStringRatingManager();
+    }
+
     public String parseJobTitle(Document document) {
         document = document.clone();
 
@@ -32,7 +38,6 @@ public class JobTitleExtractor {
         String[] htmlLines = html.split("\\n");
 
         // extract rated strings
-        JobTitleStringRatingManager jobTitleStringRatingManager = new JobTitleStringRatingManager();
         List<IntStringPair> ratedStrings = jobTitleStringRatingManager.extractRatedStringsFromHtml(htmlLines);
 
         // adjust rating based on job title indicators and clean strings
@@ -85,5 +90,9 @@ public class JobTitleExtractor {
         }
 
         return ratedStrings.get(0).getString();
+    }
+
+    public JobTitleStringRatingManager getJobTitleStringRatingManager() {
+        return jobTitleStringRatingManager;
     }
 }
