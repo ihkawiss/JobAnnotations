@@ -27,13 +27,12 @@ public class JobTitleStringRatingManager {
 
     public static final int LOW_RATING_THRESHOLD = 10;
 
-    private static final String JOB_TITLES_TRAIN_FILE_NAME = "jobtitles.fhnw.raw";
-
     // rating values
     private static final int RATING_TAG_H1 = 20;
-    private static final int RATING_MAX_KNOWN_LIST_MATCH = 100;
     private static final int RATING_JOB_TITLE_INDICATOR = 50;
     private static final int RATING_REPETITION = RATING_JOB_TITLE_INDICATOR / 2 * RATING_TAG_H1;
+    private static final int RATING_MAX_KNOWN_LIST_MATCH = RATING_JOB_TITLE_INDICATOR * 2;
+    private static final int RATING_MAX_SPECIAL_CHARS_NEGATIVE = -RATING_JOB_TITLE_INDICATOR;
 
     /**
      * Array of high priority tags with corresponding rating value
@@ -60,9 +59,9 @@ public class JobTitleStringRatingManager {
     private static final String REGEX_WORKLOAD_TEXT = "\\s?(\\d+\\s?%?\\s?-\\s?)?\\d+\\s?%\\s?";
     private static final String REGEX_GENDER_TEXT = "\\s?[wmfWMF]\\s?\\/\\s?[wmfWMF]\\s?";
     private static final String REGEX_JOB_TITLE_GENDER_SUFFIX = "\\w[-\\/\\(\\|]+(in|IN|r|R)|\\w[-\\/\\(\\|]*In";
-    private static final String REGEX_WORKLOAD_INDICATOR = "\\(?" + REGEX_WORKLOAD_TEXT + "\\)?";
     private static final String REGEX_WORKLOAD_GENDER_INDICATOR = "\\((" + REGEX_WORKLOAD_TEXT + ")[^\\(\\)]*(" + REGEX_GENDER_TEXT + ")\\)|\\((" + REGEX_GENDER_TEXT + ")[^\\(\\)]*(" + REGEX_WORKLOAD_TEXT + ")\\)";
     private static final String REGEX_GENDER_INDICATOR = "\\(?" + REGEX_GENDER_TEXT + "\\)?";
+    private static final String REGEX_WORKLOAD_INDICATOR = "\\(?" + REGEX_WORKLOAD_TEXT + "\\)?";
 
     /**
      * Array of job title indicator regex. Int value defines whether matched String should be removed or not (1 = true)
@@ -74,15 +73,20 @@ public class JobTitleStringRatingManager {
             new IntStringPair(1, REGEX_WORKLOAD_INDICATOR)
     };
 
-
+    // special char count
     private static final String REGEX_SPECIAL_CHARS = "[^a-zA-Z]+";
-    private static final String DICTIONARY_CATEGORY_JOB_TITLE = "JobTitle";
+    private static final double THRESHOLD_RATING_SPECIAL_CHARS = 0.5;
 
+    // known job titles
+    private static final String DICTIONARY_CATEGORY_JOB_TITLE = "JobTitle";
+    private static final String JOB_TITLES_TRAIN_FILE_NAME = "jobtitles.fhnw.raw";
     private static final int CHUNK_INFO_POS_START = 0;
     private static final int CHUNK_INFO_POS_END = 1;
     private static final int CHUNK_INFO_POS_SCORE = 2;
 
+
     private final TrieDictionary<String> dictionary;
+
 
     public JobTitleStringRatingManager() {
         dictionary = initJobTitleDictionary();
@@ -211,7 +215,12 @@ public class JobTitleStringRatingManager {
                 text = text.replace(matchedString, "");
             }
 
-            double specialCharPercentage = 100 / ratedString.getString().length() * text.length();
+            double specialCharPercentage = 1 - text.length() / ratedString.getString().length(); // 50% = 0.5, not 50
+            if (specialCharPercentage >= THRESHOLD_RATING_SPECIAL_CHARS) {
+                int ratingAdjustment = (int) (RATING_MAX_SPECIAL_CHARS_NEGATIVE * specialCharPercentage);
+                int newRating = ratedString.getInt() + ratingAdjustment;
+                ratedString.setInt(newRating);
+            }
         }
     }
 
