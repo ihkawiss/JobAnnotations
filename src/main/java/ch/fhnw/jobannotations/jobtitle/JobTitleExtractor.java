@@ -21,6 +21,7 @@ public class JobTitleExtractor {
     };
 
     private JobTitleStringRatingManager jobTitleStringRatingManager;
+    private boolean cleanJobTitle = true;
 
     public JobTitleExtractor() {
         jobTitleStringRatingManager = new JobTitleStringRatingManager();
@@ -43,25 +44,27 @@ public class JobTitleExtractor {
         // adjust rating based on job title indicators and clean strings
         jobTitleStringRatingManager.cleanAndAdjustRatingsByJobTitleIndicator(ratedStrings);
 
-        // clean all entries and remove entries with empty strings
-        Pattern patternSpecialChars = Pattern.compile(REGEX_SPECIAL_CHARS_TO_REMOVE);
-        for (int i = ratedStrings.size() - 1; i > -1; i--) {
-            // remove special characters
-            IntStringPair ratedString = ratedStrings.get(i);
-            String string = ratedString.getString();
-            Matcher matcher = patternSpecialChars.matcher(string);
-            while (matcher.find()) {
-                string = string.replace(matcher.group(), "");
-            }
-            string = string.trim();
+        if (cleanJobTitle) {
+            // clean all entries and remove entries with empty strings
+            Pattern patternSpecialChars = Pattern.compile(REGEX_SPECIAL_CHARS_TO_REMOVE);
+            for (int i = ratedStrings.size() - 1; i > -1; i--) {
+                // remove special characters
+                IntStringPair ratedString = ratedStrings.get(i);
+                String string = ratedString.getString();
+                Matcher matcher = patternSpecialChars.matcher(string);
+                while (matcher.find()) {
+                    string = string.replace(matcher.group(), "");
+                }
+                string = string.trim();
 
-            if (string.isEmpty()) {
-                // remove empty entries
-                ratedStrings.remove(i);
+                if (string.isEmpty()) {
+                    // remove empty entries
+                    ratedStrings.remove(i);
 
-            } else {
-                // update cleaned entries
-                ratedString.setString(string);
+                } else {
+                    // update cleaned entries
+                    ratedString.setString(string);
+                }
             }
         }
 
@@ -83,7 +86,7 @@ public class JobTitleExtractor {
         ratedStrings = ratedStrings.subList(0, ratedStrings.size() > 5 ? 5 : ratedStrings.size() - 1);
 
         // adjust rating by check with known job title list
-        jobTitleStringRatingManager.adjustRatingByKnownJobTitleList(ratedStrings);
+        //jobTitleStringRatingManager.adjustRatingByKnownJobTitleList(ratedStrings);
 
         for (int i = 0; i < (ratedStrings.size() > 5 ? 5 : ratedStrings.size()); i++) {
             System.out.println(ratedStrings.get(i));
@@ -94,5 +97,10 @@ public class JobTitleExtractor {
 
     public JobTitleStringRatingManager getJobTitleStringRatingManager() {
         return jobTitleStringRatingManager;
+    }
+
+    public void setCleanJobTitle(boolean cleanJobTitle) {
+        this.cleanJobTitle = cleanJobTitle;
+        jobTitleStringRatingManager.setCleanJobTitle(cleanJobTitle);
     }
 }
