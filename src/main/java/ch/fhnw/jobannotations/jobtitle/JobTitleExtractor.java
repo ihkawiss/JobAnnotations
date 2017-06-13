@@ -71,6 +71,9 @@ public class JobTitleExtractor {
         // adjust rating based on special char percentage
         jobTitleStringRatingManager.adjustRatingsBySpecialCharCount(ratedStrings);
 
+        // adjust rating based on text length
+        jobTitleStringRatingManager.adjustRatingsByTextLength(ratedStrings);
+
         // remove all entries with low ratings
         for (int i = ratedStrings.size() - 1; i > -1; i--) {
             IntStringPair ratedString = ratedStrings.get(i);
@@ -91,8 +94,8 @@ public class JobTitleExtractor {
         // adjust rating by check with known job title list
         //jobTitleStringRatingManager.adjustRatingByKnownJobTitleList(ratedStrings);
 
-        for (int i = 0; i < (ratedStrings.size() > 5 ? 5 : ratedStrings.size()); i++) {
-            System.out.println(ratedStrings.get(i));
+        for (IntStringPair ratedString : ratedStrings) {
+            System.out.println(ratedString.toString());
         }
 
         return ratedStrings.get(0).getString();
