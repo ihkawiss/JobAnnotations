@@ -10,6 +10,7 @@ import com.aliasi.dict.TrieDictionary;
 import com.aliasi.spell.FixedWeightEditDistance;
 import com.aliasi.spell.WeightedEditDistance;
 import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
+import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -140,6 +141,9 @@ public class JobTitleStringRatingManager {
                     matchedString = matchedString.replaceAll(REGEX_TAG, "").trim();
 
                     if (!matchedString.isEmpty()) {
+                        // use Jsoup to convert html special to normal chars (eg.: &amp; => &)
+                        matchedString = Jsoup.parse(matchedString).text();
+
                         // add extracted tag content and rating to list
                         int rating = tagRating.getInt() + additionalRating;
                         IntStringPair ratedString = new IntStringPair(rating, matchedString);
