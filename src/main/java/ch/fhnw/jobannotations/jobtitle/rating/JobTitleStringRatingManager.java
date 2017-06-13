@@ -33,7 +33,8 @@ public class JobTitleStringRatingManager {
     private static final int RATING_JOB_TITLE_INDICATOR = 50;
     private static final int RATING_REPETITION = RATING_JOB_TITLE_INDICATOR / 2 * RATING_TAG_H1;
     private static final int RATING_MAX_KNOWN_LIST_MATCH = RATING_JOB_TITLE_INDICATOR * 2;
-    private static final int RATING_MAX_SPECIAL_CHARS_NEGATIVE = -RATING_JOB_TITLE_INDICATOR;
+    private static final int RATING_NEGATIVE_MAX_SPECIAL_CHARS = -RATING_JOB_TITLE_INDICATOR;
+    private static final int RATING_NEGATIVE_TEXT_TOO_LONG = -RATING_JOB_TITLE_INDICATOR;
 
     /**
      * Array of high priority tags with corresponding rating value
@@ -77,6 +78,9 @@ public class JobTitleStringRatingManager {
     // special char count
     private static final String REGEX_SPECIAL_CHARS = "[^a-zA-Z]+";
     private static final double THRESHOLD_RATING_SPECIAL_CHARS = 0.5;
+
+    // text length
+    private static final int THRESHOLD_TEXT_TOO_LONG = 75;
 
     // known job titles
     private static final String DICTIONARY_CATEGORY_JOB_TITLE = "JobTitle";
@@ -224,11 +228,23 @@ public class JobTitleStringRatingManager {
 
             double specialCharPercentage = 1 - (double) text.length() / ratedString.getString().length(); // 50% = 0.5, not 50
             if (specialCharPercentage >= THRESHOLD_RATING_SPECIAL_CHARS) {
-                int ratingAdjustment = (int) (RATING_MAX_SPECIAL_CHARS_NEGATIVE * specialCharPercentage);
+                int ratingAdjustment = (int) (RATING_NEGATIVE_MAX_SPECIAL_CHARS * specialCharPercentage);
                 int newRating = ratedString.getInt() + ratingAdjustment;
                 ratedString.setInt(newRating);
             }
         }
+    }
+
+    public void adjustRatingsByTextLength(List<IntStringPair> ratedStrings) {
+        for (IntStringPair ratedString : ratedStrings) {
+            int ratingMultiplier = ratedString.getString().length() / THRESHOLD_TEXT_TOO_LONG;
+            if (ratingMultiplier > 0) {
+                int ratingAdjustment = ratingMultiplier * RATING_NEGATIVE_TEXT_TOO_LONG;
+                int newRating = ratedString.getInt() + ratingAdjustment;
+                ratedString.setInt(newRating);
+            }
+        }
+
     }
 
     public void adjustRatingsByRepetitionCount(List<IntStringPair> ratedStrings) {
@@ -249,7 +265,7 @@ public class JobTitleStringRatingManager {
         }
     }
 
-    public void adjustRatingByKnownJobTitleList(List<IntStringPair> ratedStrings) {
+    public void adjustRatingsByKnownJobTitleList(List<IntStringPair> ratedStrings) {
 
         IndoEuropeanTokenizerFactory tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
         WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -2, -2, -2, Double.NEGATIVE_INFINITY);
