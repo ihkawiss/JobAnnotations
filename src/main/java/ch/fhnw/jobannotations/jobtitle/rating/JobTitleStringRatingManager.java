@@ -29,24 +29,60 @@ public class JobTitleStringRatingManager {
 
     private static final String JOB_TITLES_TRAIN_FILE_NAME = "jobtitles.fhnw.raw";
 
-    private static final int KNOWN_LIST_MATCH_MAX_RATING = 100;
-    private static final int JOB_TITLE_INDICATOR_RATING = 50;
-    private static final int TAG_RATING_H1 = 20;
-    private static final int REPETITION_RATING = JOB_TITLE_INDICATOR_RATING / 2 * TAG_RATING_H1;
+    // rating values
+    private static final int RATING_TAG_H1 = 20;
+    private static final int RATING_MAX_KNOWN_LIST_MATCH = 100;
+    private static final int RATING_JOB_TITLE_INDICATOR = 50;
+    private static final int RATING_REPETITION = RATING_JOB_TITLE_INDICATOR / 2 * RATING_TAG_H1;
 
-    private static final String REGEX_TAG = "<[^>]+>";
+    /**
+     * Array of high priority tags with corresponding rating value
+     */
+    private static final IntStringPair[] RATINGS_HIGH_PRIORITY_TAG = {
+            new IntStringPair(RATING_TAG_H1, "h1"),
+            new IntStringPair(RATING_TAG_H1 / 4 * 3, "h2"),
+            new IntStringPair(RATING_TAG_H1 / 2, "h3"),
+            new IntStringPair(RATING_TAG_H1 / 4, "h4"),
+            new IntStringPair(RATING_TAG_H1 / 4, "h5"),
+            new IntStringPair(RATING_TAG_H1 / 4, "h6"),
+            new IntStringPair(RATING_TAG_H1 / 4 * 3, "title"),
+            new IntStringPair(RATING_TAG_H1 / 4, "b"),
+            new IntStringPair(RATING_TAG_H1 / 4, "strong"),
+            new IntStringPair(-RATING_TAG_H1, "li")
+    };
+
+    // html parsing
     private static final String REGEX_FORMAT_TAG = "<%s[^>]*>.*<\\/%s>";
-    private static final String REGEX_JOB_TITLE_GENDER_SUFFIX = "\\w[-\\/\\(\\|]+(in|IN|r|R)|\\w[-\\/\\(\\|]*In";
-    private static final String REGEX_GENDER_TEXT = "\\s?[wmfWMF]\\s?\\/\\s?[wmfWMF]\\s?";
+    private static final String REGEX_TAG = "<[^>]+>";
+
+
+    // job title indicator
     private static final String REGEX_WORKLOAD_TEXT = "\\s?(\\d+\\s?%?\\s?-\\s?)?\\d+\\s?%\\s?";
-    private static final String REGEX_GENDER_INDICATOR = "\\(?" + REGEX_GENDER_TEXT + "\\)?";
+    private static final String REGEX_GENDER_TEXT = "\\s?[wmfWMF]\\s?\\/\\s?[wmfWMF]\\s?";
+    private static final String REGEX_JOB_TITLE_GENDER_SUFFIX = "\\w[-\\/\\(\\|]+(in|IN|r|R)|\\w[-\\/\\(\\|]*In";
     private static final String REGEX_WORKLOAD_INDICATOR = "\\(?" + REGEX_WORKLOAD_TEXT + "\\)?";
     private static final String REGEX_WORKLOAD_GENDER_INDICATOR = "\\((" + REGEX_WORKLOAD_TEXT + ")[^\\(\\)]*(" + REGEX_GENDER_TEXT + ")\\)|\\((" + REGEX_GENDER_TEXT + ")[^\\(\\)]*(" + REGEX_WORKLOAD_TEXT + ")\\)";
+    private static final String REGEX_GENDER_INDICATOR = "\\(?" + REGEX_GENDER_TEXT + "\\)?";
+
+    /**
+     * Array of job title indicator regex. Int value defines whether matched String should be removed or not (1 = true)
+     */
+    private static final IntStringPair[] JOB_TITLE_INDICATOR_REGEX_LIST = {
+            new IntStringPair(0, REGEX_JOB_TITLE_GENDER_SUFFIX),
+            new IntStringPair(1, REGEX_WORKLOAD_GENDER_INDICATOR),
+            new IntStringPair(1, REGEX_GENDER_INDICATOR),
+            new IntStringPair(1, REGEX_WORKLOAD_INDICATOR)
+    };
+
+
+    private static final String REGEX_SPECIAL_CHARS = "[^a-zA-Z]+";
     private static final String DICTIONARY_CATEGORY_JOB_TITLE = "JobTitle";
 
-    private final TrieDictionary<String> dictionary;
+    private static final int CHUNK_INFO_POS_START = 0;
+    private static final int CHUNK_INFO_POS_END = 1;
+    private static final int CHUNK_INFO_POS_SCORE = 2;
 
-    private boolean cleanJobTitle = true;
+    private final TrieDictionary<String> dictionary;
 
     public JobTitleStringRatingManager() {
         dictionary = initJobTitleDictionary();
@@ -79,32 +115,6 @@ public class JobTitleStringRatingManager {
         return dictionary;
     }
 
-    /**
-     * Array of high priority tags with corresponding rating value
-     */
-    private static final IntStringPair[] HIGH_PRIORITY_TAG_RATINGS = {
-            new IntStringPair(TAG_RATING_H1, "h1"),
-            new IntStringPair(TAG_RATING_H1 / 4 * 3, "h2"),
-            new IntStringPair(TAG_RATING_H1 / 2, "h3"),
-            new IntStringPair(TAG_RATING_H1 / 4, "h4"),
-            new IntStringPair(TAG_RATING_H1 / 4, "h5"),
-            new IntStringPair(TAG_RATING_H1 / 4, "h6"),
-            new IntStringPair(TAG_RATING_H1 / 4 * 3, "title"),
-            new IntStringPair(TAG_RATING_H1 / 4, "b"),
-            new IntStringPair(TAG_RATING_H1 / 4, "strong"),
-            new IntStringPair(-TAG_RATING_H1, "li")
-    };
-
-    /**
-     * Array of job title indicator regex. Int value defines whether matched String should be removed or not (1 = true)
-     */
-    private static final IntStringPair[] JOB_TITLE_INDICATOR_REGEX_LIST = {
-            new IntStringPair(0, REGEX_JOB_TITLE_GENDER_SUFFIX),
-            new IntStringPair(1, REGEX_WORKLOAD_GENDER_INDICATOR),
-            new IntStringPair(1, REGEX_GENDER_INDICATOR),
-            new IntStringPair(1, REGEX_WORKLOAD_INDICATOR)
-    };
-
     public List<IntStringPair> extractRatedStringsFromHtml(String[] htmlLines) {
         List<IntStringPair> extractedRatedStrings = new ArrayList<>();
 
@@ -113,7 +123,7 @@ public class JobTitleStringRatingManager {
 
             // extract all important tags
             String addedImportantTagContent = null;
-            for (IntStringPair tagRating : HIGH_PRIORITY_TAG_RATINGS) {
+            for (IntStringPair tagRating : RATINGS_HIGH_PRIORITY_TAG) {
                 String tagName = tagRating.getString();
                 String regex = String.format(REGEX_FORMAT_TAG, tagName, tagName);
                 Pattern pattern = Pattern.compile(regex);
@@ -150,7 +160,7 @@ public class JobTitleStringRatingManager {
         return extractedRatedStrings;
     }
 
-    public void cleanAndAdjustRatingsByJobTitleIndicator(List<IntStringPair> ratedStrings) {
+    public void adjustRatingsByJobTitleIndicator(List<IntStringPair> ratedStrings, boolean cleanJobTitle) {
         for (IntStringPair ratedString : ratedStrings) {
 
             int jobTitleRating = 0;
@@ -167,7 +177,7 @@ public class JobTitleStringRatingManager {
                     if (removeMatchedString && cleanJobTitle) {
                         string = string.replace(matchedString, "").trim();
                     }
-                    jobTitleRating += JOB_TITLE_INDICATOR_RATING;
+                    jobTitleRating += RATING_JOB_TITLE_INDICATOR;
                 }
             }
 
@@ -189,6 +199,22 @@ public class JobTitleStringRatingManager {
         }
     }
 
+    public void adjustRatingsBySpecialCharCount(List<IntStringPair> ratedStrings) {
+        for (IntStringPair ratedString : ratedStrings) {
+            String text = ratedString.getString();
+            Pattern pattern = Pattern.compile(REGEX_SPECIAL_CHARS);
+            Matcher matcher = pattern.matcher(text);
+
+            // remove special chars
+            while (matcher.find()) {
+                String matchedString = matcher.group();
+                text = text.replace(matchedString, "");
+            }
+
+            double specialCharPercentage = 100 / ratedString.getString().length() * text.length();
+        }
+    }
+
     public void adjustRatingsByRepetitionCount(List<IntStringPair> ratedStrings) {
         for (IntStringPair currentRatedString : ratedStrings) {
             int counter = -1; // -1 because it will match with it's own list entry
@@ -202,12 +228,13 @@ public class JobTitleStringRatingManager {
             }
 
             int currentRating = currentRatedString.getInt();
-            int additionalRating = counter * REPETITION_RATING;
+            int additionalRating = counter * RATING_REPETITION;
             currentRatedString.setInt(currentRating + additionalRating);
         }
     }
 
     public void adjustRatingByKnownJobTitleList(List<IntStringPair> ratedStrings) {
+
         IndoEuropeanTokenizerFactory tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
         WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -2, -2, -2, Double.NEGATIVE_INFINITY);
 
@@ -225,73 +252,58 @@ public class JobTitleStringRatingManager {
 
             System.out.printf("%15s  %15s   %8s\n", "Matched Phrase", "Dict Entry", "Distance");
 
-            // add chunk text with score to list
-            List<IntStringPair> chunks = new ArrayList<>();
-            for (Chunk chunk : chunkSet) {
-                String chunkText = text.substring(chunk.start(), chunk.end());
-                int chunkScore = (int) chunk.score();
-                chunks.add(new IntStringPair(chunkScore, chunkText));
-            }
+            // create list of chunk info
+            List<int[]> chunkInfoList = createChunkInfoListFromChunkSet(chunkSet);
 
-            // merge chunks (remove chunks that has it's text contained by other chunks and add scores)
-            boolean mergedSomething = true;
-            while (mergedSomething) {
-                mergedSomething = false;
+            // merge chunks (remove sub chunks and add scores)
+            chunkInfoList = mergeChunkInfoListEntries(chunkInfoList);
 
-                for (int i = chunks.size(); i > 0; i--) {
-                    IntStringPair currentChunk = chunks.get(i - 1);
-                    for (int j = i; j > 0; j--) {
-                        IntStringPair compareChunk = chunks.get(j - 1);
-                        if (currentChunk.getString().contains(compareChunk.getString())) {
-                            int mergedScore = currentChunk.getInt() + compareChunk.getInt();
-                            currentChunk.setInt(mergedScore);
-                            chunks.remove(j - 1);
-                            mergedSomething = true;
-                        }
-                    }
-                }
-            }
-
-            List<int[]> triple = new ArrayList<int[]>();
-
-            for (Chunk chunk : chunkSet) {
-
-                // get start an end position of chunk
-                int start = chunk.start();
-                int end = chunk.end();
-
-                int[] data = {start, end};
-
-                triple.add(data);
-
-                System.out.println(chunk.score());
-            }
-
-            List<int[]> filteredList = new ArrayList<>(triple);
-
-            int previousListSize;
-            do {
-                previousListSize = filteredList.size();
-                for (int[] ints : triple) {
-                    for (int i = filteredList.size() - 1; i > -1; i--) {
-                        int[] potentialChild = filteredList.get(i);
-                        if (potentialChild[0] >= ints[0] && potentialChild[1] < ints[1]
-                                || potentialChild[0] > ints[0] && potentialChild[1] <= ints[1]) {
-                            filteredList.remove(i);
-                        }
-                    }
-                }
-
-            } while (previousListSize > filteredList.size());
-
-            for (int[] ints : filteredList) {
-                System.out.println(text.substring(ints[0], ints[1]));
+            for (int[] chunkInfo : chunkInfoList) {
+                String chunkText = text.substring(chunkInfo[CHUNK_INFO_POS_START], chunkInfo[CHUNK_INFO_POS_END]);
+                int chunkScore = chunkInfo[CHUNK_INFO_POS_SCORE];
+                System.out.println(chunkScore + " : " + chunkText);
             }
 
         }
     }
 
-    public void setCleanJobTitle(boolean cleanJobTitle) {
-        this.cleanJobTitle = cleanJobTitle;
+    private List<int[]> createChunkInfoListFromChunkSet(Set<Chunk> chunkSet) {
+        List<int[]> chunkInfoList = new ArrayList<>();
+        for (Chunk chunk : chunkSet) {
+            // get start an end position and score of chunk
+            int start = chunk.start();
+            int end = chunk.end();
+            int score = (int) chunk.score();
+            int[] data = {start, end, score};
+            chunkInfoList.add(data);
+        }
+        return chunkInfoList;
+    }
+
+    private List<int[]> mergeChunkInfoListEntries(List<int[]> chunkInfoList) {
+        List<int[]> filteredList = new ArrayList<>(chunkInfoList);
+        boolean mergedChunks = true;
+        while (mergedChunks) {
+            mergedChunks = false;
+
+            for (int[] currentChunk : chunkInfoList) {
+                for (int i = filteredList.size() - 1; i > -1; i--) {
+                    int[] compareChunk = filteredList.get(i);
+
+                    if (compareChunk[CHUNK_INFO_POS_START] >= currentChunk[CHUNK_INFO_POS_START]
+                            && compareChunk[CHUNK_INFO_POS_END] <= currentChunk[CHUNK_INFO_POS_END]) {
+
+                        // remove sub chunk
+                        filteredList.remove(i);
+
+                        // adjust parent chunk score
+                        int newScore = currentChunk[CHUNK_INFO_POS_SCORE] + compareChunk[CHUNK_INFO_POS_SCORE];
+                        currentChunk[CHUNK_INFO_POS_SCORE] = newScore;
+                        mergedChunks = true;
+                    }
+                }
+            }
+        }
+        return filteredList;
     }
 }
