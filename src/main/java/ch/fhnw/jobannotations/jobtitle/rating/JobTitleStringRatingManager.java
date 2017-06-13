@@ -46,6 +46,8 @@ public class JobTitleStringRatingManager {
 
     private final TrieDictionary<String> dictionary;
 
+    private boolean cleanJobTitle = true;
+
     public JobTitleStringRatingManager() {
         dictionary = initJobTitleDictionary();
     }
@@ -162,7 +164,7 @@ public class JobTitleStringRatingManager {
                     String matchedString = matcher.group();
 
                     boolean removeMatchedString = jobTitleIndicatorRating.getInt() == 1;
-                    if (removeMatchedString) {
+                    if (removeMatchedString && cleanJobTitle) {
                         string = string.replace(matchedString, "").trim();
                     }
                     jobTitleRating += JOB_TITLE_INDICATOR_RATING;
@@ -215,29 +217,6 @@ public class JobTitleStringRatingManager {
 
         for (IntStringPair ratedString : ratedStrings) {
             String text = ratedString.getString();
-            System.out.println("\n\n " + text + "\n");
-            Chunking chunking = chunker.chunk(text);
-            CharSequence cs = chunking.charSequence();
-            Set<Chunk> chunkSet = chunking.chunkSet();
-
-            System.out.printf("%15s  %15s   %8s\n",
-                    "Matched Phrase",
-                    "Dict Entry",
-                    "Distance");
-            for (Chunk chunk : chunkSet) {
-                int start = chunk.start();
-                int end = chunk.end();
-                CharSequence str = cs.subSequence(start, end);
-                double distance = chunk.score();
-                String match = chunk.type();
-                System.out.printf("%15s  %15s   %8.1f\n",
-                        str, match, distance);
-            }
-        }
-
-
-        for (IntStringPair ratedString : ratedStrings) {
-            String text = ratedString.getString();
 
             System.out.println("\n\n " + text + "\n");
             Chunking chunking = chunker.chunk(text);
@@ -246,7 +225,34 @@ public class JobTitleStringRatingManager {
 
             System.out.printf("%15s  %15s   %8s\n", "Matched Phrase", "Dict Entry", "Distance");
 
-            List<int[]> tuples = new ArrayList<int[]>();
+            // add chunk text with score to list
+            List<IntStringPair> chunks = new ArrayList<>();
+            for (Chunk chunk : chunkSet) {
+                String chunkText = text.substring(chunk.start(), chunk.end());
+                int chunkScore = (int) chunk.score();
+                chunks.add(new IntStringPair(chunkScore, chunkText));
+            }
+
+            // merge chunks (remove chunks that has it's text contained by other chunks and add scores)
+            boolean mergedSomething = true;
+            while (mergedSomething) {
+                mergedSomething = false;
+
+                for (int i = chunks.size(); i > 0; i--) {
+                    IntStringPair currentChunk = chunks.get(i - 1);
+                    for (int j = i; j > 0; j--) {
+                        IntStringPair compareChunk = chunks.get(j - 1);
+                        if (currentChunk.getString().contains(compareChunk.getString())) {
+                            int mergedScore = currentChunk.getInt() + compareChunk.getInt();
+                            currentChunk.setInt(mergedScore);
+                            chunks.remove(j - 1);
+                            mergedSomething = true;
+                        }
+                    }
+                }
+            }
+
+            List<int[]> triple = new ArrayList<int[]>();
 
             for (Chunk chunk : chunkSet) {
 
@@ -256,17 +262,17 @@ public class JobTitleStringRatingManager {
 
                 int[] data = {start, end};
 
-                tuples.add(data);
+                triple.add(data);
 
                 System.out.println(chunk.score());
             }
 
-            List<int[]> filteredList = new ArrayList<>(tuples);
+            List<int[]> filteredList = new ArrayList<>(triple);
 
             int previousListSize;
             do {
                 previousListSize = filteredList.size();
-                for (int[] ints : tuples) {
+                for (int[] ints : triple) {
                     for (int i = filteredList.size() - 1; i > -1; i--) {
                         int[] potentialChild = filteredList.get(i);
                         if (potentialChild[0] >= ints[0] && potentialChild[1] < ints[1]
@@ -283,5 +289,9 @@ public class JobTitleStringRatingManager {
             }
 
         }
+    }
+
+    public void setCleanJobTitle(boolean cleanJobTitle) {
+        this.cleanJobTitle = cleanJobTitle;
     }
 }
