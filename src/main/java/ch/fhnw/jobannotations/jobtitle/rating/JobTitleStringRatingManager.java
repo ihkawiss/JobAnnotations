@@ -215,7 +215,7 @@ public class JobTitleStringRatingManager {
                 text = text.replace(matchedString, "");
             }
 
-            double specialCharPercentage = 1 - text.length() / ratedString.getString().length(); // 50% = 0.5, not 50
+            double specialCharPercentage = 1 - (double) text.length() / ratedString.getString().length(); // 50% = 0.5, not 50
             if (specialCharPercentage >= THRESHOLD_RATING_SPECIAL_CHARS) {
                 int ratingAdjustment = (int) (RATING_MAX_SPECIAL_CHARS_NEGATIVE * specialCharPercentage);
                 int newRating = ratedString.getInt() + ratingAdjustment;
