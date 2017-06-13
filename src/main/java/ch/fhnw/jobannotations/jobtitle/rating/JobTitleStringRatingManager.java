@@ -142,7 +142,7 @@ public class JobTitleStringRatingManager {
 
                     if (!matchedString.isEmpty()) {
                         // use Jsoup to convert html special to normal chars (eg.: &amp; => &)
-                        matchedString = Jsoup.parse(matchedString).text();
+                        matchedString = Jsoup.parse(Jsoup.parse(htmlLine).text()).text();
 
                         // add extracted tag content and rating to list
                         int rating = tagRating.getInt() + additionalRating;
@@ -156,6 +156,9 @@ public class JobTitleStringRatingManager {
 
             // remove all remaining html tags
             htmlLine = htmlLine.replaceAll(REGEX_TAG, "").trim();
+
+            // use Jsoup to convert html special to normal chars (eg.: &amp; => &)
+            htmlLine = Jsoup.parse(Jsoup.parse(htmlLine).text()).text();
 
             if (!htmlLine.isEmpty() && !htmlLine.equals(addedImportantTagContent)) {
                 // add remaining text with base rating of 0 (+ additionalRating)
