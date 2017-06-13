@@ -58,17 +58,8 @@ public class Measure {
                 if (foundTitle.toLowerCase().equals(threshold.toLowerCase())) {
                     foundTitles++;
                 } else {
-
-                    // maybe title is correct, ask user to validate
-                    System.err.println("\nThreshold: " + threshold + " \nFound: " + foundTitle);
-                    System.err.println("Job title seems not to be the threshold, correct? [Y]:");
-                    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-                    String input = br.readLine();
-
-                    // if user entered any char, title is correct anyway!
-                    if (!input.isEmpty()) {
-                        foundTitles++;
-                    }
+                    System.err.println("\nFalse match:");
+                    System.err.println("Threshold: " + threshold + " \nFound: " + foundTitle);
                 }
 
             } catch (IOException e) {
@@ -81,7 +72,7 @@ public class Measure {
         System.err.println("Job documents processed: " + testSuite.size());
         System.err.println("Found titles: " + foundTitles);
 
-        double percentage = (foundTitles / testSuite.size()) * 100;
+        double percentage = foundTitles * 100 / testSuite.size();
         System.out.println("Success rate: " + percentage + "%");
     }
 
@@ -103,7 +94,7 @@ public class Measure {
         try {
 
             // read test file's contents
-            CSVReader reader = new CSVReader(new FileReader(pathToTestFile), ';', '"', 1);
+            CSVReader reader = new CSVReader(new FileReader(pathToTestFile), ';');
 
             String[] nextLine;
             while ((nextLine = reader.readNext()) != null) {
