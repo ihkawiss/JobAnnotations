@@ -2,6 +2,7 @@ package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
 import ch.fhnw.jobannotations.location.JobLocationExtractor;
+import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -36,6 +37,9 @@ public class Main {
 
                         JobLocationExtractor jobLocationExtractor = new JobLocationExtractor();
                         //jobLocationExtractor.parseJobLocation(document);
+
+                        OrganisationExtractor organisationExtractor = new OrganisationExtractor();
+                        organisationExtractor.parse(document);
 
                     }
                 } catch (IOException e) {
