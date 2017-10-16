@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 
 public class OrganisationExtractor {
 
+    // regex to filter special characters
     private final String SPECIAL_CHARS = "[$&+,:;=?@#<>.^*%!-\"]";
 
     // official legal form postfixes in switzerland
@@ -66,7 +67,7 @@ public class OrganisationExtractor {
      * Within the passed sentence, a search for possible organisation names is performed.
      * If a probable organisation name is found, it's returned with a score from [0 - 100].
      *
-     * @param sentence to analyse
+     * @param sentences to analyse
      * @return probable organisation name with score
      */
     private List<String> getLegalFormCandidates(String[] sentences) {
@@ -123,6 +124,13 @@ public class OrganisationExtractor {
         return candidates;
     }
 
+    /**
+     * Analyses given text with LingPipe's basic NER class
+     * ApproxDictionaryChunker, similar to a basic fuzzy search.
+     *
+     * @param sentences to analyse for organisation names
+     * @return list of probable organisation names
+     */
     private List<String> getFuzzySearchCandidates(String[] sentences) {
 
         List<String> candidates = new ArrayList<>();
@@ -158,6 +166,13 @@ public class OrganisationExtractor {
         return candidates;
     }
 
+    /**
+     * Analyses given text with CoreNLP NER (named entity recognition)
+     * and tries to identify probable organisation names.
+     *
+     * @param text to analyse for organisation names
+     * @return list of probable organisation names
+     */
     private List<String> getNerCandidates(String text) {
 
         StanfordCoreNLP pipeline = new StanfordCoreNLP(
@@ -193,23 +208,23 @@ public class OrganisationExtractor {
 
                 if (ne.equals("I-ORG") && lastNerTag.equals("I-ORG")) {
                     organisationCandidate += word;
-                } else if(ne.equals("I-ORG") ) {
-
-                    if(organisationCandidate != "")
+                } else if (ne.equals("I-ORG")) {
+                    if (organisationCandidate != "")
                         candidates.add(organisationCandidate);
 
                     organisationCandidate = word;
-                } else if(ne.equals("I-ORG") && lastNerTag.equals("I-ORG")) {
+                } else if (!ne.equals("I-ORG") && lastNerTag.equals("I-ORG")) {
                     candidates.add(organisationCandidate);
                 }
             }
 
-            if(!candidates.contains(organisationCandidate))
+            if (!candidates.contains(organisationCandidate))
                 candidates.add(organisationCandidate);
         }
 
         return candidates;
     }
+
 
     /**
      * Sentences of input text are detected and returned unchanged.
@@ -235,9 +250,12 @@ public class OrganisationExtractor {
         return null;
     }
 
+
     /**
-     * @param text
-     * @return
+     * Analyses the given sentence and returns it's part-of-speech structure
+     *
+     * @param sentence to analyse
+     * @return array of pos-tags for each word of the sentence
      * @see STTS Stuttgart Tübingen tag set definition at http://www.datcatinfo.net/rest/dcs/376
      */
     private String[] analysePartOfSpeech(String sentence) {
@@ -257,15 +275,29 @@ public class OrganisationExtractor {
         return null;
     }
 
+
+    /**
+     * Cleans special characters form given string.
+     *
+     * @param word to clean
+     * @return given word without any special character
+     */
     private String clearWord(String word) {
         return word.replaceAll(SPECIAL_CHARS, "");
     }
 
+
+    /**
+     * Loads known company names form resources and returns them as
+     * TrieDictionary - ready to use for the ApproxDictionaryChunker.
+     *
+     * @return dictionary of known company names
+     */
     private TrieDictionary<String> getKnownOrganisations() {
 
-        try {
+        TrieDictionary<String> dictionary = new TrieDictionary<>();
 
-            TrieDictionary<String> dictionary = new TrieDictionary<>();
+        try {
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileInputStream("known_companies.txt"), "UTF8"));
 
@@ -280,7 +312,7 @@ public class OrganisationExtractor {
             e.printStackTrace();
         }
 
-        return null;
+        return dictionary;
     }
 
 }
