@@ -1,8 +1,8 @@
 package ch.fhnw.jobannotations.utils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.net.URL;
+import java.util.Properties;
 
 /**
  * @author Hoang
@@ -22,6 +22,23 @@ public class FileUtils {
                 // ignore
             }
         }
+        return null;
+    }
+
+    public static Properties getStanfordCoreNLPGermanConfiguration() {
+
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileInputStream("configuration/StanfordCoreNLP-german.properties"), "UTF8"));
+
+            Properties props = new Properties();
+            props.load(reader);
+
+            return props;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 }

@@ -15,7 +15,6 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.PropertiesUtils;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.sentdetect.SentenceDetectorME;
@@ -39,7 +38,7 @@ public class OrganisationExtractor {
 
     // official legal form postfixes in switzerland
     private final String[] KNOWN_LEGAL_FORMS = {
-            "AG", "Gen", "", "GmbH", "KlG", "KmG", "KmAG", "SA", "SCoop", "Sàrl",
+            "AG", "Gen", "Genossenschaft", "GmbH", "KlG", "KmG", "KmAG", "SA", "SCoop", "Sàrl",
             "SNC", "SCm", "SCmA", "Sagl", "SAc", "SAcA", "Scrl", "SCl", "SACm"
     };
 
@@ -51,13 +50,9 @@ public class OrganisationExtractor {
         // detect sentences from text
         String[] sentences = detectSentences(text);
 
-        List<String> candidates = new ArrayList<>();
-        candidates.addAll(getLegalFormCandidates(sentences));
-        candidates.addAll(getFuzzySearchCandidates(sentences));
-        candidates.addAll(getNerCandidates(text));
-
-        for (String candidate : candidates)
-            System.out.println(candidate);
+        List<String> legalFormCandidates = getLegalFormCandidates(sentences);
+        List<String> fuzzySearchCandidates = getFuzzySearchCandidates(sentences);
+        List<String> nerCandidates = getNerCandidates(text);
 
         return "";
     }
@@ -93,9 +88,8 @@ public class OrganisationExtractor {
                             String organisationName = ""; // glue probable name together
 
                             // check words left from found postfix
-                            // naive: NE NE NE Postfix == organisation name
-                            // TODO: implement more intelligent algorithm (which may give better results)
-                            for (int j = i; j >= 0; j--) {
+                            // naive: NE NN NE Postfix == organisation name
+                            for (int j = i - 1; j >= 0; j--) {
                                 if (posTags[j].equals("NN") || posTags[j].equals("NE")) {
 
                                     // make sure word does not contain special chars
@@ -111,8 +105,12 @@ public class OrganisationExtractor {
                             }
 
                             // build found organisation name
-                            if (organisationName.trim().length() > legalForm.length())
-                                candidates.add(organisationName);
+                            if (organisationName.trim().length() > legalForm.length()) {
+                                candidates.add(organisationName + legalForm);
+
+                                System.out.println("[indicator]\t" + organisationName + " " + legalForm);
+                            }
+
                         }
                     }
 
@@ -141,7 +139,7 @@ public class OrganisationExtractor {
 
             WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -1, -1, -1, Double.NaN);
 
-            double maxDistance = 2.0;
+            double maxDistance = 1;
 
             ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(getKnownOrganisations(), tokenizerFactory, editDistance, maxDistance);
 
@@ -151,11 +149,23 @@ public class OrganisationExtractor {
                 CharSequence cs = chunking.charSequence();
                 Set<Chunk> chunkSet = chunking.chunkSet();
 
+                List<int[]> tuples = new ArrayList<int[]>();
+
                 for (Chunk chunk : chunkSet) {
+
+                    // get start an end position of chunk
+                    int start = chunk.start();
+                    int end = chunk.end();
+                    double score = chunk.score();
+                    int[] data = {start, end};
 
                     CharSequence str = cs.subSequence(chunk.start(), chunk.end());
 
                     candidates.add(str.toString());
+
+                    System.out.println("[fuzzy]\t" + str.toString() + " dist: " +score);
+
+                    tuples.add(data);
                 }
             }
 
@@ -175,17 +185,7 @@ public class OrganisationExtractor {
      */
     private List<String> getNerCandidates(String text) {
 
-        StanfordCoreNLP pipeline = new StanfordCoreNLP(
-                PropertiesUtils.asProperties(
-                        "annotators", "tokenize, ssplit, pos, ner, parse",
-                        "parse.model", "edu/stanford/nlp/models/pos-tagger/german/german-hgc.tagger",
-                        "ner.model", "edu/stanford/nlp/models/ner/german.conll.hgc_175m_600.crf.ser.gz",
-                        "ner.applyNumericClassifiers", "false",
-                        "ner.useSUTime", "false",
-                        "parse.model", "edu/stanford/nlp/models/lexparser/germanFactored.ser.gz",
-                        "depparse.model", "edu/stanford/nlp/models/parser/nndep/UD_German.gz",
-                        "depparse.language", "german",
-                        "tokenize.language", "de"));
+        StanfordCoreNLP pipeline = new StanfordCoreNLP(FileUtils.getStanfordCoreNLPGermanConfiguration());
 
         Annotation document = new Annotation(text);
 
@@ -209,17 +209,23 @@ public class OrganisationExtractor {
                 if (ne.equals("I-ORG") && lastNerTag.equals("I-ORG")) {
                     organisationCandidate += word;
                 } else if (ne.equals("I-ORG")) {
-                    if (organisationCandidate != "")
+                    if (organisationCandidate != "") {
                         candidates.add(organisationCandidate);
+                        System.out.println("ner\t" + organisationCandidate);
+                    }
 
                     organisationCandidate = word;
                 } else if (!ne.equals("I-ORG") && lastNerTag.equals("I-ORG")) {
                     candidates.add(organisationCandidate);
+                    System.out.println("ner\t" + organisationCandidate);
                 }
             }
 
-            if (!candidates.contains(organisationCandidate))
+            if (!candidates.contains(organisationCandidate)) {
                 candidates.add(organisationCandidate);
+                System.out.println("ner\t" + organisationCandidate);
+            }
+
         }
 
         return candidates;

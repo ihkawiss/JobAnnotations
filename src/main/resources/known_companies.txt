@@ -1,500 +1,1180 @@
-Glencore International AG
-Vitol SA
-Cargill International SA
-Trafigura AG
-Mercuria Energy Trading SA
+Glencore International
+Vitol
+Cargill International
+Trafigura
+Mercuria Energy Trading
 Nestlé S.A.
-Louis Dreyfus Commodities Lint SA
-Roche Holding AG
-Gunvor SA
-Novartis AG
-INEOS Holdings AG
+Louis Dreyfus Commodities Lint
+Roche Holding
+Gunvor
+Novartis
+INEOS Holdings
 ABB Ltd.
-BHP Billiton Marketing AG
+BHP Billiton Marketing
 Coop Gruppe
 Migros-Genossenschafts-Bund
 MSC Mediteranean Shipping Company
 LafargeHolcim Ltd
-Adecco Group AG
-Kühne + Nagel International AG
-Syngenta AG
-Intersport PSC Holding AG
-Tetra Pak International SA
-Swisscom AG
+Adecco Group
+Kühne + Nagel International
+Syngenta
+Intersport PSC Holding
+Tetra Pak International
+Swisscom
 Compagnie Financière Richemont
-Liebherr International AG
-DKSH Holding AG
-Schindler Holding AG
+Liebherr International
+DKSH Holding
+Schindler Holding
 Schweizerische Bundesbahnen SBB
-Transgourmet Schweiz AG
-ALSO Holding AG
-Die Schweizerische Post AG
-International Operations & Services (CH) AG
-The Swatch Group AG
-Barry Callebaut AG
-Alpiq Holding AG
-Maus Frères SA
-Ameropa Holding AG
-SGS SA
+Transgourmet Schweiz
+ALSO Holding
+Die Schweizerische Post
+International Operations & Services
+The Swatch Group
+Barry Callebaut
+Alpiq Holding
+Maus Frères
+Ameropa Holding
+SGS
 fenaco Genossenschaft
-Clariant AG
-Sika AG
-DufEnergy Trading SA
-Axpo Holding AG
-Panalpina Welttransport (Holding) AG
-Pargesa Holding SA
-Rolex SA
-Swiss International Air Lines AG
+Clariant
+Sika
+DufEnergy Trading
+Axpo Holding
+Panalpina Welttransport
+Pargesa Holding
+Rolex
+Swiss International Air Lines
 Hilti Aktiengesellschaft
-Givaudan SA
-Amag Automobil- und Motoren AG
+Givaudan
+Amag Automobil- und Motoren
 Transocean Ltd.
-Aryzta AG
-Lonza Group AG
-GaleniCare Holding AG
-Rehau GmbH
-Omya AG
-Axpo Trading AG
-Chocoladefabriken Lindt & Sprüngli AG
-Kolmar Group AG
-Georg Fischer AG
-gategroup Holding AG
-Bell Food Group AG
-Apple Switzerland AG
-Kuoni Reisen Holding AG
-Implenia AG
-Emmi AG
-Firmenich International SA
-Swissport International AG
-Galenica AG
-Denner AG
-Sulzer AG
-BKW AG
-Geberit AG
-Artemis Holding AG
-Schmolz+Bickenbach AG
-Manor AG
-Bühler Holding AG
-BMW (Schweiz) AG
+Aryzta
+Lonza Group
+GaleniCare Holding
+Rehau
+Omya
+Axpo Trading
+Chocoladefabriken Lindt & Sprüngli
+Kolmar Group
+Georg Fischer
+gategroup Holding
+Bell Food Group
+Apple Switzerland
+Kuoni Reisen Holding
+Implenia
+Emmi
+Firmenich International
+Swissport International
+Galenica
+Denner
+Sulzer
+BKW
+Geberit
+Artemis Holding
+Schmolz+Bickenbach
+Manor
+Bühler Holding
+BMW
 Actelion Ltd
-LVMH Swiss Manufactures SA
-Omega SA
-Bucher Industries AG
-Endress+Hauser AG
-OC Oerlikon Corporation AG, Pfäffikon
-Ferring Pharmaceuticals SA
-Hewlett-Packard (Schweiz) GmbH
-CRH Gétaz Holding AG
-Stadler Rail AG
-Coop Mineraloel AG
-Autoneum Holding AG
-Siemens Schweiz AG
+LVMH Swiss Manufactures
+Omega
+Bucher Industries
+Endress+Hauser
+OC Oerlikon Corporation
+Ferring Pharmaceuticals
+Hewlett-Packard
+CRH Gétaz Holding
+Stadler Rail
+Coop Mineraloel
+Autoneum Holding
+Siemens Schweiz
 Vorwerk International Strecker & Co.
-dormakaba Holding AG
-Valora Holding AG
-Sonova Holding AG
-MSC Cruises SA
-Emil Frey AG
-Mercedes-Benz Schweiz AG
-Franke Schweiz AG
+dormakaba Holding
+Valora Holding
+Sonova Holding
+MSC Cruises
+Emil Frey
+Mercedes-Benz Schweiz
+Franke Schweiz
 Logitech International S.A.
-Ems-Chemie AG
-Aldi Suisse AG
-Sunrise Communications AG
-Lagerhäuser der Centralschweiz AG
-Ruag Holding AG
-Triumph Holding AG
-CSL Behring AG
-SIX Group AG
-Swiss Krono Holding AG
-Repower AG
-Octapharma AG
-MIR Trade AG
-Hirslanden AG
+Ems-Chemie
+Aldi Suisse
+Sunrise Communications
+Lagerhäuser der Centralschweiz
+Ruag Holding
+Triumph Holding
+CSL Behring
+SIX Group
+Swiss Krono Holding
+Repower
+Octapharma
+MIR Trade
+Hirslanden
 SRG/SSR Radio und Fernsehen
-Landis+Gyr Holding AG
-Jet Aviation AG
-Belfor (Suisse) AG
-Mövenpick Holding AG
-Insel Gruppe AG
-PostLogistics AG
-IBM Schweiz AG
-Micarna SA
-Sicpa Holding SA
+Landis+Gyr Holding
+Jet Aviation
+Belfor
+Mövenpick Holding
+Insel Gruppe
+PostLogistics
+IBM Schweiz
+Micarna
+Sicpa Holding
 Compagnie des Montres Longines, Francillon S.A.
-Volg Konsumwaren AG
-Sto AG
-Bobst Group SA
-SFS Group AG
-Hotelplan Holding AG
-Google Switzerland GmbH
-Bucherer AG
-UPC Schweiz GmbH
-Werco Trade AG
+Volg Konsumwaren
+Sto
+Bobst Group
+SFS Group
+Hotelplan Holding
+Google Switzerland
+Bucherer
+UPC Schweiz
+Werco Trade
 Tamoil S.A.
 Universitätsspital Zürich
-Patek Phillippe SA
-Securitas AG Schweizerische Bewachungsgesellschaft
-Landi Schweiz AG
-Migrol AG
-Hero AG
-Swissgrid AG
-Zimmer GmbH
-Dätwyler Holding AG
-Conzzeta AG
-Stäubli AG
-Forbo Holding AG
-Vifor Pharma Management AG
-HRS Holding AG
-Tissot SA
-Salt Mobile SA
+Patek Phillippe
+Securitas
+Landi Schweiz
+Migrol
+Hero
+Swissgrid
+Zimmer
+Dätwyler Holding
+Conzzeta
+Stäubli
+Forbo Holding
+Vifor Pharma Management
+HRS Holding
+Tissot
+Salt Mobile
 Services industriels de Genève
-Calltrade Carrier Services AG
-swisspor Holding AG
-IKEA AG
-mobilezone holding ag
+Calltrade Carrier Services
+swisspor Holding
+IKEA
+mobilezone holding
 Universitätsspital Basel
 Kudelski S.A.
-Swiss Prime Site AG
-Ringier AG
-Cisco Systems (Switzerland) GmbH
-SR Technics Switzerland AG
-BLS AG
-Dipl. Ing. Fust AG
-SPAR Holding AG
-Energiedienst Holding AG
-Chocolat Frey AG
-Flughafen Zürich AG
-Tamedia AG
-TAG Heuer, succursale de LVMH Swiss Manufactures SA
-MB Barter & Trading AG
+Swiss Prime Site
+Ringier
+Cisco Systems
+SR Technics Switzerland
+BLS
+Dipl. Ing. Fust
+SPAR Holding
+Energiedienst Holding
+Chocolat Frey
+Flughafen Zürich
+Tamedia
+TAG Heuer, succursale de LVMH Swiss Manufactures
+MB Barter & Trading
 Schweiter Technologies
-Debrunner Koenig Holding AG
-Arbonia AG
-Microsoft Schweiz GmbH
+Debrunner Koenig Holding
+Arbonia
+Microsoft Schweiz
 Jaeger-Le Coultre S.A.
-Metall Zug AG
-Lidl Schweiz AG
-FLAME AG
-Merbag Holding AG
-Rieter Holding AG
+Metall Zug
+Lidl Schweiz
+FLAME
+Merbag Holding
+Rieter Holding
 Interdiscount
-PostAuto Schweiz AG
-Straumann Holding AG
-Coca-Cola HBC Schweiz AG
+PostAuto Schweiz
+Straumann Holding
+Coca-Cola HBC Schweiz
 Samsung Electronics Switzerland
 Feldschlösschen Getränke
-BT Switzerland AG
-Ammann Group Holding AG
-Fracht AG
-Dosenbach-Ochsner AG
+BT Switzerland
+Ammann Group Holding
+Fracht
+Dosenbach-Ochsner
 IWC International Watch
-Würth International AG
-Zur Rose AG
-Magazine zum Globus AG
-Model Holding AG
+Würth International
+Zur Rose
+Magazine zum Globus
+Model Holding
 Elektrizitätswerk der Stadt Zürich
-SBB Cargo AG
+SBB Cargo
 Centralschweizerische Kraftwerke
-SAP (Schweiz) AG
+SAP
 Kantonsspital St. Gallen
-Allreal Holding AG
-Steiner AG
-Pilatus Flugzeugwerke AG
+Allreal Holding
+Steiner
+Pilatus Flugzeugwerke
 HG Commerciale
-Planzer Holding AG
-Selecta AG
-Jowa AG
+Planzer Holding
+Selecta
+Jowa
 Audemars Piguet & Cie
-Lekkerland (Schweiz) AG
-Marti Holding AG
-Ivoclar Vivadent AG
-Frutiger Unternehmungen AG
+Lekkerland
+Marti Holding
+Ivoclar Vivadent
+Frutiger Unternehmungen
 Elektrizitätswerke Kanton Zürich
-ISS Schweiz AG
+ISS Schweiz
 Montana Tech Components
-SV Group AG
-M+R Spedag Group AG
-Fritz Meyer Holding AG
-Media Markt Zürich AG
-Saviva AG
+SV Group
+M+R Spedag Group
+Fritz Meyer Holding
+Media Markt Zürich
+Saviva
 Montres Breguet S.A.
-Huber+Suhner AG
-Otto's AG
+Huber+Suhner
+Otto's
 IWB Industrielle Werke Basel
-Accenture AG
-Galaxus (Schweiz) AG
-Leica Geosystems AG
-SoftwareONE AG
-Bertschi AG
-Siegfried Holding AG
-H & M Hennes & Mauritz SA
+Accenture
+Galaxus
+Leica Geosystems
+SoftwareONE
+Bertschi
+Siegfried Holding
+H & M Hennes & Mauritz
 McDonald's Suisse Holding
 PricewaterhouseCoopers
-Ospelt Food AG
-Bossard Holding AG
-Oracle Software (Schweiz)
-B+R Industrie-Automation AG
-Renault Suisse SA
-Vacheron & Constantin SA
-Trumpf Maschinen AG
-Rational International AG
-Ernst & Young AG
-Habasit AG
-Unilever Schweiz GmbH
-Deloitte AG
-Bystronic Laser AG
-Piaget SA
-Galliker Transport AG
-Franck Muller Watchland SA
+Ospelt Food
+Bossard Holding
+Oracle Software
+B+R Industrie-Automation
+Renault Suisse
+Vacheron & Constantin
+Trumpf Maschinen
+Rational International
+Ernst & Young
+Habasit
+Unilever Schweiz
+Deloitte
+Bystronic Laser
+Piaget
+Galliker Transport
+Franck Muller Watchland
 Egon Zehnder International
 Pistor Holding
-Losinger Marazzi AG
-Tech Data (Schweiz) GmbH
+Losinger Marazzi
+Tech Data
 Schweizer Reisekasse
-Phoenix Mecano AG
-Temenos Group AG
-Walo Bertschinger AG
+Phoenix Mecano
+Temenos Group
+Walo Bertschinger
 Coop Bau & Hobby
 Robert Bosch Schweiz
-Cargo24 AG
-Pfister Arco Holding AG
-Competec Holding AG
-Romande Energie Holding SA
+Cargo24
+Pfister Arco Holding
+Competec Holding
+Romande Energie Holding
 Vetropack Holding S.A.
-Halter AG Bauunternehmung
-Estavayer Lait SA
-Medela Holding AG
+Halter
+Estavayer Lait
+Medela Holding
 Nokia Solutions and Networks
-Oettinger Davidoff AG
-Aevis Holding SA
-Aduno Holding AG
-Sabag Holding AG
+Oettinger Davidoff
+Aevis Holding
+Aduno Holding
+Sabag Holding
 Swissgas
 M & M Militzer & Münch
 CWT Schweiz
-Chopard & Cie SA
-Eugster/Frismag AG
-Priora Holding AG
-A.H. Meyer & Cie AG
-Carl Spaeter AG
+Chopard & Cie
+Eugster/Frismag
+Priora Holding
+A.H. Meyer & Cie
+Carl Spaeter
 Burckhardt Compression Holding
-Kabelwerke Brugg AG Holding
-Solothurner Spitäler AG
+Kabelwerke Brugg
+Solothurner Spitäler
 Feintool International
-Hochdorf Holding AG
-Jumbo AG
+Hochdorf Holding
+Jumbo
 Swiss Automotive Group
 WRH Walter Reist Holding
-Bally International SA
-Sanitas Troesch AG
-KPMG AG
-Ernst Sutter AG
-Zehnder Group AG
+Bally International
+Sanitas Troesch
+KPMG
+Ernst Sutter
+Zehnder Group
 Schneider Electric Schweiz
-Belimo Holding AG
-EMC Computer Systems AG
-Orior AG
-Burkhalter Holding AG
-Hilcona AG
+Belimo Holding
+EMC Computer Systems
+Orior
+Burkhalter Holding
+Hilcona
 Cremo S.A.
-VAT Group AG
-Tecan Group AG
-Depot CH AG
+VAT Group
+Tecan Group
+Depot CH
 Kantonsspital Winterthur
-Hublot SA
+Hublot
 Movado Group
-Avaloq Evolution AG
+Avaloq Evolution
 Conforama Suisse Holding
-Keytrade AG
-Goldbach Group AG
-Cofely AG
-Elektro-Material AG
-Vinci Energies Schweiz AG
-Ericsson AG
-Hupac SA
-Victorinox AG
+Keytrade
+Goldbach Group
+Cofely
+Elektro-Material
+Vinci Energies Schweiz
+Ericsson
+Hupac
+Victorinox
 Kantonsspital Baselland
-Meyer Burger Technology AG
-Bechtle Holding Schweiz AG
-Skyguide SA
-Grosspeter AG
+Meyer Burger Technology
+Bechtle Holding Schweiz
+Skyguide
+Grosspeter
 Rado Uhren
-Groupe E SA
-Neue Zürcher Zeitung AG
-MCH Group AG
-IBSA Institut Biochimique SA
-Gasverbund Mittelland AG
+Groupe E
+Neue Zürcher Zeitung
+MCH Group
+IBSA Institut Biochimique
+Gasverbund Mittelland
 CPH Chemie+Papier Holding
-Looser Holding AG
-Migrolino AG
-C&A Mode AG
+Looser Holding
+Migrolino
+C&A Mode
 Fiat Group Automobiles Switzerland
-Mibelle AG
-Energie 360 Grad AG
-Weleda AG
-Jura Elektroapparate AG
-Maxon Motor AG
-Edelweiss Air AG
-Transports publics genevois (TPG)
+Mibelle
+Energie 360 Grad
+Weleda
+Jura Elektroapparate
+Maxon Motor
+Edelweiss Air
+Transports publics genevois
 Energie Wasser Bern
-Lenovo (Schweiz) GmbH
-AEW Energie AG
-Interoll Holding AG
-Metrohm AG
-Kardex AG
-Ingram Micro GmbH
-Frigemo AG
-Ypsomed Holding AG
+Lenovo
+AEW Energie
+Interoll Holding
+Metrohm
+Kardex
+Ingram Micro
+Frigemo
+Ypsomed Holding
 Beauty Alliance Schweiz
-Hügli Holding AG
-Infosys Consulting Holding AG
-TopPharm AG
-Baumer Holding AG
+Hügli Holding
+Infosys Consulting Holding
+TopPharm
+Baumer Holding
 Orange Business Service
-Wicor Holding AG
-Erne Holding AG
-Intel Semiconductor AG
-Gondrand Holding AG
-Calida Holding AG
-Komax Holding AG
-Starrag Group Holding AG
-Haco Holding AG
-Breitling AG
-Central Station AG
-Canon (Schweiz) AG
-Hoval Holding AG
-Littlebit Technology AG
-u-blox Holding AG
+Wicor Holding
+Erne Holding
+Intel Semiconductor
+Gondrand Holding
+Calida Holding
+Komax Holding
+Starrag Group Holding
+Haco Holding
+Breitling
+Central Station
+Canon
+Hoval Holding
+Littlebit Technology
+u-blox Holding
 swenex - swiss energy exchange Ltd
-Kistler Instrumente AG
-Ascom Holding AG
-Rhätische Bahn AG
-Agta Record AG
-Symantec Switzerland AG
-Gurit Holding AG
-T-Systems Schweiz AG
-Haag-Streit Holding AG
-Dell SA
+Kistler Instrumente
+Ascom Holding
+Rhätische Bahn
+Agta Record
+Symantec Switzerland
+Gurit Holding
+T-Systems Schweiz
+Haag-Streit Holding
+Dell
 ESA-Einkaufsorganisation
-Xerox AG
-Mifroma SA
-Festina - Candino Watch AG
-APG SGA SA
-B. Braun Medical AG
-Comet Holding AG
-Kirchhofer AG
-Tobler Haustechnik AG
-Reishauer AG
-Von Roll Holding AG
-Schätzle Holding AG
-Inficon Holding AG
-Schulthess Group AG
-Tarchini FoxTown SA
-Ricola Familienholding AG
-Publisuisse SA
-Acino International AG
+Xerox
+Mifroma
+Festina - Candino Watch
+APG SGA
+B. Braun Medical
+Comet Holding
+Kirchhofer
+Tobler Haustechnik
+Reishauer
+Von Roll Holding
+Schätzle Holding
+Inficon Holding
+Schulthess Group
+Tarchini FoxTown
+Ricola Familienholding
+Publisuisse
+Acino International
 Bernard Nicod S.A.
 Huawei Technologies Switzerland
-Alfred Müller AG
+Alfred Müller
 TopCC
-Rhenus Alpina AG
-Jansen AG
-Blancpain SA
+Rhenus Alpina
+Jansen
+Blancpain
 Aziende Industriali di Lugano
-Orell Füssli Holding AG
-Alcatel-Lucent Schweiz AG
-Mars Schweiz AG
-Griesser Holding AG
-Mazda (Suisse) SA
-Charles Vögele Mode AG
+Orell Füssli Holding
+Alcatel-Lucent Schweiz
+Mars Schweiz
+Griesser Holding
+Mazda
+Charles Vögele Mode
 Offix Holding
-Hoco Holding AG
-Streck Transport AG
-Bauwerk Parkett AG
-B-Source SA
-Hälg Holding AG
-Mobimo Holding AG
+Hoco Holding
+Streck Transport
+Bauwerk Parkett
+B-Source
+Hälg Holding
+Mobimo Holding
 ewl Energie Wasser Luzern
-Fiege Logistik (Schweiz) AG
-Sipro Stahl Holding AG
-Schneider & Cie AG
+Fiege Logistik
+Sipro Stahl Holding
+Schneider & Cie
 Cognizant Technology Solutions
-LEM Holding SA
+LEM Holding
 Müller Schweiz
-Emanuele Centonze Holding AG
-Schenker Schweiz AG
-Mikron Holding AG
-Atos AG
-Globetrotter Group AG
-Schmid Bauunternehmung AG
-Via Mat Holding AG
-Scania Schweiz AG
-Georg Utz Holding AG
+Emanuele Centonze Holding
+Schenker Schweiz
+Mikron Holding
+Atos
+Globetrotter Group
+Schmid Bauunternehmung
+Via Mat Holding
+Scania Schweiz
+Georg Utz Holding
 ZFV-Unternehmungen
-Bernina International AG
+Bernina International
 Stadtwerk Winterthur
-CSC Switzerland GmbH
-Walter Meier AG
-Reinhard Fromm Holding AG
-Schenker Storen AG
+CSC Switzerland
+Walter Meier
+Reinhard Fromm Holding
+Schenker Storen
 Orascom
-Visilab SA
-Bachem Holding AG
-AZ Medien AG
+Visilab
+Bachem Holding
+AZ Medien
 Basler Verkehrs-Betriebe
-Mammut Sports Group AG
+Mammut Sports Group
 Bindella Gruppe
-Holdigaz SA
-Florin AG
-Camion-Transport AG Wil
-Reichle & De-Massari AG
-Adval Tech Holding AG
-Veritas (Schweiz) GmbH
-Induni & Cie SA
+Holdigaz
+Florin
+Camion-Transport
+Reichle & De-Massari
+Adval Tech Holding
+Veritas
+Induni & Cie
 Quickline Verbund
-Trisa Holding AG
-Itris AG
-Bulgari Horlogerie SA
-Lyreco Switzerland AG
-Avnet AG
-Acer Computer (Switzerland) AG
+Trisa Holding
+Itris
+Bulgari Horlogerie
+Lyreco Switzerland
+Avnet
+Acer Computer
 Korean Motor Company
-SAK Holding AG
-DSS International SA
-Raymond Weil SA
+SAK Holding
+DSS International
+Raymond Weil
 Zweifel Chips+Snacks Holding
-Leonteq AG
-Karl Vögele AG
-Lipo Beteiligungen AG
-Hapimag AG
+Leonteq
+Karl Vögele
+Lipo Beteiligungen
+Hapimag
 Interroute
-Schweizer Zucker AG
-Orell Füssli Thalia AG
-Gübelin AG
+Schweizer Zucker
+Orell Füssli Thalia
+Gübelin
 Wilhelm Schulthess - Stiftung
-DPD (Schweiz) AG
-Curaden AG
+DPD
+Curaden
 Top Tip Lumimart
-Lüchinger+Schmid AG
-Fielmann AG
-Cham Paper Group Holding AG
-Schurter Holding AG
+Lüchinger+Schmid
+Fielmann
+Cham Paper Group Holding
+Schurter Holding
 Spitäler Schaffhausen
-BDO AG
-BLS Cargo AG
-Fossil Group Europe GmbH
+BDO
+BLS Cargo
+Fossil Group Europe
 Cicor Technologies Ltd.
-Brunschwig Holding SA
+Brunschwig Holding
 CCS Customer Care & Solutions
-Schaffner Holding AG
-Volvo Trucks (Schweiz) AG
-Fujitsu Technology Solutions AG
-Thermoplan AG
-Baumann Federn AG
-Clienia AG
+Schaffner Holding
+Volvo Trucks
+Fujitsu Technology Solutions
+Thermoplan
+Baumann Federn
+Clienia
 Spitalverband Limmattal
 LeShop
 Myriad Group
-PKZ Burger-Kehl & Co. AG
-R. Nussbaum AG
+PKZ Burger-Kehl & Co.
+R. Nussbaum
+bbv Software Services
+2parse.it
+a & u Kaderberatung
+Aargauische Kantonalbank
+Abacus Business Solutions
+ABB Schweiz
+Abraxas Informatik
+ABS Personalberatung
+Accarda
+Accenture
+Ad Insertion Platform
+Adcubum
+addexpert
+adesso Schweiz
+Administration fédérale des douanes AFD Berne
+AdNovum Informatik
+advisca
+Aequor Consulting
+AFP Küchen
+AGI
+Allgeier
+Allianz Global Assistance
+Allianz Suisse Versicherungs-Gesellschaft
+almo
+Alpiq
+Alpiq InTec Management
+Altruwin
+Ambit
+Ammann Schweiz
+AMOS IT
+Amt für Informatik und Organisation
+Amt für Informatik und Organisation Kanton Zug
+ANNAX Schweiz
+AO Foundation
+ARIZON Sourcing
+armasuisse ar
+Arobase
+Art of Work Personalberatung
+Artionet
+AS INFOLINK
+Ascom
+ASSpro
+Atos Consulting Schweiz
+Ausgleichskasse Gärtner und Floristen
+AutoForm Development 
+Autoneum Management
+Avalect HR-Executive Consulting
+Avanade Schweiz
+Avance Careers
+Avectris
+AWK Group
+AXA Versicherungen
+AXAS
+aXelerateur Ressources
+Axept Business Software
+axia
+Axians
+AXON IVY
+Axon Lab
+Bachem
+baeriswyl tschanz & partner
+Baloise Group
+BAMBUS EDV-Consulting
+Band-Genossenschaft
+Bank J. Safra Sarasin
+Bank Vontobel
+Base-Net Informatik
+Basler Versicherung
+Bayer Consumer Care
+BBT Software
+BdU Consulting
+BEARINGPOINT
+Bechtle Steffen Schweiz
+Bedag Informatik
+Belimed
+Bell Schweiz
+Berner Bildungszentrum Pflege
+Berner Kantonalbank
+Bernwald Personalberatung
+Bertrams Chemieanlagen
+BE-terna
+Betterhomes
+Biketec
+Bilfinger Mauell ESG
+Bio Partner Schweiz
+Bioengineering
+BioSanté Editions
+BIOTRONIK
+Bircher ProcessControl
+Bizerba Busch
+BKW Gruppe
+Blue Yonder
+Bobst
+Böhler-Uddeholm Schweiz
+Bornhauser People's Management
+Boss Info
+Bossard
+BRANDSOUL
+BROMsolutions
+BROMsolutions
+Bucher Personal
+Bühler
+Bundesamt für Bauten und Logistik BBL
+Bundesamt für Informatik und Telekommunikation BIT
+Bundesamt für Kommunikation BAKOM
+Bundesamt für Kultur BAK
+Bundesamt für Statistik BFS
+Büro Marxer Büro-Systeme
+CargoServer
+CBA Computer Brainware Advisors
+CBS Cybernetic Business Support
+CDI
+Cembra Money Bank
+Cendres+Métaux
+censhare
+Centre de service informatique CSI-DFJP
+Centris
+Centro del Servizio Informatico CSI-DFGP
+CERN
+CH INTERTRADE
+Chain IQ Group
+CIGES
+CKW
+CKW Centralschweizerische Kraftwerke
+CKW Conex
+Clinerion Ltd.
+CM Informatik
+cobra computer's brainware
+CODAN ARGUS
+Cogito Projects
+Cognizant
+colibri people
+COMET
+Comicro-Netsys
+comparis.ch
+Competec
+Competence Call Center
+Computer Futures
+Concordia
+coni + partner
+Consult & Pepper
+Contauro
+Coop
+Coopers Group
+Cortexia
+COSANUM
+CoSB
+CREALOGIX
+Credit Suisse
+CS-Computing
+CSS Versicherung
+Customize
+Data Connect
+Datalizard
+Dataphone
+Datimo
+Debitors management
+Dehaco
+DELIGO
+Deloitte
+Di Santo & Partner
+Diartis
+Die Schweizerische Post
+Direct Mail Company
+Dodax
+Dorigo
+dormakaba Schweiz
+DP Consulting
+DT Swiss
+duagon
+Dyconex
+E. Gutzwiller & Cie, Banquiers
+e3
+Earth Space Technical Ecosystem Enterprises
+Eberli Generalunternehmung
+EBL
+Econis
+EDELWAY
+EDELWAY
+edorasware
+Eidgenössische Steuerverwaltung ESTV
+Eidgenössische Zollverwaltung EZV Bern
+Eidgenössisches Institut für Geistiges Eigentum
+EKT
+ELCA Informatik
+ELESTA
+elipsLife
+ELITA Personalberatung
+Endress+Hauser Flowtec
+Endress+Hauser Process Solutions
+Energie 360°
+Engineering Management Selection E.M.S.
+ENKOM
+entec IT + Communication
+EPFL - Blue Brain Project
+ER & Partner
+ERNE
+ERNI Consulting
+Etat de Fribourg
+Etat du Valais
+ETAVIS
+ETEL S.A.
+ETH Zürich
+Evergreen Human Resources
+Ewag
+EWZ
+Experis Schweiz Basel
+Experis Schweiz Zürich
+expert group
+Expomobilia
+EY
+F. Hoffmann-La Roche
+Fakultät / Institution
+Fastlog
+Feller
+fenaco/Bison
+Ferag
+FinITia
+FIS
+Fluance
+Freestar Academy
+Freestar-Informatik
+Freestar-People
+Fritz Studer
+Frontiers
+Frontwerks
+frontwork
+Früh Verpackungstechnik
+Fyte
+GE  Healthcare
+GemDat Informatik
+Gemeindeverwaltung Steffisburg
+Generali Versicherungen
+Genossenschaft Migros Basel
+Genossenschaft Migros Zürich
+Gewerblich-industrielle Berufsschule Bern GIBB
+GF Machining Solutions
+GIA Informatik
+Gilgen Door Systems
+Gilgen Logistics
+glaus personal
+Global Kader Personal
+Global Personal Partner
+Global Personal Partner
+GLOBONET
+Globus
+Goetzfried
+Gold Interactive
+Good Job
+Graphax
+green.ch
+Groupe Swiss Risk & Care
+GSCF Ltd.
+GSI Consultants
+Güdel
+GULP Schweiz
+H&M Hennes & Mauritz
+Haag-Streit
+HAGER
+Hamilton Bonaduz
+Hamilton Medical
+Harvey Nash
+Haufe-umantis
+Hays
+HCC / Human Competence Center
+Helbling Technik
+Helbling Technik Bern
+Helsana Versicherungen
+Heltias
+Helvetia Versicherungen
+Helvetica Partners HR Solutions
+Helvetica Partners
+HELVETING
+Hertz Autovermietung Schweiz
+Hiltbrand Systemtechnik
+Hilti Aktiengesellschaft Schaan
+Hirslanden
+HIS - Programm
+Hochschule für Technik und Wirtschaft HTW Chur
+Hochschule Luzern
+Holcim
+Hôpital du Valais
+Hôpitaux Universitaires de Genève
+Hortis GRC
+Hospice Général
+hostettler group
+Hostpoint
+HR Campus
+HUK
+Humanis
+Humentum
+Huxley
+IAZI
+IBM Client Innovation Center
+iConsultants / The Brains
+Identitas
+iET
+IIC-INTERSPORT International Corp.
+II-VI Laser Enterprise
+ilem Group
+IMA Medtech Switzerland
+Imbach & Cie
+IMD
+Imnoo
+IMS Integrierte Managementsyst
+Incodev
+Indigita
+Infofactory
+INFOGATE
+Informatik Service Center ISC-EJPD
+Information Factory
+Information Service Center ISCeco WBF
+Infosys Consulting
+Innovative Web Marekting und Service
+Innovatives Traditions-Unternehmen
+inova Job
+INSELSPITAL
+insign
+Institut für Rechtsmedizin
+Inter-Community School
+ipeak Infosystems
+ipt Innovation Process Technology
+IQ PLUS
+isolutions
+ISS Schweiz
+IT - yellowshark
+ITech Consult
+ITRIS Informatik
+IT-Tech Personal
+IVU Traffic Technologies
+IWF
+JAG Jakob
+Jelmoli
+job impuls
+JobCloud
+Jobst Willers Engineering
+JobTalente
+JOHN RESEARCH
+Joker Personal
+Jörg Lienert
+Julius Bär Gruppe
+JURA Management
+Kanton Aargau
+Kanton Basel Stadt: Justiz- und Sicherheitsdepartement
+Kanton Basel-Stadt: Finanzdepartement
+Kanton St.Gallen
+Kantonale Verwaltung Basel-Landschaft
+Kantonale Verwaltung Luzern
+Kantonspolizei Zürich
+Kantonsspital Aarau
+Kantonsspital Baden
+Kantonsspital St.Gallen
+KCS.net
+Kelly Services Aarau
+Kelly Services Winterthur
+KIDSTON - IT
+Kienbaum
+Kinderspital Zürich
+Kistler
+Kizy Tracking
+KMS
+Knecht Reisen
+Kohlberg & Partner
+Kohler & Partner
+KPT / CPT Krankenkasse
+Krauer Engineering
+KWC
+LAN Computer Systems
+Lavoris
+LCA Automation
+Legacy Pharmaceuticals Switzerland
+Leica Microsystems
+LEONI
+Leonteq Securities
+LGT
+Liechtensteinische Landesbank /Bank Linth
+Liechtensteinische Landesverwaltung
+Lindt & Sprüngli
+Lindt & Sprüngli
+localsearch - Swisscom Directories
+Luzerner Kantonalbank
+Luzerner Kantonsspital
+Manexperts
+Manpower
+Mathys & Scheitlin
+MCH Messe Schweiz
+MEGGITT
+Meraxo
+Mercedes-Benz Financial Services Schweiz
+Mercuri Urval
+Metas
+METTLER TOLEDO - Gruppe
+Meyer Burger
+Micro Informatique & Technologies S.A.
+microPrint LC
+Migros Bank
+mimacom
+Möbel Egger
+Möbel Pfister
+Möbel Schubiger
+Mobiliar Versicherungen
+Model
+MTF Quadra
+mühlemann IT-personal
+MySign
+NAB Neue Aargauer Bank
+Namics
+nemensis
+Nestle
+NETCONOMY Switzerland
+Netstream
+Network 41
+New Access
+Nexgen
+Nexphone
+NEXPLORE
+Nexus Personal- & Unternehmensberatung
+Nickl & Partner Architekten Schweiz
+Nicoll Curtin Recruitment
+Nordwand Group
+Noser Engineering
+NOVO Business Consultants
+Novotec Engineering
+NSNW
+null
+OBT
+Oerlikon Metco
+Office fédéral de la statistique OFS
+Office World
+Olbrecht & Weber
+On Demand Agility Solutions
+Opacc Software
+Open Systems
+oprandi & partner
+ORS Service
+p3b
+p4b
+Packaging Services
+Packaging Systems
+Page Personnel
+Pantec GS Systems
+ParCom Systems
+ParMag
+Partners Group
+Paul Scherrer Institut
+Pax
+People Business
+people4you human resources
+Performa
+Personal Sigma Luzern / Zug
+pharmaSuisse, Schweizerischer Apothekerverband
+Pharmatic
+PK Softech
+PKS Personal- & Kaderselektion
+Planzer Informatik
+Plasma Control Technologies - Member of Comet Group
+PMS SCHÖNENBERGER
+Polynorm Software
+PostFinance
+pQRSt tech
+Pragmatica
+Pro Informatik
+Process Management Selection
+PRODYNA
+ProfiLogic
+proles solutions
+ProPers
+Protect7
+Publishing Factory
+PwC
+PwC Strategyand
+Q_PERIOR
+Quickline
+Raiffeisen Schweiz
+Randstad
+Ratbacher
+RBS Services
+Real Personal Werner Blumer
+Regio Personal
+Regiobank Solothurn
+Rehaklinik Bellikon
+ReportingSoft
+République et Canton du Jura - Service des ressources humaines
+RICOH SCHWEIZ
+Ricola
+Rieter
+RM IT Professional Resources
+Robert Half Technology
+Roger Renggli Personalberatung
+RONDO Burgdorf
+Rowei Search
+RTM Systems
+RUAG
+Ruckstuhl itec
+Ruf Gruppe
+Run my Accounts
+Rychiger
+Saab Bofors Dynamics Switzerland Ltd
+Sage Schweiz
+Sanitas Krankenversicherung
+SASIS
+SBA Human Resources
+SBB
+Schaerer
+Schaltag
+SCHENK
+scherler People Management
+Schick Personal
+Schindler Aufzüge
+Schindler Management
+Schleuniger
+schmid consulting
+Schneider Electric
+Schober Information Group
+Schoch Informatik
+Schule Oetwil am See
+Schweizer Armee - Führungsunterstützungsbasis FUB
+Schweizer Paraplegiker-Zentrum
+Schweizer Radio und Fernsehen
+Schweizer Schiesssportverband
+Schweizerische Nationalbank
+Schweizerischer Nationalfonds SNF
+Schweizerisches Rotes Kreuz SRK
+Scintilla
+scope solutions
+screenFOODnet Digital Signage Retail Services
+Securitas
+Securiton
+Sefar
+SelecTeam
+Selectron Systems
+Sensirion
+SFS Group
+SICPA
+Siga Services
+Sigmalis
+Sika Informationssysteme
+Sius
+SIX Payment Services
+SIX Securities Services
+Skan
+skybris
+skyguide
+smartpersonal
+Softcom Technologies
+Solcept
+solidIT
+SolvAxis
+Solve
+Sonova
+Sopra Steria
+Soranus
+Sozialwerke Pfarrer Ernst Sieber
+SPIE ICS
+Spring Professional Information Technology
+Spring Professional Information Technology
+SRG SSR
+SRO
+SSI Schäfer
+Staatssekretariat für Migration SEM
+Stadt Brugg
+Stadt Zürich
+Stamford Consultants
+Steiner-Gruppe
+Stellenwerk
+stewards.ch
+Stier & Partner
+Stiftung SOS-Kinderdorf Schweiz
+STIHL Kettenwerk
+Stöcklin Logistik
+Straumann Villeret
+Stryker
+Supercomputing Systems
+Suva Hauptverwaltung
+Suxesiv
+SV
+SVA Zürich
+SVTI Schweizerischer Verein für technische Inspektionen
+Swatch Group Services
+Swiss GRC
+Swiss Infosec
+Swiss Life
+Swiss Timing Ltd
+SWISSBILLING
+Swisscard AECS
+SwissCaution
+Swisscom
+Swisscom Digital Technology
+SwissCommerce Management
+swisselect
+Swisslinx
+Swisslog
+Swissport International
+swisspro
+SWITCH
+Synechron Switzerland
+Synergie Suisse
+synlab Suisse
+Talents4you
+Talentum
+Tamedia - Olmero
+tcc - the career company
+TCG Informatik
+Team-Kader
+Technical & Engineering - yellowshark
+Telecom Liechtenstein 
+Telsec ESS Schweiz
+Tertianum Management
+tessi document solutions
+TEUFEL solutions
+TFB
+TGW Mechanics
+The Body Shop
+THE BOSTON CONSULTING GROUP
+Thoma & Partner Management Consulting
+thyssenkrupp Presta
+TinLine
+Tom Capital
+Topal Solutions
+Toptip
+TORMAX | Landert Motoren
+Trafag
+Transteam Personal
+TRB CHEMEDICA INTERNATIONAL
+Trivadis
+u-blox
+UBS Card Center
+UMB
+Unic
+United Grinding Group
+United Security Providers
+Universal-Job
+Universitäre Fernstudien Schweiz
+Universität Zürich
+Universitäts-Kinderspital beider Basel
+Universitätsklinik Balgrist
+Unternährer Personal
+UP-GREAT
+Urs Ledermann & Partner
+Uster Technologies
+Valora Schweiz
+Varian Medical Systems
+Vaudoise Assurances
+Ventura Associates Suisse
+Ventura Consultant
+Veriset Küchen
+Viacar
+Vifor Pharma
+Visana
+vonRoll infratec.com
+vonRoll itec
+VP Bank
+VRSG
+VSA - Verband Schweizer Abwasser- und Gewässerschutzfachleute
+VSP Personal
+WAGNER
+Wander
+Wealthport
+webalyse marketing & consulting
+WILHELM
+win2you
+Wincasa
+Wistar Informatik
+WORKFOR Switzerland
+World Economic Forum
+WSL
+Würth ITensis
+Xovis
+XS Stellen
+Your Recruiter
+Ypsomed
+Zehnder Group International
+ZEIT
+ZHAW
+Zuger Kantonalbank
+Zühlke Engineering
+Zürcher Kantonalbank
+Zürcher Lehrbetriebsverband ICT
+Zurich Insurance Company
+zurichnetgroup
