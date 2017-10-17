@@ -1,40 +1,23 @@
 package ch.fhnw.jobannotations.organisation;
 
 import ch.fhnw.jobannotations.utils.FileUtils;
-import com.aliasi.chunk.Chunk;
-import com.aliasi.chunk.Chunking;
-import com.aliasi.dict.ApproxDictionaryChunker;
-import com.aliasi.dict.DictionaryEntry;
+import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
 import com.aliasi.dict.TrieDictionary;
-import com.aliasi.spell.FixedWeightEditDistance;
-import com.aliasi.spell.WeightedEditDistance;
-import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
-import com.aliasi.tokenizer.TokenizerFactory;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import opennlp.tools.postag.POSModel;
-import opennlp.tools.postag.POSTaggerME;
-import opennlp.tools.sentdetect.SentenceDetectorME;
-import opennlp.tools.sentdetect.SentenceModel;
 import org.jsoup.nodes.Document;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OrganisationExtractor {
 
-    // regex to filter special characters
-    private final String SPECIAL_CHARS = "[$&+,:;=?@#<>.^*%!-\"]";
 
     // official legal form postfixes in switzerland
     private final String[] KNOWN_LEGAL_FORMS = {
@@ -48,10 +31,10 @@ public class OrganisationExtractor {
         final String text = document.body().text();
 
         // detect sentences from text
-        String[] sentences = detectSentences(text);
+        String[] sentences = PartOfSpeechUtil.detectSentences(text);
 
         List<String> legalFormCandidates = getLegalFormCandidates(sentences);
-        List<String> fuzzySearchCandidates = getFuzzySearchCandidates(sentences);
+        List<String> fuzzySearchCandidates = getFuzzySearchCandidates(text);
         List<String> nerCandidates = getNerCandidates(text);
 
         return "";
@@ -72,7 +55,7 @@ public class OrganisationExtractor {
         for (String sentence : sentences) {
 
             // analyse sentence's part of speech structure
-            String[] posTags = analysePartOfSpeech(sentence);
+            String[] posTags = PartOfSpeechUtil.analysePartOfSpeech(sentence);
 
             // search for known legal form postfixes in sentence
             for (String legalForm : KNOWN_LEGAL_FORMS) {
@@ -83,7 +66,7 @@ public class OrganisationExtractor {
 
                     for (int i = 0; i < words.length; i++) {
 
-                        if (clearWord(words[i]).toLowerCase().equals(legalForm.toLowerCase())) {
+                        if (PartOfSpeechUtil.clearWord(words[i]).toLowerCase().equals(legalForm.toLowerCase())) {
 
                             String organisationName = ""; // glue probable name together
 
@@ -93,7 +76,7 @@ public class OrganisationExtractor {
                                 if (posTags[j].equals("NN") || posTags[j].equals("NE")) {
 
                                     // make sure word does not contain special chars
-                                    Pattern p = Pattern.compile(SPECIAL_CHARS);
+                                    Pattern p = Pattern.compile(PartOfSpeechUtil.SPECIAL_CHARS);
                                     Matcher m = p.matcher(words[j]);
 
                                     if (!m.find())
@@ -108,7 +91,7 @@ public class OrganisationExtractor {
                             if (organisationName.trim().length() > legalForm.length()) {
                                 candidates.add(organisationName + legalForm);
 
-                                System.out.println("[indicator]\t" + organisationName + " " + legalForm);
+                                System.out.println("[organization-indicator]\t" + organisationName + " " + legalForm);
                             }
 
                         }
@@ -129,50 +112,21 @@ public class OrganisationExtractor {
      * @param sentences to analyse for organisation names
      * @return list of probable organisation names
      */
-    private List<String> getFuzzySearchCandidates(String[] sentences) {
+    private List<String> getFuzzySearchCandidates(String text) {
 
+        // get chunks for known organisation names which may be recognized within the text
+        TrieDictionary knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_companies.txt", "ORG");
+        Map<String, int[]> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text);
+
+        // return found chunks as simple List<String>
+        // TODO: use additional information such as score to enhance prediction
         List<String> candidates = new ArrayList<>();
+        for (Map.Entry<String, int[]> entry : foundChunks.entrySet()) {
+            candidates.add(entry.getKey());
 
-        try {
-
-            TokenizerFactory tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
-
-            WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -1, -1, -1, Double.NaN);
-
-            double maxDistance = 1;
-
-            ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(getKnownOrganisations(), tokenizerFactory, editDistance, maxDistance);
-
-            for (String text : sentences) {
-
-                Chunking chunking = chunker.chunk(text);
-                CharSequence cs = chunking.charSequence();
-                Set<Chunk> chunkSet = chunking.chunkSet();
-
-                List<int[]> tuples = new ArrayList<int[]>();
-
-                for (Chunk chunk : chunkSet) {
-
-                    // get start an end position of chunk
-                    int start = chunk.start();
-                    int end = chunk.end();
-                    double score = chunk.score();
-                    int[] data = {start, end};
-
-                    CharSequence str = cs.subSequence(chunk.start(), chunk.end());
-
-                    candidates.add(str.toString());
-
-                    System.out.println("[fuzzy]\t" + str.toString() + " dist: " +score);
-
-                    tuples.add(data);
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("[organization-approx]\t" + entry.getKey());
         }
-
+        // extract candidates
         return candidates;
     }
 
@@ -231,94 +185,5 @@ public class OrganisationExtractor {
         return candidates;
     }
 
-
-    /**
-     * Sentences of input text are detected and returned unchanged.
-     * Detection is performed using OpenNLP sentence detection and the german model.
-     *
-     * @param text to analyse
-     * @return String array containing sentences
-     */
-    private String[] detectSentences(String text) {
-
-        try (InputStream modelIn = FileUtils.getFileInputStream("de-sent.bin")) {
-
-            SentenceModel sentenceModel = new SentenceModel(modelIn);
-
-            SentenceDetectorME sentenceDetector = new SentenceDetectorME(sentenceModel);
-
-            return sentenceDetector.sentDetect(text);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-
-    /**
-     * Analyses the given sentence and returns it's part-of-speech structure
-     *
-     * @param sentence to analyse
-     * @return array of pos-tags for each word of the sentence
-     * @see STTS Stuttgart Tübingen tag set definition at http://www.datcatinfo.net/rest/dcs/376
-     */
-    private String[] analysePartOfSpeech(String sentence) {
-
-        try (InputStream modelIn = FileUtils.getFileInputStream("de-pos-maxent.bin")) {
-
-            POSModel posModel = new POSModel(modelIn);
-
-            POSTaggerME tagger = new POSTaggerME(posModel);
-
-            return tagger.tag(sentence.split(" "));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-
-    /**
-     * Cleans special characters form given string.
-     *
-     * @param word to clean
-     * @return given word without any special character
-     */
-    private String clearWord(String word) {
-        return word.replaceAll(SPECIAL_CHARS, "");
-    }
-
-
-    /**
-     * Loads known company names form resources and returns them as
-     * TrieDictionary - ready to use for the ApproxDictionaryChunker.
-     *
-     * @return dictionary of known company names
-     */
-    private TrieDictionary<String> getKnownOrganisations() {
-
-        TrieDictionary<String> dictionary = new TrieDictionary<>();
-
-        try {
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileInputStream("known_companies.txt"), "UTF8"));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                dictionary.addEntry(new DictionaryEntry<>(line, "Known-ORG"));
-            }
-
-            return dictionary;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return dictionary;
-    }
 
 }
