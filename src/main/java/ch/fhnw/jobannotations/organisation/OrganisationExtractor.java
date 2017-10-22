@@ -116,7 +116,7 @@ public class OrganisationExtractor {
 
         // get chunks for known organisation names which may be recognized within the text
         TrieDictionary knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_companies.txt", "ORG");
-        Map<String, int[]> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text);
+        Map<String, int[]> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
 
         // return found chunks as simple List<String>
         // TODO: use additional information such as score to enhance prediction
@@ -155,29 +155,27 @@ public class OrganisationExtractor {
             String lastNerTag = "";
             String organisationCandidate = "";
 
-            for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+            List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+
+            String currentOrganisation = "";
+
+            for (int i = 0; i < tokens.size(); i++) {
+
+                CoreLabel token = tokens.get(i);
 
                 String word = token.get(CoreAnnotations.TextAnnotation.class);
                 String ne = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
 
-                if (ne.equals("I-ORG") && lastNerTag.equals("I-ORG")) {
-                    organisationCandidate += word;
-                } else if (ne.equals("I-ORG")) {
-                    if (organisationCandidate != "") {
-                        candidates.add(organisationCandidate);
-                        System.out.println("ner\t" + organisationCandidate);
-                    }
+                if (ne.equals("I-ORG")) {
+                    currentOrganisation = currentOrganisation + " " + word;
+                } else if(currentOrganisation != ""){
+                    candidates.add(currentOrganisation);
 
-                    organisationCandidate = word;
-                } else if (!ne.equals("I-ORG") && lastNerTag.equals("I-ORG")) {
-                    candidates.add(organisationCandidate);
-                    System.out.println("ner\t" + organisationCandidate);
+                    System.out.println("[organization-ner]\t" + currentOrganisation);
+
+                    currentOrganisation = "";
                 }
-            }
 
-            if (!candidates.contains(organisationCandidate)) {
-                candidates.add(organisationCandidate);
-                System.out.println("ner\t" + organisationCandidate);
             }
 
         }
