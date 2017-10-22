@@ -11,6 +11,7 @@ import edu.stanford.nlp.util.CoreMap;
 import org.jsoup.nodes.Document;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -34,10 +35,112 @@ public class OrganisationExtractor {
         String[] sentences = PartOfSpeechUtil.detectSentences(text);
 
         List<String> legalFormCandidates = getLegalFormCandidates(sentences);
-        List<String> fuzzySearchCandidates = getFuzzySearchCandidates(text);
-        List<String> nerCandidates = getNerCandidates(text);
+        Map<String, Integer> fuzzySearchCandidates = getFuzzySearchCandidates(text);
 
-        return "";
+        // ---------------------------------------------------------
+        // (1) analyse indicator results
+        // ---------------------------------------------------------
+        if (!legalFormCandidates.isEmpty()) {
+
+            // TODO: rate "ACTIV FITNESS AG" higher
+            // [organization-indicator]	ACTIV FITNESS AG
+            // [organization-indicator]	Bewerben ACTIV FITNESS AG
+
+            Map<String, Integer> weightedIndicatorCandidates = new HashMap<>();
+
+            int posScore = 0;
+            for (String candidate : legalFormCandidates) {
+
+                // check against found fuzzy search chunks
+                for (Map.Entry<String, Integer> fuzzyCandidate : fuzzySearchCandidates.entrySet()) {
+
+                    if (candidate.toLowerCase().contains(fuzzyCandidate.getKey().toLowerCase())) {
+
+                        if (weightedIndicatorCandidates.containsKey(candidate)) {
+
+                            weightedIndicatorCandidates.put(candidate, weightedIndicatorCandidates.get(candidate) + 1 - fuzzyCandidate.getValue());
+
+                        } else {
+                            weightedIndicatorCandidates.put(candidate, 1 + posScore - fuzzyCandidate.getValue());
+                        }
+
+                    }
+
+                }
+
+                // no cross match found for candidate, rate at least with it's position score
+                if (!weightedIndicatorCandidates.containsKey(candidate)) {
+                    weightedIndicatorCandidates.put(candidate, posScore);
+                }
+
+                posScore++;
+            }
+
+            return weightedIndicatorCandidates.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey();
+
+        }
+
+        // ---------------------------------------------------------
+        // (2) analyse fuzzy chunks for perfect matches
+        // ---------------------------------------------------------
+        long perfectMatches = fuzzySearchCandidates.entrySet().stream().filter(a -> a.getValue() == 0).count();
+
+        if (perfectMatches > 0) {
+
+            String lastMatch = "";
+
+            for (Map.Entry<String, Integer> entry : fuzzySearchCandidates.entrySet()) {
+
+                if (entry.getValue() == 0) {
+                    lastMatch = entry.getKey(); // replacing means later position in document is higher rated
+                }
+
+            }
+
+            return lastMatch;
+        }
+
+        // ---------------------------------------------------------
+        // (3) analyse fuzzy and ner for cross results
+        // ---------------------------------------------------------
+        System.out.println("[organization] Need to look for NER - WARNING: this may take a while...");
+
+        List<String> merged = new ArrayList<>();
+
+        // add all fuzzy candidates keys
+        fuzzySearchCandidates.entrySet().stream().forEach(t -> merged.add(t.getKey()));
+
+        // add all ner tags found
+        merged.addAll(getNerCandidates(text));
+
+        // search for similarities
+        Map<String, Integer> weighted = new HashMap<>();
+
+        for (String candidate : merged) {
+
+            for (String c : merged) {
+
+                if (candidate.toLowerCase().contains(c.toLowerCase())) {
+
+                    if (weighted.containsKey(candidate)) {
+
+                        weighted.put(candidate, weighted.get(candidate) + 1);
+
+                    } else {
+                        weighted.put(candidate, 1);
+                    }
+
+                }
+
+            }
+
+        }
+
+        if (weighted.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).isPresent()) {
+            return weighted.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey();
+        } else {
+            return "organisation not found!";
+        }
     }
 
 
@@ -88,10 +191,10 @@ public class OrganisationExtractor {
                             }
 
                             // build found organisation name
-                            if (organisationName.trim().length() > legalForm.length()) {
+                            if (organisationName.trim().length() > legalForm.length() && !candidates.contains(organisationName + legalForm)) {
                                 candidates.add(organisationName + legalForm);
 
-                                System.out.println("[organization-indicator]\t" + organisationName + " " + legalForm);
+                                System.out.println("[organization-indicator]\t" + organisationName + legalForm);
                             }
 
                         }
@@ -112,21 +215,21 @@ public class OrganisationExtractor {
      * @param sentences to analyse for organisation names
      * @return list of probable organisation names
      */
-    private List<String> getFuzzySearchCandidates(String text) {
+    private Map<String, Integer> getFuzzySearchCandidates(String text) {
 
         // get chunks for known organisation names which may be recognized within the text
         TrieDictionary knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_companies.txt", "ORG");
-        Map<String, int[]> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
+        Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
 
         // return found chunks as simple List<String>
         // TODO: use additional information such as score to enhance prediction
-        List<String> candidates = new ArrayList<>();
-        for (Map.Entry<String, int[]> entry : foundChunks.entrySet()) {
-            candidates.add(entry.getKey());
+        Map<String, Integer> candidates = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : foundChunks.entrySet()) {
+            candidates.put(entry.getKey(), entry.getValue());
 
             System.out.println("[organization-approx]\t" + entry.getKey());
         }
-        // extract candidates
+
         return candidates;
     }
 
@@ -152,9 +255,6 @@ public class OrganisationExtractor {
 
         for (CoreMap sentence : sentences) {
 
-            String lastNerTag = "";
-            String organisationCandidate = "";
-
             List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
 
             String currentOrganisation = "";
@@ -168,7 +268,7 @@ public class OrganisationExtractor {
 
                 if (ne.equals("I-ORG")) {
                     currentOrganisation = currentOrganisation + " " + word;
-                } else if(currentOrganisation != ""){
+                } else if (currentOrganisation != "") {
                     candidates.add(currentOrganisation);
 
                     System.out.println("[organization-ner]\t" + currentOrganisation);

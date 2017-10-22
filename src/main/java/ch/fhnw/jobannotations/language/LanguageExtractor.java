@@ -29,18 +29,7 @@ public class LanguageExtractor {
 
     private List<String> getFuzzySearchCandidates(String text) {
 
-        Map<String, int[]> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownLanguages, text, 1);
-
-        // return found chunks as simple List<String>
-        // TODO: use additional information such as score to enhance prediction
-        List<String> candidates = new ArrayList<>();
-        for (Map.Entry<String, int[]> entry : foundChunks.entrySet()) {
-            candidates.add(entry.getKey());
-
-            System.out.println("[lang-approx]\t" + PartOfSpeechUtil.clearWord(entry.getKey()));
-        }
-        // extract candidates
-        return candidates;
+        return null;
 
     }
 

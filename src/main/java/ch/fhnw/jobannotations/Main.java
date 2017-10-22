@@ -39,7 +39,9 @@ public class Main {
                         //jobLocationExtractor.parseJobLocation(document);
 
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
-                        organisationExtractor.parse(document);
+                        String organisation = organisationExtractor.parse(document);
+
+                        System.out.println("ORG BEST MATCH: " + organisation);
 
                     }
                 } catch (IOException e) {
