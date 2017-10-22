@@ -29,6 +29,7 @@ public class OrganisationExtractor {
     public String parse(Document document) {
 
         // get the visible text from document
+        // TODO: instead of body().text(); analyse TAG-texts
         final String text = document.body().text();
 
         // detect sentences from text

@@ -1,6 +1,7 @@
 package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
+import ch.fhnw.jobannotations.language.LanguageExtractor;
 import ch.fhnw.jobannotations.location.JobLocationExtractor;
 import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import org.jsoup.Jsoup;
@@ -41,7 +42,11 @@ public class Main {
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
                         String organisation = organisationExtractor.parse(document);
 
+                        LanguageExtractor languageExtractor = new LanguageExtractor();
+                        String language = languageExtractor.parse(document);
+
                         System.out.println("ORG BEST MATCH: " + organisation);
+                        System.out.println("LANG BEST MATCH: " + language);
 
                     }
                 } catch (IOException e) {
