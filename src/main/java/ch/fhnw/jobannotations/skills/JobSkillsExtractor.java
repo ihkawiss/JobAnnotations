@@ -241,8 +241,8 @@ public class JobSkillsExtractor {
             probability += rateTitles(jobOffer, listTitle);
         }
 
-        if (probability > 50) {
-            System.out.println(probability + "\t" + listTitle);
+        if (Main.DEBUG && probability > 50) {
+            System.out.println("[skills]\t" + probability + "\t" + listTitle);
         }
 
         return (int) probability;
@@ -276,7 +276,7 @@ public class JobSkillsExtractor {
         // adjust rating based on list titles
         probability += rateTitles(jobOffer, listTitle);
 
-        if (probability > 50) {
+        if (Main.DEBUG && probability > 50) {
             System.out.println("[skills]\t" + probability + "\t" + listTitle);
         }
 
