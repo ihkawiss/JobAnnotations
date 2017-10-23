@@ -1,5 +1,6 @@
 package ch.fhnw.jobannotations.jobtitle;
 
+import ch.fhnw.jobannotations.JobOffer;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class JobTitleExtractorTest {
 
         for (Map.Entry<String, String> entry : jobTitleWebPages.entrySet()) {
             try {
-                String jobTitle = testee.parseJobTitle(Jsoup.connect(entry.getKey()).get());
+                String jobTitle = testee.parseJobTitle(new JobOffer(Jsoup.connect(entry.getKey()).get()));
                 assertEquals(entry.getValue(), jobTitle);
 
             } catch (HttpStatusException e) {

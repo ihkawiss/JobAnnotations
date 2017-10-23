@@ -2,7 +2,8 @@ package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
 import ch.fhnw.jobannotations.location.JobLocationExtractor;
-import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
+import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
+import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -32,14 +33,30 @@ public class Main {
                         System.err.println("Failed to load web page");
 
                     } else {
+                        JobOffer jobOffer = new JobOffer(document);
+
                         JobTitleExtractor jobTitleParser = new JobTitleExtractor();
-                        String jobTitle = jobTitleParser.parseJobTitle(document);
+                        String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
 
                         JobLocationExtractor jobLocationExtractor = new JobLocationExtractor();
-                        //jobLocationExtractor.parseJobLocation(document);
+                        String location = jobLocationExtractor.parseJobLocation(document);
 
+                        /*
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
-                        organisationExtractor.parse(document);
+                        String organisation = organisationExtractor.parse(document);
+                        System.out.println("Firma: " + organisation);
+                        */
+
+                        JobWorkloadExtractor jobWorkloadExtractor = new JobWorkloadExtractor();
+                        String workload = jobWorkloadExtractor.parseJobWorkload(jobOffer);
+
+                        JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
+                        String skills = jobSkillsExtractor.parseJobSkills(jobOffer);
+
+                        System.out.println("Titel: " + jobTitle);
+                        System.out.println("Arbeitsort: " + location);
+                        System.out.println("Pensum: " + workload);
+                        System.out.println("Anforderungen:\n" + skills);
 
                     }
                 } catch (IOException e) {

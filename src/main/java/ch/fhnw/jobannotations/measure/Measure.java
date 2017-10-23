@@ -1,5 +1,6 @@
 package ch.fhnw.jobannotations.measure;
 
+import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
 import com.opencsv.CSVReader;
 import org.jsoup.Jsoup;
@@ -54,7 +55,7 @@ public class Measure {
                 Document document = Jsoup.connect(hyperlink).get();
 
                 // get most probable job title
-                String foundTitle = ex.parseJobTitle(document);
+                String foundTitle = ex.parseJobTitle(new JobOffer(document));
 
                 // check if found title matches threshold
                 if (foundTitle.toLowerCase().equals(threshold.toLowerCase())) {

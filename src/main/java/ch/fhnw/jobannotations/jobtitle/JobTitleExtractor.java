@@ -1,5 +1,6 @@
 package ch.fhnw.jobannotations.jobtitle;
 
+import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.jobtitle.rating.JobTitleStringRatingManager;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import org.jsoup.nodes.Document;
@@ -12,12 +13,15 @@ import java.util.regex.Pattern;
  * @author Hoang
  */
 public class JobTitleExtractor {
-    private static final String REGEX_SPECIAL_CHARS_TO_REMOVE = "[$&+,:;=?@#<>.^*%!-\"]";
+    private static final String REGEX_SPECIAL_CHARS_TO_REMOVE = "[$+,:;=?@#<>.^*%!-\"]";
     private static final String[] IRRELEVANT_TAGS = {
             "style",
             "script",
             "meta",
-            "link"
+            "link",
+            "a",
+            "input",
+            "button"
     };
 
     private JobTitleStringRatingManager jobTitleStringRatingManager;
@@ -27,8 +31,8 @@ public class JobTitleExtractor {
         jobTitleStringRatingManager = new JobTitleStringRatingManager();
     }
 
-    public String parseJobTitle(Document document) {
-        document = document.clone();
+    public String parseJobTitle(JobOffer jobOffer) {
+        Document document = jobOffer.getDocument().clone();
 
         // remove irrelevant tags
         for (String irrelevantTag : IRRELEVANT_TAGS) {
@@ -82,6 +86,10 @@ public class JobTitleExtractor {
             }
         }
 
+        if (ratedStrings.isEmpty()) {
+            return null;
+        }
+
         // adjust rating based on number of appearances in list
         jobTitleStringRatingManager.adjustRatingsByRepetitionCount(ratedStrings);
 
@@ -89,14 +97,19 @@ public class JobTitleExtractor {
         ratedStrings.sort((o1, o2) -> o2.getInt() - o1.getInt());
 
         // only keep top 5 entries
-        ratedStrings = ratedStrings.subList(0, ratedStrings.size() > 5 ? 5 : ratedStrings.size() - 1);
-
-        // adjust rating by check with known job title list
-        //jobTitleStringRatingManager.adjustRatingByKnownJobTitleList(ratedStrings);
+        if (ratedStrings.size() > 5) {
+            ratedStrings = ratedStrings.subList(0, 5);
+        }
 
         for (IntStringPair ratedString : ratedStrings) {
             System.out.println(ratedString.toString());
         }
+
+        System.out.println("adjustRatingsByKnownJobTitleList");
+
+        // adjust rating by check with known job title list
+        jobTitleStringRatingManager.adjustRatingsByKnownJobTitleList(ratedStrings);
+
 
         return ratedStrings.get(0).getString();
     }

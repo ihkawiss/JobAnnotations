@@ -2,6 +2,7 @@ package ch.fhnw.jobannotations.jobtitle.rating;
 
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
+import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
 import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunking;
 import com.aliasi.dict.ApproxDictionaryChunker;
@@ -58,12 +59,11 @@ public class JobTitleStringRatingManager {
 
 
     // job title indicator
-    private static final String REGEX_WORKLOAD_TEXT = "\\s?(\\d+\\s?%?\\s?-\\s?)?\\d+\\s?%\\s?";
     private static final String REGEX_GENDER_TEXT = "\\s?[wmfWMF]\\s?\\/\\s?[wmfWMF]\\s?";
     private static final String REGEX_JOB_TITLE_GENDER_SUFFIX = "\\w[-\\/\\(\\|]+(in|IN|r|R)|\\w[-\\/\\(\\|]*In";
-    private static final String REGEX_WORKLOAD_GENDER_INDICATOR = "\\((" + REGEX_WORKLOAD_TEXT + ")[^\\(\\)]*(" + REGEX_GENDER_TEXT + ")\\)|\\((" + REGEX_GENDER_TEXT + ")[^\\(\\)]*(" + REGEX_WORKLOAD_TEXT + ")\\)";
+    private static final String REGEX_WORKLOAD_GENDER_INDICATOR = "\\((" + JobWorkloadExtractor.WORKLOAD_REGEX + ")[^\\(\\)]*(" + REGEX_GENDER_TEXT + ")\\)|\\((" + REGEX_GENDER_TEXT + ")[^\\(\\)]*(" + JobWorkloadExtractor.WORKLOAD_REGEX + ")\\)";
     private static final String REGEX_GENDER_INDICATOR = "\\(?" + REGEX_GENDER_TEXT + "\\)?";
-    private static final String REGEX_WORKLOAD_INDICATOR = "\\(?" + REGEX_WORKLOAD_TEXT + "\\)?";
+    private static final String REGEX_WORKLOAD_INDICATOR = "\\(?" + JobWorkloadExtractor.WORKLOAD_REGEX + "\\)?";
 
     /**
      * Array of job title indicator regex. Int value defines whether matched String should be removed or not (1 = true)
