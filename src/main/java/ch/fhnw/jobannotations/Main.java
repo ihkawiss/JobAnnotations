@@ -4,6 +4,8 @@ import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
 import ch.fhnw.jobannotations.language.LanguageExtractor;
 import ch.fhnw.jobannotations.location.JobLocationExtractor;
 import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
+import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
+import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -16,39 +18,57 @@ import java.io.InputStreamReader;
  */
 public class Main {
 
+    // TODO: transfer to configuration file
+    public static final boolean DEBUG = true;
+
     public static void main(String[] args) {
         boolean keepGoing = true;
         while (keepGoing) {
             boolean repeat = true;
             while (repeat) {
-                System.out.print("Enter URL: ");
+                System.out.print("Please enter a job offer (URL) to parse: ");
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
                 try {
+
+                    if (DEBUG) {
+                        System.out.println("NOTICE: DEBUG mode is enabled, extractors will print some messages.");
+                    }
+
                     String url = br.readLine();
-                    System.out.println("Parsing Data...");
+                    System.out.println("Sit tight, we're parsing the data...");
 
                     Document document = Jsoup.connect(url).get();
 
                     if (document == null) {
-                        System.err.println("Failed to load web page");
+                        System.err.println("ERROR: Failed to load web page, please try again and report used URL!");
 
                     } else {
                         JobOffer jobOffer = new JobOffer(document);
 
+                        // extract job title from offer
                         JobTitleExtractor jobTitleParser = new JobTitleExtractor();
-                        //String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
+                        String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
 
+                        // extract job location from offer
                         JobLocationExtractor jobLocationExtractor = new JobLocationExtractor();
-                        //jobLocationExtractor.parseJobLocation(document);
+                        String jobLocation = jobLocationExtractor.parseJobLocation(document);
 
+                        // extract organisation from offer
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
-                        String organisation = organisationExtractor.parse(document);
+                        String jobOrganisation = organisationExtractor.parse(document);
 
+                        // extract languages from offer
                         LanguageExtractor languageExtractor = new LanguageExtractor();
-                        String language = languageExtractor.parse(document);
+                        String jobLanguage = languageExtractor.parse(document);
 
-                        System.out.println("ORG BEST MATCH: " + organisation);
-                        System.out.println("LANG BEST MATCH: " + language);
+                        // extract work load from offer
+                        JobWorkloadExtractor workloadExtractor = new JobWorkloadExtractor();
+                        String jobWorkload = workloadExtractor.parseJobWorkload(jobOffer);
+
+                        // extract skills from offer
+                        JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
+                        String jobSkills = jobSkillsExtractor.parseJobSkills(jobOffer);
+
 
                     }
                 } catch (IOException e) {
@@ -58,16 +78,6 @@ public class Main {
                 repeat = false;
             }
         }
-        //String url = "https://primework.ch/de/d/backend-web-developer-php-100-/24454";
 
-        /*
-        List<String> jobs = new ArrayList<>();
-        jobs.add("Web-Developer");
-        jobs.add("Web Entwickler");
-        jobs.add("Engineer");
-        jobs.add("Developer");
-        jobs.add("Entwickler");
-        ExtractedResult extractedResult = FuzzySearch.extractOne("Wir suchen einen PHP Web Entwickelr für unser Team bei unserem neuen Standort in Bern.", jobs);
-        System.out.println(extractedResult.toString());*/
     }
 }
