@@ -119,6 +119,9 @@ public class JobOffer {
         // clean html
         text = Jsoup.parse(text).text();
 
+        // replace non-breaking space with normal whitespace
+        text = text.replaceAll("\\u00A0"," ");
+
         // replace placeholder with real line breaks
         text = text.replaceAll(breakTagPlaceholder, "\n");
 
