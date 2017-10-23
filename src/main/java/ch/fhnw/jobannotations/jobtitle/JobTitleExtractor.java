@@ -1,8 +1,10 @@
 package ch.fhnw.jobannotations.jobtitle;
 
 import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.jobtitle.rating.JobTitleStringRatingManager;
 import ch.fhnw.jobannotations.utils.IntStringPair;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 
 import java.util.List;
@@ -33,6 +35,11 @@ public class JobTitleExtractor {
 
     public String parseJobTitle(JobOffer jobOffer) {
         Document document = jobOffer.getDocument().clone();
+
+        if (Main.DEBUG) {
+            System.out.println("\n" + StringUtils.repeat("-", 80));
+            System.out.println("[jobtitle-indicator]\t" + "Started to parse job title from offer");
+        }
 
         // remove irrelevant tags
         for (String irrelevantTag : IRRELEVANT_TAGS) {
@@ -105,11 +112,13 @@ public class JobTitleExtractor {
             System.out.println(ratedString.toString());
         }
 
-        System.out.println("adjustRatingsByKnownJobTitleList");
+        if (Main.DEBUG) {
+            System.out.println("[jobtitle-indicator]\t" + "Adjusting rating by known job titles");
+        }
 
         // adjust rating by check with known job title list
+        // TODO: adjust rating from above here
         jobTitleStringRatingManager.adjustRatingsByKnownJobTitleList(ratedStrings);
-
 
         return ratedStrings.get(0).getString();
     }

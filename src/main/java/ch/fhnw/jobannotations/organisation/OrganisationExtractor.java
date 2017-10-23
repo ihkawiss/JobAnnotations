@@ -1,5 +1,6 @@
 package ch.fhnw.jobannotations.organisation;
 
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
 import com.aliasi.dict.TrieDictionary;
@@ -8,6 +9,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 
 import java.util.ArrayList;
@@ -27,6 +29,11 @@ public class OrganisationExtractor {
     };
 
     public String parse(Document document) {
+
+        if (Main.DEBUG) {
+            System.out.println("\n" + StringUtils.repeat("-", 80));
+            System.out.println("[organisation]\t" + "Started to parse organisation from offer");
+        }
 
         // get the visible text from document
         // TODO: instead of body().text(); analyse TAG-texts

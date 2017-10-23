@@ -1,6 +1,7 @@
 package ch.fhnw.jobannotations.skills;
 
 import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -11,6 +12,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.TypedDependency;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -67,6 +69,12 @@ public class JobSkillsExtractor {
     );
 
     public String parseJobSkills(JobOffer jobOffer) {
+
+        if (Main.DEBUG) {
+            System.out.println("\n" + StringUtils.repeat("-", 80));
+            System.out.println("[skills-indicator]\t" + "Started to parse skills from offer");
+        }
+
         Element body = jobOffer.getBodyElement();
         Map<List<String>, Integer> ratedSkillLists = new HashMap<>();
 
@@ -269,7 +277,7 @@ public class JobSkillsExtractor {
         probability += rateTitles(jobOffer, listTitle);
 
         if (probability > 50) {
-            System.out.println(probability + "\t" + listTitle);
+            System.out.println("[skills]\t" + probability + "\t" + listTitle);
         }
 
         return (int) probability;

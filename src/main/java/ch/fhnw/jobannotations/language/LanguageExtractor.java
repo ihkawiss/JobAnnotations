@@ -1,7 +1,9 @@
 package ch.fhnw.jobannotations.language;
 
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
 import com.aliasi.dict.TrieDictionary;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 
 import java.util.HashMap;
@@ -11,6 +13,11 @@ public class LanguageExtractor {
 
     // TODO: extract level of language
     public String parse(Document document) {
+
+        if (Main.DEBUG) {
+            System.out.println("\n" + StringUtils.repeat("-", 80));
+            System.out.println("[language]\t" + "Started to parse language from offer");
+        }
 
         // get the visible text from document
         final String text = document.body().text();
@@ -25,7 +32,14 @@ public class LanguageExtractor {
             result += entry.getKey() + ", ";
         }
 
-        return result.substring(0, result.length() - 2);
+        if (result != "") {
+            return result.substring(0, result.length() - 2);
+        } else {
+            System.out.println("[language]\t" + "No languages found");
+            return "";
+        }
+
+
     }
 
     private Map<String, Integer> getFuzzySearchCandidates(String text) {

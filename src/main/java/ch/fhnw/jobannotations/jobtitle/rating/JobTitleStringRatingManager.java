@@ -277,12 +277,9 @@ public class JobTitleStringRatingManager {
         for (IntStringPair ratedString : ratedStrings) {
             String text = ratedString.getString();
 
-            System.out.println("\n\n " + text + "\n");
             Chunking chunking = chunker.chunk(text);
             CharSequence cs = chunking.charSequence();
             Set<Chunk> chunkSet = chunking.chunkSet();
-
-            System.out.printf("%15s  %15s   %8s\n", "Matched Phrase", "Dict Entry", "Distance");
 
             // create list of chunk info
             List<int[]> chunkInfoList = createChunkInfoListFromChunkSet(chunkSet);

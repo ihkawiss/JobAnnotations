@@ -1,5 +1,6 @@
 package ch.fhnw.jobannotations.location;
 
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import edu.stanford.nlp.simple.Sentence;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
@@ -70,6 +71,12 @@ public class JobLocationExtractor {
     }
 
     public String parseJobLocation(Document document) {
+
+        if (Main.DEBUG) {
+            System.out.println("\n" + StringUtils.repeat("-", 80));
+            System.out.println("[location]\t" + "Started to parse location from offer");
+        }
+
         findPotentialJobLocations(document);
         return getLocationWithHighestPotential();
     }
@@ -82,28 +89,29 @@ public class JobLocationExtractor {
         for (String potentialJobLocation : getPotentialJobLocationByLocationFlags(bodyElement, plainText)) {
             IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_LOCATION_FLAGS, potentialJobLocation);
             ratedJobLocations.add(ratedJobLocation);
-            System.out.println("Found location by location flags: " + potentialJobLocation);
+            System.out.println("[location-indicator]\tFound location by location flags: " + potentialJobLocation);
         }
 
         // use parsing with zip code regex
         for (String location : getPotentialJobLocationByZipCode(plainText)) {
-            System.out.println("Found location with ZIP code: " + location);
+            System.out.println("[location-indicator]\tFound location with ZIP code: " + location);
             IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_ZIP_CODE, location);
             ratedJobLocations.add(ratedJobLocation);
         }
 
         if (ratedJobLocations.isEmpty()) {
-            System.out.println("No locations found by parsing and ZIP regex. Using Named Entity Recognition...");
+            System.out.println("[location-indicator]\tNo locations found by parsing and ZIP regex. Using Named Entity Recognition...");
             // use named entity recognition
             for (String location : getPotentialJobLocationByNamedEntityRecognition(plainText)) {
-                System.out.println("Found location with NER: " + location);
+                System.out.println("[location-ner]\tFound location with NER: " + location);
                 IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_NER, location);
                 ratedJobLocations.add(ratedJobLocation);
             }
         }
 
-        System.out.println("Remove entries that contain too many words");
-        System.out.println("Remove leading lower case words");
+        System.out.println("[location]\tRemove entries that contain too many words");
+        System.out.println("[location]\tRemove leading lower case words");
+
         int previousSize = ratedJobLocations.size();
         for (int i = previousSize - 1; i >= 0; i--) {
             String location = ratedJobLocations.get(i).getString();
@@ -188,7 +196,7 @@ public class JobLocationExtractor {
 
     private String getLocationWithHighestPotential() {
         if (ratedJobLocations.isEmpty()) {
-            System.out.println("No locations found. Returning null.");
+            System.out.println("[location]\tNo locations found. Returning null.");
             return null;
         }
 
@@ -208,7 +216,7 @@ public class JobLocationExtractor {
      * Removes duplicated entries and adjust rating by number of duplications.
      */
     private void removeDuplications() {
-        System.out.println("Remove duplicates and adjust rating by number of identical entries");
+        System.out.println("[location]\tRemove duplicates and adjust rating by number of identical entries");
         ratedJobLocations.sort(Comparator.comparing(IntStringPair::getString));
         String lastLocation = null;
         for (int i = ratedJobLocations.size() - 1; i >= 0; i--) {
@@ -228,13 +236,13 @@ public class JobLocationExtractor {
     }
 
     private void validateLocations() {
-        System.out.println("Validate location names");
+        System.out.println("[location]\tValidate location names");
         boolean addressValidated = false;
         for (IntStringPair ratedLocation : ratedJobLocations) {
             String location = ratedLocation.getString();
             String validatedAddress = getValidatedAddressFromGeoApi(location);
             if (validatedAddress != null) {
-                System.out.println("Location validated: [" + location + "] => [" + validatedAddress + "]");
+                System.out.println("[location]\tLocation validated: [" + location + "] => [" + validatedAddress + "]");
                 addressValidated = true;
                 int validationRating = calculateValidationRating(location, validatedAddress);
                 ratedLocation.setString(validatedAddress);
@@ -244,7 +252,7 @@ public class JobLocationExtractor {
 
         // if failed to validate address, try again with separate words of each location string
         if (!addressValidated) {
-            System.out.println("No locations could be validated. Validating separate words in location names now...");
+            System.out.println("[location]\tNo locations could be validated. Validating separate words in location names now...");
             int previousListSize = ratedJobLocations.size();
             for (int i = 0; i < previousListSize; i++) {
                 IntStringPair ratedLocation = ratedJobLocations.get(i);
@@ -256,7 +264,7 @@ public class JobLocationExtractor {
                             && Character.isUpperCase(partialLocationName.charAt(0))) {
                         String validatedAddress = getValidatedAddressFromGeoApi(partialLocationName);
                         if (validatedAddress != null) {
-                            System.out.println("Location validated: [" + location + "] => [" + partialLocationName + "] => [" + validatedAddress + "]");
+                            System.out.println("[location]\tLocation validated: [" + location + "] => [" + partialLocationName + "] => [" + validatedAddress + "]");
                             int partialLocationRating = ratedLocation.getInt() - 25;
                             partialLocationRating += calculateValidationRating(partialLocationName, validatedAddress);
                             IntStringPair ratedPartialLocation = new IntStringPair(partialLocationRating, validatedAddress);
