@@ -33,8 +33,10 @@ public class Main {
                         System.err.println("Failed to load web page");
 
                     } else {
+                        JobOffer jobOffer = new JobOffer(document);
+
                         JobTitleExtractor jobTitleParser = new JobTitleExtractor();
-                        String jobTitle = jobTitleParser.parseJobTitle(document);
+                        //String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
 
                         JobLocationExtractor jobLocationExtractor = new JobLocationExtractor();
                         //jobLocationExtractor.parseJobLocation(document);
