@@ -51,12 +51,6 @@
             <version>3.9</version>
         </dependency>
         <dependency>
-            <groupId>de.julielab</groupId>
-            <artifactId>aliasi-lingpipe</artifactId>
-            <version>4.1.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
             <version>3.8.0</version>
@@ -73,7 +67,16 @@
             <version>3.8.0</version>
             <classifier>models-german</classifier>
         </dependency>
-
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.5</version>
+        </dependency>
     </dependencies>
 
     <build>

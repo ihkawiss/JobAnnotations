@@ -7,6 +7,7 @@ import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
 import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.BasicConfigurator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -23,6 +24,7 @@ public class Main {
     public static final boolean DEBUG = true;
 
     public static void main(String[] args) {
+        BasicConfigurator.configure();
 
         boolean keepGoing = true;
 

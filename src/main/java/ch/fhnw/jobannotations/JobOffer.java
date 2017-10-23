@@ -109,6 +109,9 @@ public class JobOffer {
     }
 
     public String getPlainTextFromHtml(String text) {
+        // keep line breaks of b-tags after other tags
+        text = text.replaceAll("(?i)>\\s*\\n*\\s*<b>", "><br><b>");
+
         // replace b-tags with space to prevent line breaks
         text = text.replaceAll("(?i)\\s*\\n*\\s*</?b>\\s*", " ");
 

@@ -178,12 +178,16 @@ public class JobSkillsExtractor {
             return null;
         }
 
+        boolean isFirstLine = true;
         StringBuilder sbSkills = new StringBuilder();
         for (List<String> skills : ratedSkillLists.keySet()) {
             for (String skill : skills) {
-                sbSkills.append("\n").append(skill);
+                if (!isFirstLine) {
+                    sbSkills.append("\n");
+                }
+                sbSkills.append(skill);
+                isFirstLine = false;
             }
-
         }
 
         return sbSkills.toString();
@@ -352,8 +356,9 @@ public class JobSkillsExtractor {
                     return -25;
                 }
             }
-        } else if (EnglishGrammaticalRelations.NOMINAL_SUBJECT.getShortName().equals(shortName)
-                && "VVFIN".equals(govTag)) {
+        } else if ((EnglishGrammaticalRelations.NOMINAL_SUBJECT.getShortName().equals(shortName) ||
+                EnglishGrammaticalRelations.DIRECT_OBJECT.getShortName().equals(shortName)) &&
+                "VVFIN".equals(govTag)) {
             if (SUBJECTS_YOU.contains(word)) {
                 if (VERBS_OFFER.contains(govWord)) {
                     return 50;
