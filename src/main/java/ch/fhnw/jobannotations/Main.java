@@ -1,9 +1,9 @@
 package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
+import ch.fhnw.jobannotations.language.LanguageExtractor;
 import ch.fhnw.jobannotations.location.JobLocationExtractor;
-import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
-import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
+import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -33,30 +33,20 @@ public class Main {
                         System.err.println("Failed to load web page");
 
                     } else {
-                        JobOffer jobOffer = new JobOffer(document);
-
                         JobTitleExtractor jobTitleParser = new JobTitleExtractor();
-                        String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
+                        String jobTitle = jobTitleParser.parseJobTitle(document);
 
                         JobLocationExtractor jobLocationExtractor = new JobLocationExtractor();
-                        String location = jobLocationExtractor.parseJobLocation(document);
+                        //jobLocationExtractor.parseJobLocation(document);
 
-                        /*
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
                         String organisation = organisationExtractor.parse(document);
-                        System.out.println("Firma: " + organisation);
-                        */
 
-                        JobWorkloadExtractor jobWorkloadExtractor = new JobWorkloadExtractor();
-                        String workload = jobWorkloadExtractor.parseJobWorkload(jobOffer);
+                        LanguageExtractor languageExtractor = new LanguageExtractor();
+                        String language = languageExtractor.parse(document);
 
-                        JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
-                        String skills = jobSkillsExtractor.parseJobSkills(jobOffer);
-
-                        System.out.println("Titel: " + jobTitle);
-                        System.out.println("Arbeitsort: " + location);
-                        System.out.println("Pensum: " + workload);
-                        System.out.println("Anforderungen:\n" + skills);
+                        System.out.println("ORG BEST MATCH: " + organisation);
+                        System.out.println("LANG BEST MATCH: " + language);
 
                     }
                 } catch (IOException e) {

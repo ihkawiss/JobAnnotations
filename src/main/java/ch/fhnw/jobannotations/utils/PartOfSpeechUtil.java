@@ -86,9 +86,9 @@ public class PartOfSpeechUtil {
     }
 
 
-    public static Map<String, int[]> getChunksByDictionary(TrieDictionary<String> dictionary, String textToAnalyse) {
+    public static Map<String, Integer> getChunksByDictionary(TrieDictionary<String> dictionary, String textToAnalyse, double distance) {
 
-        Map<String, int[]> candidates = new HashMap<>();
+        Map<String, Integer> candidates = new HashMap<>();
 
         String[] sentences = detectSentences(textToAnalyse);
 
@@ -96,7 +96,7 @@ public class PartOfSpeechUtil {
 
         WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -1, -1, -1, Double.NaN);
 
-        double maxDistance = 2;
+        double maxDistance = distance;
 
         ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(dictionary, tokenizerFactory, editDistance, maxDistance);
 
@@ -115,7 +115,7 @@ public class PartOfSpeechUtil {
 
                 CharSequence str = cs.subSequence(chunk.start(), chunk.end());
 
-                candidates.put(str.toString(), new int[]{start, end, (int) score});
+                candidates.put(str.toString(), (int) score);
 
             }
         }
