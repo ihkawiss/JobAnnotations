@@ -1,6 +1,7 @@
 package ch.fhnw.jobannotations.skills;
 
 import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -11,6 +12,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
 import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.TypedDependency;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -67,6 +69,12 @@ public class JobSkillsExtractor {
     );
 
     public String parseJobSkills(JobOffer jobOffer) {
+
+        if (Main.DEBUG) {
+            System.out.println("\n" + StringUtils.repeat("-", 80));
+            System.out.println("[skills-indicator]\t" + "Started to parse skills from offer");
+        }
+
         Element body = jobOffer.getBodyElement();
 
         Elements listElements = new Elements();
@@ -103,7 +111,7 @@ public class JobSkillsExtractor {
 
         List<String> skills = new ArrayList<>();
         for (Element listElement : ratedListElements.keySet()) {
-            System.out.println(ratedListElements.get(listElement));
+            System.out.println("[skills]\t" + ratedListElements.get(listElement));
             for (Element listItemElement : listElement.getElementsByTag("li")) {
                 String skill = listItemElement.text().trim();
                 if (!skills.contains(skill)) {
@@ -173,7 +181,7 @@ public class JobSkillsExtractor {
         }
 
         if (probability > 50) {
-            System.out.println(probability + "\t" + listTitle);
+            System.out.println("[skills]\t" + probability + "\t" + listTitle);
         }
 
         return (int) probability;

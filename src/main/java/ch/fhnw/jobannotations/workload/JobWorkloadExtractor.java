@@ -1,7 +1,9 @@
 package ch.fhnw.jobannotations.workload;
 
 import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.IntStringPair;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -20,6 +22,12 @@ public class JobWorkloadExtractor {
 
     // TODO search in job title element
     public String parseJobWorkload(JobOffer jobOffer) {
+
+        if (Main.DEBUG) {
+            System.out.println("\n" + StringUtils.repeat("-", 80));
+            System.out.println("[jobtitle-indicator]\t" + "Started to parse workload from offer");
+        }
+
         String text = jobOffer.getPlainText();
 
         List<IntStringPair> ratedWorkloads = new ArrayList<>();
@@ -90,7 +98,7 @@ public class JobWorkloadExtractor {
      * Removes duplicated entries and adjust rating by number of duplications.
      */
     private void removeDuplications(List<IntStringPair> ratedWorkloads) {
-        System.out.println("Remove duplicates and adjust rating by number of identical entries");
+        System.out.println("[workload]\tRemove duplicates and adjust rating by number of identical entries");
         ratedWorkloads.sort(Comparator.comparing(IntStringPair::getString));
         String lastLocation = null;
         for (int i = ratedWorkloads.size() - 1; i >= 0; i--) {
