@@ -67,8 +67,12 @@ public class Main {
                         String jobLocation = jobLocationExtractor.parseJobLocation(document);
 
                         // extract organisation from offer
+                        // TODO: use found title to enhance extraction since the company name may be already present there (often in <title> tag)
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
                         String jobOrganisation = organisationExtractor.parse(document);
+
+                        // clean company from jobtitle
+                        jobTitle = OrganisationExtractor.removeOrganisationFromString(jobOrganisation, jobTitle);
 
                         // extract languages from offer
                         LanguageExtractor languageExtractor = new LanguageExtractor();

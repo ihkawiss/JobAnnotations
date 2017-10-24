@@ -21,9 +21,8 @@ import java.util.regex.Pattern;
 
 public class OrganisationExtractor {
 
-
     // official legal form postfixes in switzerland
-    private final String[] KNOWN_LEGAL_FORMS = {
+    private static final String[] KNOWN_LEGAL_FORMS = {
             "AG", "Gen", "Genossenschaft", "GmbH", "KlG", "KmG", "KmAG", "SA", "SCoop", "Sàrl",
             "SNC", "SCm", "SCmA", "Sagl", "SAc", "SAcA", "Scrl", "SCl", "SACm"
     };
@@ -289,6 +288,22 @@ public class OrganisationExtractor {
         }
 
         return candidates;
+    }
+
+    public static String removeOrganisationFromString(String organisation, String jobTitle) {
+
+        String organisationWithoutLegalIdentifier = organisation;
+
+        // remove known legal identifiers
+        for (String identifier : KNOWN_LEGAL_FORMS) {
+            organisationWithoutLegalIdentifier = organisationWithoutLegalIdentifier.replaceAll("\\s(?i)" + identifier, "");
+        }
+
+        // replace organisation from job title
+        String cleaned = jobTitle.replaceAll("(?i)" + organisation, "");
+        cleaned = cleaned.replaceAll("(?i)" + organisationWithoutLegalIdentifier, "");
+
+        return cleaned.trim();
     }
 
 
