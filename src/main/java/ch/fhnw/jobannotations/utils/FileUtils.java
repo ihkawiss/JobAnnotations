@@ -1,7 +1,9 @@
 package ch.fhnw.jobannotations.utils;
 
-import java.io.*;
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 /**
@@ -12,23 +14,15 @@ public class FileUtils {
         // private constructor
     }
 
-    public static FileInputStream getFileInputStream(String fileName) {
+    public static InputStream getFileAsInputStream(String fileName) {
         ClassLoader classLoader = FileUtils.class.getClassLoader();
-        URL resource = classLoader.getResource(fileName);
-        if (resource != null) {
-            try {
-                return new FileInputStream(resource.getFile());
-            } catch (FileNotFoundException e) {
-                // ignore
-            }
-        }
-        return null;
+        return classLoader.getResourceAsStream(fileName);
     }
 
     public static Properties getStanfordCoreNLPGermanConfiguration() {
 
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileInputStream("configuration/StanfordCoreNLP-german.properties"), "UTF8"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileAsInputStream("configuration/StanfordCoreNLP-german.properties"), "UTF8"));
 
             Properties props = new Properties();
             props.load(reader);

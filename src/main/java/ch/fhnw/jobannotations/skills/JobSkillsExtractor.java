@@ -3,6 +3,7 @@ package ch.fhnw.jobannotations.skills;
 import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.FileUtils;
+import ch.fhnw.jobannotations.utils.IntStringPair;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.TaggedWord;
@@ -76,111 +77,112 @@ public class JobSkillsExtractor {
         }
 
         Element body = jobOffer.getBodyElement();
-        Map<List<String>, Integer> ratedSkillLists = new HashMap<>();
+        Map<IntStringPair, List<String>> ratedSkills = new HashMap<>();
 
         Elements listElements = new Elements();
 
+        // TODO check for sub lists
         // add ul elements
         listElements.addAll(body.getElementsByTag("ul"));
 
         // add ol elements
         listElements.addAll(body.getElementsByTag("ol"));
 
-        // calculate rating for skill lists
         for (Element listElement : listElements) {
-            int skillListRating = calculateSkillListProbability(jobOffer, listElement);
-            if (skillListRating >= 100) {
-                List<String> skills = new ArrayList<>();
-                for (Element listItemElement : listElement.getElementsByTag("li")) {
-                    String skill = listItemElement.text().trim();
-                    if (!skills.contains(skill)) {
-                        skills.add(skill);
-                    }
-                }
-                ratedSkillLists.put(skills, skillListRating);
+            Elements listItems = listElement.getElementsByTag("li");
+            String listTitle = getListTitle(jobOffer, listItems);
+            int rating = 100 + calculateHtmlSkillListItemsRating(listItems);
+
+            List<String> skills = new ArrayList<>();
+            for (Element listItem : listItems) {
+                skills.add(listItem.text());
             }
+
+            IntStringPair ratedSkillListTitle = new IntStringPair(rating, listTitle);
+            ratedSkills.put(ratedSkillListTitle, skills);
         }
 
 
-        // find fake lists
+        // Find non valid html lists
         String lastBulletPoint = null;
         String lastLine = null;
-        String listTitle = null;
-        List<String> listItems = new ArrayList<>();
-        Map<String, List<String>> lists = new HashMap<>();
+        String lastListTitle = null;
+        List<String> lastListItems = new ArrayList<>();
         String[] lines = jobOffer.getPlainText().split("\\n");
-        for (int i = 0; i < lines.length; i++) {
-            String line = lines[i].trim();
+        for (String line : lines) {
+            line = line.trim();
+
+            boolean addSkillList = false;
+
             if (line.isEmpty()) {
-                if (listTitle != null) {
-                    // list ended
-                    lists.put(listTitle, listItems);
-                    listItems = new ArrayList<>();
-
-                    listTitle = null;
-                    lastBulletPoint = null;
-                }
-                continue;
-            }
-
-            // check for potential list
-            Matcher matcher = Pattern.compile("^([^a-zA-ZäöüÄÖÜ])\\s+.*$").matcher(line);
-            if (matcher.find()) {
-                String bulletPoint = matcher.group(1);
-
-                if (lastBulletPoint == null) {
-                    // first list item
-                    lastBulletPoint = bulletPoint;
-                    listTitle = lastLine;
-
-                    line = line.substring(1, line.length()).trim();
-                    listItems.add(line);
-
-                } else if (!bulletPoint.equals(lastBulletPoint)) {
-                    if (listTitle != null) {
-                        // list ended
-                        lists.put(listTitle, listItems);
-                        listItems = new ArrayList<>();
-
-                        listTitle = null;
-                        lastBulletPoint = null;
-                    }
-                } else if (bulletPoint.equals(lastBulletPoint)) {
-                    // additional list item
-                    line = line.substring(1, line.length()).trim();
-                    listItems.add(line);
-
+                if (lastListTitle != null) {
+                    addSkillList = true;
                 }
             } else {
-                if (listTitle != null) {
-                    // list ended
-                    lists.put(listTitle, listItems);
-                    listItems = new ArrayList<>();
+                // check for potential list
+                Matcher matcher = Pattern.compile("^([^a-zA-ZäöüÄÖÜ])\\s+.*$").matcher(line);
+                if (matcher.find()) {
+                    String bulletPoint = matcher.group(1);
 
-                    listTitle = null;
-                    lastBulletPoint = null;
+                    if (lastBulletPoint == null) {
+                        // first list item
+                        lastBulletPoint = bulletPoint;
+                        lastListTitle = lastLine;
+
+                        line = line.substring(1, line.length()).trim();
+                        lastListItems.add(line);
+
+                    } else if (!bulletPoint.equals(lastBulletPoint)) {
+                        if (lastListTitle != null) {
+                            addSkillList = true;
+                        }
+                    } else if (bulletPoint.equals(lastBulletPoint)) {
+                        // additional list item
+                        line = line.substring(1, line.length()).trim();
+                        lastListItems.add(line);
+
+                    }
+                } else {
+                    if (lastListTitle != null) {
+                        addSkillList = true;
+                    }
                 }
+            }
+
+            if (addSkillList) {
+                IntStringPair ratedSkillListTitle = new IntStringPair(100, lastListTitle);
+                ratedSkills.put(ratedSkillListTitle, lastListItems);
+                lastListItems = new ArrayList<>();
+
+                lastListTitle = null;
+                lastBulletPoint = null;
             }
 
             // keep last non empty line
             lastLine = line;
         }
-        // calculate rating for fake skill lists
-        for (String title : lists.keySet()) {
-            List<String> items = lists.get(title);
-            int skillListRating = calculateSkillListProbability(jobOffer, title, items);
-            if (skillListRating >= 100) {
-                ratedSkillLists.put(items, skillListRating);
-            }
+
+
+        // calculate rating for skill lists
+        List<IntStringPair> ratedListTitles = new ArrayList<>();
+        for (IntStringPair ratedListTitle : ratedSkills.keySet()) {
+            ratedListTitles.add(ratedListTitle);
+            List<String> listItems = ratedSkills.get(ratedListTitle);
+            calculateSkillListProbability(jobOffer, ratedListTitle, listItems);
         }
 
-        if (ratedSkillLists.isEmpty()) {
+        ratedListTitles.sort((o1, o2) -> o2.getInt() - o1.getInt());
+
+        // TODO remove skill lists with bad ratings
+
+        if (ratedSkills.isEmpty()) {
             return null;
         }
 
         boolean isFirstLine = true;
         StringBuilder sbSkills = new StringBuilder();
-        for (List<String> skills : ratedSkillLists.keySet()) {
+        for (IntStringPair ratedListTitle : ratedListTitles) {
+            List<String> skills = ratedSkills.get(ratedListTitle);
             for (String skill : skills) {
                 if (!isFirstLine) {
                     sbSkills.append("\n");
@@ -193,22 +195,9 @@ public class JobSkillsExtractor {
         return sbSkills.toString();
     }
 
-    private int calculateSkillListProbability(JobOffer jobOffer, Element listElement) {
-        double probability = 100;
-        Elements listItems = listElement.getElementsByTag("li");
+    private int calculateHtmlSkillListItemsRating(Elements listItems) {
+        double probability = 0;
         int nofListItems = listItems.size();
-
-        // adjust rating based on number of list items
-        if (nofListItems == 0) {
-            return 0;
-        } else if (nofListItems == 1) {
-            probability -= 25;
-        } else if (nofListItems == 2) {
-            probability -= 15;
-        }
-
-        initDependencyParser();
-
         for (Element listItem : listItems) {
             // adjust rating based on types of children
             if (containsSuspiciousChildren(listItem)) {
@@ -225,66 +214,48 @@ public class JobSkillsExtractor {
                 }
                 probability -= subtract;
             }
-
-            // adjust rating based on number of special chars
-            String text = listItem.text();
-            int nofSpecialChars = getNumberOfSpecialChars(text);
-            if (nofSpecialChars > text.length() / 4d) {
-                double subtract = 75d / nofListItems;
-                subtract *= (double) nofSpecialChars / text.length();
-                probability -= subtract;
-            }
-        }
-
-        // adjust rating based on list titles
-        String listTitle = getListTitle(jobOffer, listItems);
-        if (listTitle == null) {
-            return 0;
-
-        } else {
-            probability += rateTitles(jobOffer, listTitle);
-        }
-
-        if (Main.DEBUG && probability > 50) {
-            System.out.println("[skills]\t" + probability + "\t" + listTitle);
         }
 
         return (int) probability;
     }
 
-    private int calculateSkillListProbability(JobOffer jobOffer, String listTitle, List<String> listItems) {
-        double probability = 100;
-        int nofListItems = listItems.size();
+
+    private int calculateSkillListProbability(JobOffer jobOffer, IntStringPair ratedSkillListTitle, List<String> skills) {
+        double rating = (double) ratedSkillListTitle.getInt();
+        int nofListItems = skills.size();
 
         // adjust rating based on number of list items
         if (nofListItems == 0) {
             return 0;
         } else if (nofListItems == 1) {
-            probability -= 25;
+            rating -= 25;
         } else if (nofListItems == 2) {
-            probability -= 15;
+            rating -= 15;
         }
 
         initDependencyParser();
 
-        for (String listItem : listItems) {
+        for (String skill : skills) {
             // adjust rating based on number of special chars
-            int nofSpecialChars = getNumberOfSpecialChars(listItem);
-            if (nofSpecialChars > listItem.length() / 4d) {
+            int nofSpecialChars = getNumberOfSpecialChars(skill);
+            if (nofSpecialChars > skill.length() / 4d) {
                 double subtract = 75d / nofListItems;
-                subtract *= (double) nofSpecialChars / listItem.length();
-                probability -= subtract;
+                subtract *= (double) nofSpecialChars / skill.length();
+                rating -= subtract;
             }
         }
 
         // adjust rating based on list titles
-        probability += rateTitles(jobOffer, listTitle);
+        String listTitle = ratedSkillListTitle.getString();
+        rating += rateTitles(jobOffer, listTitle);
 
-        if (Main.DEBUG && probability > 50) {
-            System.out.println("[skills]\t" + probability + "\t" + listTitle);
+        if (Main.DEBUG && rating > 50) {
+            System.out.println("[skills]\t" + rating + "\t" + listTitle);
         }
 
-        return (int) probability;
+        ratedSkillListTitle.setInt((int) rating);
+
+        return (int) rating;
     }
 
     private void initDependencyParser() {

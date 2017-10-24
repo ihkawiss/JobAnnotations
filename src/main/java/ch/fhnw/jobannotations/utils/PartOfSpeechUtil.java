@@ -36,7 +36,7 @@ public class PartOfSpeechUtil {
      */
     public static String[] detectSentences(String text) {
 
-        try (InputStream modelIn = FileUtils.getFileInputStream("de-sent.bin")) {
+        try (InputStream modelIn = FileUtils.getFileAsInputStream("de-sent.bin")) {
 
             SentenceModel sentenceModel = new SentenceModel(modelIn);
 
@@ -60,7 +60,7 @@ public class PartOfSpeechUtil {
      */
     public static String[] analysePartOfSpeech(String sentence) {
 
-        try (InputStream modelIn = FileUtils.getFileInputStream("de-pos-maxent.bin")) {
+        try (InputStream modelIn = FileUtils.getFileAsInputStream("de-pos-maxent.bin")) {
 
             POSModel posModel = new POSModel(modelIn);
 
@@ -136,7 +136,7 @@ public class PartOfSpeechUtil {
 
         try {
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileInputStream(filename), "UTF8"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileAsInputStream(filename), "UTF8"));
 
             String line;
             while ((line = reader.readLine()) != null) {

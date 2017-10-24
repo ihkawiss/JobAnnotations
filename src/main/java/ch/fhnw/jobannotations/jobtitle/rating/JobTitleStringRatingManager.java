@@ -14,7 +14,7 @@ import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,10 +101,10 @@ public class JobTitleStringRatingManager {
         TrieDictionary<String> dictionary = new TrieDictionary<>();
         List<String> knownJobTitles = new ArrayList<>();
 
-        FileInputStream fileInputStream = FileUtils.getFileInputStream(JOB_TITLES_TRAIN_FILE_NAME);
-        if (fileInputStream != null) {
+        InputStream inputStream = FileUtils.getFileAsInputStream(JOB_TITLES_TRAIN_FILE_NAME);
+        if (inputStream != null) {
             try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(fileInputStream));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
                 String line;
                 while ((line = reader.readLine()) != null) {
