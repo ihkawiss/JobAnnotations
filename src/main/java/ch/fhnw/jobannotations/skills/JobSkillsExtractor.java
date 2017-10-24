@@ -173,7 +173,8 @@ public class JobSkillsExtractor {
 
         ratedListTitles.sort((o1, o2) -> o2.getInt() - o1.getInt());
 
-        // TODO remove skill lists with bad ratings
+        // only keep titles with high ratings
+        ratedListTitles.removeIf(t -> t.getInt() < 100);
 
         if (ratedSkills.isEmpty()) {
             return null;
