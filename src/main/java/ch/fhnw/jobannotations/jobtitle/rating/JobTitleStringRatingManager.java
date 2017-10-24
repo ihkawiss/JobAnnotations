@@ -1,16 +1,12 @@
 package ch.fhnw.jobannotations.jobtitle.rating;
 
+import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
+import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
 import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
-import com.aliasi.chunk.Chunk;
-import com.aliasi.chunk.Chunking;
-import com.aliasi.dict.ApproxDictionaryChunker;
 import com.aliasi.dict.DictionaryEntry;
 import com.aliasi.dict.TrieDictionary;
-import com.aliasi.spell.FixedWeightEditDistance;
-import com.aliasi.spell.WeightedEditDistance;
-import com.aliasi.tokenizer.IndoEuropeanTokenizerFactory;
 import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
@@ -18,7 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,11 +86,13 @@ public class JobTitleStringRatingManager {
     private static final int CHUNK_INFO_POS_SCORE = 2;
 
 
-    private final TrieDictionary<String> dictionary;
+    private static TrieDictionary<String> dictionary = null;
 
 
     public JobTitleStringRatingManager() {
-        dictionary = initJobTitleDictionary();
+        if (dictionary == null) {
+            dictionary = initJobTitleDictionary();
+        }
     }
 
     private TrieDictionary<String> initJobTitleDictionary() {
@@ -266,73 +264,27 @@ public class JobTitleStringRatingManager {
     }
 
     public void adjustRatingsByKnownJobTitleList(List<IntStringPair> ratedStrings) {
-
-        IndoEuropeanTokenizerFactory tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
-        WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -2, -2, -2, Double.NEGATIVE_INFINITY);
-
-        double maxDistance = 2;
-
-        ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(dictionary, tokenizerFactory, editDistance, maxDistance);
-
         for (IntStringPair ratedString : ratedStrings) {
             String text = ratedString.getString();
 
-            Chunking chunking = chunker.chunk(text);
-            CharSequence cs = chunking.charSequence();
-            Set<Chunk> chunkSet = chunking.chunkSet();
-
-            // create list of chunk info
-            List<int[]> chunkInfoList = createChunkInfoListFromChunkSet(chunkSet);
-
-            // merge chunks (remove sub chunks and add scores)
-            chunkInfoList = mergeChunkInfoListEntries(chunkInfoList);
-
-            for (int[] chunkInfo : chunkInfoList) {
-                String chunkText = text.substring(chunkInfo[CHUNK_INFO_POS_START], chunkInfo[CHUNK_INFO_POS_END]);
-                int chunkScore = chunkInfo[CHUNK_INFO_POS_SCORE];
-                System.out.println(chunkScore + " : " + chunkText);
+            if (Main.DEBUG) {
+                System.out.println("[jobtitle-approx]\t" + text);
             }
 
-        }
-    }
-
-    private List<int[]> createChunkInfoListFromChunkSet(Set<Chunk> chunkSet) {
-        List<int[]> chunkInfoList = new ArrayList<>();
-        for (Chunk chunk : chunkSet) {
-            // get start an end position and score of chunk
-            int start = chunk.start();
-            int end = chunk.end();
-            int score = (int) chunk.score();
-            int[] data = {start, end, score};
-            chunkInfoList.add(data);
-        }
-        return chunkInfoList;
-    }
-
-    private List<int[]> mergeChunkInfoListEntries(List<int[]> chunkInfoList) {
-        List<int[]> filteredList = new ArrayList<>(chunkInfoList);
-        boolean mergedChunks = true;
-        while (mergedChunks) {
-            mergedChunks = false;
-
-            for (int[] currentChunk : chunkInfoList) {
-                for (int i = filteredList.size() - 1; i > -1; i--) {
-                    int[] compareChunk = filteredList.get(i);
-
-                    if (compareChunk[CHUNK_INFO_POS_START] >= currentChunk[CHUNK_INFO_POS_START]
-                            && compareChunk[CHUNK_INFO_POS_END] <= currentChunk[CHUNK_INFO_POS_END]) {
-
-                        // remove sub chunk
-                        filteredList.remove(i);
-
-                        // adjust parent chunk score
-                        int newScore = currentChunk[CHUNK_INFO_POS_SCORE] + compareChunk[CHUNK_INFO_POS_SCORE];
-                        currentChunk[CHUNK_INFO_POS_SCORE] = newScore;
-                        mergedChunks = true;
-                    }
+            Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(dictionary, text, 1);
+            for (String key : foundChunks.keySet()) {
+                Integer score = foundChunks.get(key);
+                if (Main.DEBUG) {
+                    System.out.println("[language-approx]\t[" + score + "] " + key);
                 }
+
+                if (score == 0) {
+                    ratedString.setInt(ratedString.getInt() + 100);
+                }
+
             }
+
+
         }
-        return filteredList;
     }
 }

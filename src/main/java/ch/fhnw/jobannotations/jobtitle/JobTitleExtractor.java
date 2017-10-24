@@ -113,7 +113,7 @@ public class JobTitleExtractor {
         }
 
         if (Main.DEBUG) {
-            System.out.println("[jobtitle-indicator]\t" + "Adjusting rating by known job titles");
+            System.out.println("[jobtitle-approx]\t" + "Adjusting rating by known job titles");
         }
 
         // adjust rating by check with known job title list

@@ -61,11 +61,14 @@ public class JobSkillsExtractor {
             "bringst",
             "bieten",
             "bietest",
+            "geboten",
             "mitbringen",
             "mitbringst"
     );
     private static final List<String> VERBS_EXPECT = Arrays.asList(
             "erwarten",
+            "erwartet",
+            "erwartest",
             "verlangen"
     );
 
