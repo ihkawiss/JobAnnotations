@@ -1,14 +1,20 @@
 package ch.fhnw.jobannotations.location;
 
+import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
+import ch.fhnw.jobannotations.utils.FileUtils;
+import ch.fhnw.jobannotations.utils.HtmlUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
-import edu.stanford.nlp.simple.Sentence;
+import ch.fhnw.jobannotations.utils.NlpHelper;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.tagger.maxent.MaxentTagger;
+import edu.stanford.nlp.util.CoreMap;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
@@ -20,17 +26,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * @author Hoang
  */
-public class JobLocationExtractor {
+public class LocationExtractor {
 
     private static final String GEO_ADMIN_API_URL_TEMPLATE = "https://api3.geo.admin.ch/rest/services/api/SearchServer?type=locations&limit=1&searchText=%s";
     private static final String[] ALLOWED_SPECIAL_LABELS_GEO_ADMIN_API = {"Ort", "Quartier", "Zug", "Bus"};
@@ -50,44 +53,50 @@ public class JobLocationExtractor {
     private static final int RATING_LOCATION_BY_LOCATION_FLAGS = 150;
     private static final int RATING_LOCATION_BY_ZIP_CODE = 75;
     private static final int RATING_LOCATION_BY_NER = 50;
-    private static final int RATING_ELEMENT_IN_FOOTER = -75;
+    private static final int RATING_ELEMENT_IN_FOOTER = -50;
     private static final int RATING_REPETITION = 15;
     private static final int RATING_VALIDATION_CONTAINS_ORIGINAL = 50;
     private static final int RATING_VALIDATION_CONTAINS_ORIGINAL_LOWER_CASE = 25;
+    private static final int RATING_VALIDATION_FAILED = -25;
     private List<IntStringPair> ratedJobLocations = new ArrayList<>();
-    private Element bodyElement;
+    private MaxentTagger tagger;
 
-    // TODO move to util class?
-    public static String getPlainTextFromHtml(String text) {
-        // remove b-tags
-        text = text.replaceAll("(?i)\\s*\\n*\\s*</?b>\\s*", " ");
-
-        String breakTagPlaceholder = "%BREAK%";
-        // replace br-tags with actual line breaks
-        text = text.replaceAll("(?i)<br[^>]*>", breakTagPlaceholder);
-        text = Jsoup.clean(text, "", Whitelist.none(), new Document.OutputSettings().prettyPrint(false));
-        text = text.replaceAll(breakTagPlaceholder, "\n");
-        return text;
-    }
-
-    public String parseJobLocation(Document document) {
+    public String parse(JobOffer jobOffer) {
 
         if (Main.DEBUG) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
             System.out.println("[location]\t" + "Started to parse location from offer");
         }
 
-        findPotentialJobLocations(document);
+        findPotentialJobLocations(jobOffer);
         return getLocationWithHighestPotential();
     }
 
-    // TODO search in job title element
-    private void findPotentialJobLocations(Document document) {
-        bodyElement = document.clone().getElementsByTag("body").first();
-        String plainText = getPlainTextFromHtml(bodyElement.html());
+    private void findPotentialJobLocations(JobOffer jobOffer) {
+        // TODO search in job title element
 
-        for (String potentialJobLocation : getPotentialJobLocationByLocationFlags(bodyElement, plainText)) {
-            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_LOCATION_FLAGS, potentialJobLocation);
+        // parse location in body without footer
+        System.out.println("[location]\tFind potential job locations in body element without footer");
+        findPotentialJobLocations(jobOffer, false);
+
+        // parse location in footer
+        System.out.println("[location]\tFind potential job locations in footer element");
+        findPotentialJobLocations(jobOffer, true);
+    }
+
+    private void findPotentialJobLocations(JobOffer jobOffer, boolean isFooter) {
+        int ratingAdjustment = isFooter ? RATING_ELEMENT_IN_FOOTER : 0;
+
+        Element element = isFooter ? jobOffer.getFooterElement() : jobOffer.getBodyElementWithoutFooter();
+
+        if (element == null) {
+            return;
+        }
+
+        String plainText = HtmlUtils.getPlainTextFromHtml(element.html());
+
+        for (String potentialJobLocation : getPotentialJobLocationByLocationFlags(element, plainText)) {
+            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_LOCATION_FLAGS + ratingAdjustment, potentialJobLocation);
             ratedJobLocations.add(ratedJobLocation);
             System.out.println("[location-indicator]\tFound location by location flags: " + potentialJobLocation);
         }
@@ -95,18 +104,17 @@ public class JobLocationExtractor {
         // use parsing with zip code regex
         for (String location : getPotentialJobLocationByZipCode(plainText)) {
             System.out.println("[location-indicator]\tFound location with ZIP code: " + location);
-            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_ZIP_CODE, location);
+            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_ZIP_CODE + ratingAdjustment, location);
             ratedJobLocations.add(ratedJobLocation);
         }
 
-        if (ratedJobLocations.isEmpty()) {
-            System.out.println("[location-indicator]\tNo locations found by parsing and ZIP regex. Using Named Entity Recognition...");
-            // use named entity recognition
-            for (String location : getPotentialJobLocationByNamedEntityRecognition(plainText)) {
-                System.out.println("[location-ner]\tFound location with NER: " + location);
-                IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_NER, location);
-                ratedJobLocations.add(ratedJobLocation);
-            }
+        // find locations using NLP
+        System.out.println("[location-ner]\tUsing Named Entity Recognition...");
+        List<CoreMap> annotatedSentences = isFooter ? jobOffer.getAnnotatedFooterSentences() : jobOffer.getAnnotatedBodySentences();
+        for (String location : getPotentialJobLocationByNamedEntityRecognition(annotatedSentences)) {
+            System.out.println("[location-ner]\tFound location with NER: " + location);
+            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_NER + ratingAdjustment, location);
+            ratedJobLocations.add(ratedJobLocation);
         }
 
         System.out.println("[location]\tRemove entries that contain too many words");
@@ -139,8 +147,6 @@ public class JobLocationExtractor {
                 }
             }
         }
-
-
     }
 
     private List<String> getPotentialJobLocationByLocationFlags(Element bodyElement, String plainText) {
@@ -170,8 +176,49 @@ public class JobLocationExtractor {
         return potentialJobLocations;
     }
 
-    private List<String> getPotentialJobLocationByNamedEntityRecognition(String plainText) {
+    private List<String> getPotentialJobLocationByNamedEntityRecognition(Iterable<? extends CoreMap> annotatedSentences) {
         List<String> potentialJobLocations = new ArrayList<>();
+
+        for (CoreMap sentence : annotatedSentences) {
+            List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+            for (CoreLabel token : tokens) {
+                String word = token.get(CoreAnnotations.TextAnnotation.class);
+                String nerTag = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+                if (NlpHelper.NER_TAG_LOCATION.equals(nerTag)) {
+                    potentialJobLocations.add(word);
+                }
+            }
+        }
+
+/*
+        String nerModel = FileUtils.getStanfordCoreNLPGermanConfiguration().getProperty("ner.model");
+        CRFClassifier<CoreMap> classifier = CRFClassifier.getClassifierNoExceptions(nerModel);
+        List<List<CoreMap>> sentences = classifier.classify(plainText);
+        for (List<CoreMap> sentence : sentences) {
+            for (CoreMap word : sentence) {
+                String nerTag = word.get(CoreAnnotations.NamedEntityTagAnnotation.class);
+                if (LOCATION_NER_TAG.equals(nerTag)) {
+                    String string = word.toString();
+                    potentialJobLocations.add(string);
+                }
+            }
+
+        }
+
+
+        DocumentPreprocessor tokenizer = new DocumentPreprocessor(new StringReader(plainText));
+        for (List<HasWord> sentence : tokenizer) {
+            List<TaggedWord> taggedWords = tagger.tagSentence(sentence);
+            for (TaggedWord taggedWord : taggedWords) {
+                String tag = taggedWord.tag();
+                if (tag.equals(LOCATION_NER_TAG)) {
+                    String word = taggedWord.word();
+                    potentialJobLocations.add(word);
+                }
+            }
+        }*/
+
+        /*
         edu.stanford.nlp.simple.Document document = new edu.stanford.nlp.simple.Document(plainText);
         for (Sentence sentence : document.sentences()) {  // Will iterate over two sentences
             List<String> tags = sentence.nerTags();
@@ -181,13 +228,19 @@ public class JobLocationExtractor {
                     potentialJobLocations.add(location);
                 }
             }
-        }
+        }*/
         return potentialJobLocations;
+    }
+
+    private void initNer() {
+        Properties germanConfig = FileUtils.getStanfordCoreNLPGermanConfiguration();
+        String taggerPath = germanConfig.getProperty("pos.model");
+        tagger = new MaxentTagger(taggerPath);
     }
 
     private List<String> getPotentialJobLocationByZipCode(String plainText) {
         List<String> potentialLocations = new ArrayList<>();
-        Matcher zipCodeMatcher = Pattern.compile("\\d{4,5}\\s(.*)\\W").matcher(plainText);
+        Matcher zipCodeMatcher = Pattern.compile("\\d{4,5}\\s(.{2,})\\W").matcher(plainText);
         while (zipCodeMatcher.find()) {
             potentialLocations.add(zipCodeMatcher.group(1));
         }
@@ -247,6 +300,10 @@ public class JobLocationExtractor {
                 int validationRating = calculateValidationRating(location, validatedAddress);
                 ratedLocation.setString(validatedAddress);
                 ratedLocation.setInt(ratedLocation.getInt() + validationRating);
+
+            } else {
+                System.out.println("[location]\tFailed to validate location: [" + location + "]");
+                ratedLocation.setInt(ratedLocation.getInt() + RATING_VALIDATION_FAILED);
             }
         }
 
@@ -293,6 +350,9 @@ public class JobLocationExtractor {
     }
 
     private int calculateValidationRating(String originalLocationName, String validatedLocationName) {
+        // remove text in parentheses for better rating calculation
+        validatedLocationName = validatedLocationName.replaceAll("\\s*\\(.*\\)\\s*", "");
+
         int rating = FuzzySearch.ratio(originalLocationName, validatedLocationName);
         rating -= 50;
         rating *= 2;
@@ -347,7 +407,7 @@ public class JobLocationExtractor {
             conn.setRequestProperty("Accept", "application/json");
 
             if (conn.getResponseCode() != 200) {
-                System.err.println("HTTP error code: " + conn.getResponseCode());
+                System.err.println("[location]\tFailed to validate location: [" + value + "] HTTP error code: " + conn.getResponseCode());
                 return null;
             }
 

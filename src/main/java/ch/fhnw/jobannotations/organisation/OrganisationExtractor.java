@@ -83,7 +83,7 @@ public class OrganisationExtractor {
                 posScore++;
             }
 
-            return weightedIndicatorCandidates.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey();
+            return weightedIndicatorCandidates.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey().trim();
 
         }
 
@@ -104,7 +104,7 @@ public class OrganisationExtractor {
 
             }
 
-            return lastMatch;
+            return lastMatch.trim();
         }
 
         // ---------------------------------------------------------
@@ -144,7 +144,7 @@ public class OrganisationExtractor {
         }
 
         if (weighted.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).isPresent()) {
-            return weighted.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey();
+            return weighted.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey().trim();
         } else {
             return "organisation not found!";
         }
@@ -254,7 +254,12 @@ public class OrganisationExtractor {
         Annotation document = new Annotation(text);
 
         // run all Annotators on this text
-        pipeline.annotate(document);
+        try {
+            pipeline.annotate(document);
+        } catch (Exception e) {
+            // TODO pipeline.annotate(document) can throw NullPointerException
+            // also if neither pipeline nor document are null
+        }
 
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
 
