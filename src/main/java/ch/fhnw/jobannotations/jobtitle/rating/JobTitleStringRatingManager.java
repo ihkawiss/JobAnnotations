@@ -275,7 +275,7 @@ public class JobTitleStringRatingManager {
             for (String key : foundChunks.keySet()) {
                 Integer score = foundChunks.get(key);
                 if (Main.DEBUG) {
-                    System.out.println("[language-approx]\t[" + score + "] " + key);
+                    System.out.println("[jobtitle-approx]\t[" + score + "] " + key);
                 }
 
                 if (score == 0) {

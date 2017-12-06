@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 public class OrganisationExtractor {
 
     // official legal form postfixes in switzerland
-    private static final String[] KNOWN_LEGAL_FORMS = {
+        private static final String[] KNOWN_LEGAL_FORMS = {
             "AG", "Gen", "Genossenschaft", "GmbH", "KlG", "KmG", "KmAG", "SA", "SCoop", "Sàrl",
             "SNC", "SCm", "SCmA", "Sagl", "SAc", "SAcA", "Scrl", "SCl", "SACm"
     };
