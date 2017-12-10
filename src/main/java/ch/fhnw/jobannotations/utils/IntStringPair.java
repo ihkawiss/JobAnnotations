@@ -30,6 +30,10 @@ public class IntStringPair {
         this.intValue = intValue;
     }
 
+    public void addInt(int intValue) {
+        this.intValue += intValue;
+    }
+
     public String getString() {
         return string;
     }

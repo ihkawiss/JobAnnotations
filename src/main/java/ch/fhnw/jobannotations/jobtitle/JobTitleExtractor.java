@@ -25,7 +25,6 @@ public class JobTitleExtractor {
             "input",
             "button"
     };
-
     private JobTitleStringRatingManager jobTitleStringRatingManager;
     private boolean cleanJobTitle = true;
 

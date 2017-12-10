@@ -2,22 +2,17 @@ package ch.fhnw.jobannotations.skills;
 
 import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
-import ch.fhnw.jobannotations.utils.FileUtils;
-import ch.fhnw.jobannotations.utils.IntStringPair;
-import edu.stanford.nlp.ling.HasWord;
+import ch.fhnw.jobannotations.utils.*;
+import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.ling.TaggedWord;
-import edu.stanford.nlp.parser.nndep.DependencyParser;
-import edu.stanford.nlp.process.DocumentPreprocessor;
-import edu.stanford.nlp.tagger.maxent.MaxentTagger;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
-import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.TypedDependency;
-import org.apache.commons.lang3.StringUtils;
+import edu.stanford.nlp.util.CoreMap;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.StringReader;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,13 +22,11 @@ import java.util.regex.Pattern;
  */
 public class JobSkillsExtractor {
 
-    private static MaxentTagger tagger;
-    private static DependencyParser parser;
     private static final List<String> DETERMINERS_YOUR = Arrays.asList("ihre", "ihr", "deine", "dein");
     private static final List<String> DETERMINERS_OUR = Arrays.asList("unsere", "unser");
     private static final List<String> SUBJECTS_YOU = Arrays.asList("sie", "du");
     private static final List<String> SUBJECTS_WE = Arrays.asList("wir", "ich");
-    private static final List<String> NOUNS_SKILL_SYNONYM = Arrays.asList(
+    private static final List<String>   NOUNS_SKILL_SYNONYM = Arrays.asList(
             "qualifikation",
             "profil",
             "erfahrung",
@@ -42,7 +35,8 @@ public class JobSkillsExtractor {
             "kompetenz",
             "fähigkeit",
             "kenntniss",
-            "eigenschaft"
+            "eigenschaft",
+            "talent"
     );
     private static final List<String> NOUNS_JOB_SYNONYM = Arrays.asList(
             "aufgabe",
@@ -53,7 +47,12 @@ public class JobSkillsExtractor {
             "tätigkeit",
             "arbeit"
     );
-    private static final List<String> NOUNS_EXPECTATION_SYNONYM = Arrays.asList("anforderung", "erwartung");
+    private static final List<String> NOUNS_EXPECTATION_SYNONYM = Arrays.asList(
+            "anforderung",
+            "anforderungen",
+            "erwartung",
+            "erwartungen"
+    );
     private static final List<String> NOUNS_OFFER_SYNONYM = Arrays.asList("angebot");
     private static final List<String> NOUNS_POSSIBILITY_SYNONYM = Arrays.asList("möglichkeit", "perspektive");
     private static final List<String> VERBS_OFFER = Arrays.asList(
@@ -63,37 +62,245 @@ public class JobSkillsExtractor {
             "bietest",
             "geboten",
             "mitbringen",
-            "mitbringst"
+            "mitbringst",
+            "haben",
+            "hast"
     );
     private static final List<String> VERBS_EXPECT = Arrays.asList(
             "erwarten",
             "erwartet",
             "erwartest",
-            "verlangen"
+            "verlangen",
+            "verlangst",
+            "verlangt",
+            "finden",
+            "findest"
     );
 
     public String parseJobSkills(JobOffer jobOffer) {
 
         if (Main.DEBUG) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[skills-indicator]\t" + "Started to parse skills from offer");
+            System.out.println("[skills-indicator]\t" + "Started to parse skills from offer by checking lists");
         }
 
-        Element body = jobOffer.getBodyElement();
-        Map<IntStringPair, List<String>> ratedSkills = new HashMap<>();
+        Map<IntStringPair, List<String>> ratedSkillLists = extractSkillListsByListParsing(jobOffer);
 
-        Elements listElements = new Elements();
+        if (ratedSkillLists.isEmpty()) {
+            // no skills found
+            if (Main.DEBUG) {
+                System.out.println("[skills-nlp]\t" + "No skills found with list parsing. Started to parse skills from offer by analysing sentences with NLP");
+            }
+            ratedSkillLists = extractSkillListsBySentenceAnalyzing(jobOffer);
+            if (ratedSkillLists.isEmpty()) {
+                if (Main.DEBUG) {
+                    System.out.println("[skills]\t" + "No skills found.");
+                }
+                return null;
+            }
+        }
 
-        // TODO check for sub lists
-        // add ul elements
-        listElements.addAll(body.getElementsByTag("ul"));
+        formatSkills(jobOffer, ratedSkillLists);
 
-        // add ol elements
-        listElements.addAll(body.getElementsByTag("ol"));
+        return generateSkillListPrintout(ratedSkillLists);
+    }
+
+    private void formatSkills(JobOffer jobOffer, Map<IntStringPair, List<String>> ratedSkillLists) {
+        for (IntStringPair listTitle : ratedSkillLists.keySet()) {
+            List<String> skillSentences = ratedSkillLists.get(listTitle);
+
+            List<String> formattedSkills = extractSkills(skillSentences);
+
+            // replace old list
+            ratedSkillLists.put(listTitle, formattedSkills);
+        }
+    }
+
+    private List<String> extractSkills(List<String> skillSentences) {
+        List<String> extractedNouns = NlpHelper.getInstance().extractNouns(skillSentences);
+        return extractSkillNouns(extractedNouns);
+    }
+
+    private List<String> extractSkillNouns(List<String> nouns) {
+        List<IntStringPair> ratedSkillNouns = new ArrayList<>();
+        for (String noun : nouns) {
+            IntStringPair ratedSkillNoun = getSkillNounRating(noun);
+            if (ratedSkillNoun.getInt() >= 0) {
+                ratedSkillNouns.add(ratedSkillNoun);
+            }
+
+        }
+
+        ratedSkillNouns.sort(Comparator.comparingInt(IntStringPair::getInt));
+
+        List<String> skills = new ArrayList<>();
+        for (IntStringPair ratedSkillNoun : ratedSkillNouns) {
+            System.out.println("SKILL: " + ratedSkillNoun.getString() + " : " + ratedSkillNoun.getInt());
+            skills.add(ratedSkillNoun.getString());
+        }
+
+        return skills;
+    }
+
+    private IntStringPair getSkillNounRating(String noun) {
+        String simplifiedNoun = StringUtils.simplify(noun);
+
+        // dictionaries
+        TrieDictionary<String> skillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
+        TrieDictionary<String> antiSkillsDictionary = NlpHelper.getInstance().getAntiSkillsDictionary();
+        TrieDictionary<String> simplifiedSkillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
+        TrieDictionary<String> simplifiedAntiSkillsDictionary = NlpHelper.getInstance().getAntiSkillsDictionary();
+
+        // get distances
+        IntStringPair skillWordDistance = getDictionaryNounDistance(skillsDictionary, noun);
+        IntStringPair antiSkillWordDistance = getDictionaryNounDistance(antiSkillsDictionary, noun);
+        IntStringPair simplifiedSkillWordDistance = getDictionaryNounDistance(simplifiedSkillsDictionary, simplifiedNoun);
+        IntStringPair simplifiedAntiSkillWordDistance = getDictionaryNounDistance(simplifiedAntiSkillsDictionary, simplifiedNoun);
+
+        // combine distances
+        int skillDistance = 0;
+        if (skillWordDistance != null) {
+            skillDistance += skillWordDistance.getInt();
+        } else {
+            skillDistance += 3000;
+        }
+        if (simplifiedSkillWordDistance != null) {
+            skillDistance += simplifiedSkillWordDistance.getInt();
+        } else {
+            skillDistance += 3000;
+        }
+
+        int antiSkillDistance = 0;
+        if (antiSkillWordDistance != null) {
+            antiSkillDistance += antiSkillWordDistance.getInt();
+        } else {
+            antiSkillDistance += 3000;
+        }
+        if (simplifiedAntiSkillWordDistance != null) {
+            antiSkillDistance += simplifiedAntiSkillWordDistance.getInt();
+        } else {
+            antiSkillDistance += 3000;
+        }
+
+        if (antiSkillDistance > 2000) {
+            // special case for acronyms
+            if (noun.contains("-")) {
+                for (String part : noun.split("-")) {
+                    if (StringUtils.isAllUpperCase(part.trim())) {
+                        skillDistance -= 1500;
+                    }
+                }
+            } else if (StringUtils.isAllUpperCase(noun)) {
+                skillDistance -= 3000;
+            }
+        }
+
+        // check diff
+        int distanceDiff = antiSkillDistance - skillDistance;
+        return new IntStringPair(distanceDiff, noun);
+    }
+
+    private IntStringPair getDictionaryNounDistance(TrieDictionary<String> dictionary, String noun) {
+        // calculate max distance
+        int nounLength = noun.length();
+        int maxDistance = 0;
+        if (nounLength > 4) {
+            maxDistance = 1 + nounLength / 10;
+        }
+        return NlpHelper.getInstance().calcDistanceWithDictionary(dictionary, noun, maxDistance);
+    }
+
+    private List<String> extractSkillNouns(String skillSentence) {
+        List<String> formattedSkills = new ArrayList<>();
+        TrieDictionary<String> skillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
+        Map<String, Integer> chunks = PartOfSpeechUtil.getChunksByDictionary(skillsDictionary, skillSentence, 1);
+        for (String skill : chunks.keySet()) {
+            Integer distance = chunks.get(skill);
+            int nofChars = skill.length();
+            if (distance > nofChars / 2) {
+                // distance too high for this word length
+                continue;
+            }
+
+            addSkill(formattedSkills, skill);
+        }
+
+        List<String> skillNouns = new ArrayList<>();
+        for (String formattedSkill : formattedSkills) {
+            skillNouns.addAll(NlpHelper.getInstance().extractNouns(formattedSkill));
+        }
+
+        return skillNouns;
+    }
+
+    private void addSkill(List<String> formattedSkills, String skill) {
+        for (String formattedSkill : formattedSkills) {
+            String skillLowerCase = skill.toLowerCase();
+            String formattedSkillLowerCase = formattedSkill.toLowerCase();
+            if (formattedSkillLowerCase.contains(skillLowerCase)) {
+                // there is already a skill in the list containing this skill
+                // do nothing
+                return;
+
+            } else if (skillLowerCase.contains(formattedSkillLowerCase)) {
+                // there is a skill in the list that is contained by this skill
+                // replace it
+                formattedSkills.remove(formattedSkill);
+                formattedSkills.add(skill);
+                return;
+            }
+        }
+
+        // nothing special to handle, just add the new skill
+        formattedSkills.add(skill);
+    }
+
+    private Map<IntStringPair, List<String>> extractSkillListsByListParsing(JobOffer jobOffer) {
+        Map<IntStringPair, List<String>> ratedSkillLists = new HashMap<>();
+
+        // add skill lists by getting html list elements
+        Map<IntStringPair, List<String>> skillListsByHtmlTags = extractSkillListsByHtmlTags(jobOffer);
+        ratedSkillLists.putAll(skillListsByHtmlTags);
+
+        // add skill lists by using list pattern
+        Map<IntStringPair, List<String>> skillListsByPattern = extractSkillListsByPattern(jobOffer);
+        ratedSkillLists.putAll(skillListsByPattern);
+
+        // calculate rating for skill lists
+        List<IntStringPair> ratedSkillListTitles = new ArrayList<>();
+        for (IntStringPair ratedListTitle : ratedSkillLists.keySet()) {
+            List<String> listItems = ratedSkillLists.get(ratedListTitle);
+            String listTitle = ratedListTitle.getString();
+            int rating = calculateSkillListRating(jobOffer, listTitle, listItems);
+            ratedListTitle.addInt(rating);
+            ratedSkillListTitles.add(ratedListTitle);
+        }
+
+        // remove lists with low ratings
+        ratedSkillListTitles.stream()
+                .filter(r -> r.getInt() <= 100)
+                .forEach(ratedSkillLists::remove);
+
+        return ratedSkillLists;
+    }
+
+    private Map<IntStringPair, List<String>> extractSkillListsByHtmlTags(JobOffer jobOffer) {
+        Map<IntStringPair, List<String>> ratedSkillLists = new HashMap<>();
+
+        // get html list elements from body
+        Elements listElements = getListElements(jobOffer.getBodyElement());
 
         for (Element listElement : listElements) {
+            // get child list item elements
             Elements listItems = listElement.getElementsByTag("li");
+
+            // get list title
             String listTitle = getListTitle(jobOffer, listItems);
+
+            if (listTitle == null) {
+                continue;
+            }
+
             int rating = 100 + calculateHtmlSkillListItemsRating(listItems);
 
             List<String> skills = new ArrayList<>();
@@ -102,9 +309,14 @@ public class JobSkillsExtractor {
             }
 
             IntStringPair ratedSkillListTitle = new IntStringPair(rating, listTitle);
-            ratedSkills.put(ratedSkillListTitle, skills);
+            ratedSkillLists.put(ratedSkillListTitle, skills);
         }
 
+        return ratedSkillLists;
+    }
+
+    private Map<IntStringPair, List<String>> extractSkillListsByPattern(JobOffer jobOffer) {
+        Map<IntStringPair, List<String>> ratedSkillLists = new HashMap<>();
 
         // Find non valid html lists
         String lastBulletPoint = null;
@@ -154,7 +366,7 @@ public class JobSkillsExtractor {
 
             if (addSkillList) {
                 IntStringPair ratedSkillListTitle = new IntStringPair(100, lastListTitle);
-                ratedSkills.put(ratedSkillListTitle, lastListItems);
+                ratedSkillLists.put(ratedSkillListTitle, lastListItems);
                 lastListItems = new ArrayList<>();
 
                 lastListTitle = null;
@@ -165,28 +377,55 @@ public class JobSkillsExtractor {
             lastLine = line;
         }
 
+        return ratedSkillLists;
+    }
 
-        // calculate rating for skill lists
-        List<IntStringPair> ratedListTitles = new ArrayList<>();
-        for (IntStringPair ratedListTitle : ratedSkills.keySet()) {
-            ratedListTitles.add(ratedListTitle);
-            List<String> listItems = ratedSkills.get(ratedListTitle);
-            calculateSkillListProbability(jobOffer, ratedListTitle, listItems);
+    private Map<IntStringPair, List<String>> extractSkillListsBySentenceAnalyzing(JobOffer jobOffer) {
+        Map<IntStringPair, List<String>> skillLists = new HashMap<>();
+
+        String[] lines = jobOffer.getPlainText().split("\n");
+        IntStringPair lastTitle = null;
+        boolean parsingSkills = false;
+        for (String line : lines) {
+            if (line.trim().isEmpty()) {
+                if (parsingSkills) {
+                    List<String> skillList = skillLists.get(lastTitle);
+                    if (!skillList.isEmpty()) {
+                        parsingSkills = false;
+                    }
+                }
+                continue;
+            }
+
+            if (parsingSkills) {
+                List<String> skillList = skillLists.get(lastTitle);
+                if (skillList != null) {
+                    skillList.add(line);
+                }
+            }
+
+            int nofWords = line.split("\\s").length;
+            if (nofWords > 6) {
+                // ignore lines with many words
+                continue;
+            }
+
+            int rating = rateTitle(jobOffer, line);
+            if (rating > 0) {
+                parsingSkills = true;
+                lastTitle = new IntStringPair(0, line);
+                skillLists.put(lastTitle, new ArrayList<>());
+            }
+
         }
+        return skillLists;
+    }
 
-        ratedListTitles.sort((o1, o2) -> o2.getInt() - o1.getInt());
-
-        // only keep titles with high ratings
-        ratedListTitles.removeIf(t -> t.getInt() < 100);
-
-        if (ratedSkills.isEmpty()) {
-            return null;
-        }
-
+    private String generateSkillListPrintout(Map<IntStringPair, List<String>> ratedSkillLists) {
         boolean isFirstLine = true;
         StringBuilder sbSkills = new StringBuilder();
-        for (IntStringPair ratedListTitle : ratedListTitles) {
-            List<String> skills = ratedSkills.get(ratedListTitle);
+        for (IntStringPair ratedListTitle : ratedSkillLists.keySet()) {
+            List<String> skills = ratedSkillLists.get(ratedListTitle);
             for (String skill : skills) {
                 if (!isFirstLine) {
                     sbSkills.append("\n");
@@ -197,6 +436,19 @@ public class JobSkillsExtractor {
         }
 
         return sbSkills.toString();
+    }
+
+    private Elements getListElements(Element body) {
+        Elements listElements = new Elements();
+
+        // TODO check for sub lists
+        // add ul elements
+        listElements.addAll(body.getElementsByTag("ul"));
+
+        // add ol elements
+        listElements.addAll(body.getElementsByTag("ol"));
+
+        return listElements;
     }
 
     private int calculateHtmlSkillListItemsRating(Elements listItems) {
@@ -224,8 +476,8 @@ public class JobSkillsExtractor {
     }
 
 
-    private int calculateSkillListProbability(JobOffer jobOffer, IntStringPair ratedSkillListTitle, List<String> skills) {
-        double rating = (double) ratedSkillListTitle.getInt();
+    private int calculateSkillListRating(JobOffer jobOffer, String skillListTitle, List<String> skills) {
+        double rating = 0;
         int nofListItems = skills.size();
 
         // adjust rating based on number of list items
@@ -237,10 +489,8 @@ public class JobSkillsExtractor {
             rating -= 15;
         }
 
-        initDependencyParser();
-
+        // adjust rating based on number of special chars
         for (String skill : skills) {
-            // adjust rating based on number of special chars
             int nofSpecialChars = getNumberOfSpecialChars(skill);
             if (nofSpecialChars > skill.length() / 4d) {
                 double subtract = 75d / nofListItems;
@@ -249,32 +499,20 @@ public class JobSkillsExtractor {
             }
         }
 
-        // adjust rating based on list titles
-        String listTitle = ratedSkillListTitle.getString();
-        rating += rateTitles(jobOffer, listTitle);
+        // adjust rating based on list title ratings
+        rating += rateTitle(jobOffer, skillListTitle);
 
         if (Main.DEBUG && rating > 50) {
-            System.out.println("[skills]\t" + rating + "\t" + listTitle);
+            System.out.println("[skills]\t" + rating + "\t" + skillListTitle);
         }
-
-        ratedSkillListTitle.setInt((int) rating);
 
         return (int) rating;
     }
 
-    private void initDependencyParser() {
-        if (tagger == null) {
-            Properties germanConfig = FileUtils.getStanfordCoreNLPGermanConfiguration();
-            String taggerPath = germanConfig.getProperty("pos.model");
-            String modelPath = germanConfig.getProperty("depparse.model");
-            tagger = new MaxentTagger(taggerPath);
-            parser = DependencyParser.loadFromModelFile(modelPath);
-        }
-    }
-
-    private int rateTitles(JobOffer jobOffer, String title) {
+    private int rateTitle(JobOffer jobOffer, String title) {
         // check if title is in suspicious element
-        Elements titleElements = jobOffer.getDocument().getElementsMatchingOwnText(title);
+        String regexSafeTitle = Pattern.quote(title);
+        Elements titleElements = jobOffer.getDocument().getElementsMatchingOwnText(regexSafeTitle);
         for (Element element : titleElements) {
             String tagName = element.tagName();
             if (tagName.equalsIgnoreCase("a")
@@ -292,14 +530,21 @@ public class JobSkillsExtractor {
             rating -= nofWords * 5;
         }
 
-        // adjust rating by type of words
-        DocumentPreprocessor tokenizer = new DocumentPreprocessor(new StringReader(title));
-        for (List<HasWord> sentence : tokenizer) {
-            List<TaggedWord> tagged = tagger.tagSentence(sentence);
-            GrammaticalStructure gs = parser.predict(tagged);
-            for (TypedDependency dependency : gs.typedDependencies()) {
-                rating += calculateTitleDependencyRating(dependency);
+        List<CoreMap> annotatedSentences = NlpHelper.getInstance().getAnnotatedSentences(title);
+        for (CoreMap annotatedSentence : annotatedSentences) {
+            SemanticGraph semanticGraph = annotatedSentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
+            Collection<TypedDependency> typedDependencies = semanticGraph.typedDependencies();
+            if (typedDependencies.size() == 1) {
+                for (TypedDependency typedDependency : typedDependencies) {
+                    rating += calculateSingleWordTitleDependencyRating(typedDependency);
+                }
+
+            } else {
+                for (TypedDependency typedDependency : typedDependencies) {
+                    rating += calculateTitleDependencyRating(typedDependency);
+                }
             }
+
         }
 
         return rating;
@@ -307,7 +552,6 @@ public class JobSkillsExtractor {
 
     private int calculateTitleDependencyRating(TypedDependency dependency) {
         String shortName = dependency.reln().getShortName();
-        String tag = dependency.dep().tag();
         String word = dependency.dep().backingLabel().value().toLowerCase();
 
         IndexedWord gov = dependency.gov();
@@ -347,7 +591,16 @@ public class JobSkillsExtractor {
                     return -50;
                 }
             }
-        } else if ("NN".equals(tag)) {
+        }
+
+        return 0;
+    }
+
+    private int calculateSingleWordTitleDependencyRating(TypedDependency dependency) {
+        String tag = dependency.dep().tag();
+        String word = dependency.dep().backingLabel().value().toLowerCase();
+
+        if ("NN".equals(tag)) {
             if (wordContainsListItem(NOUNS_SKILL_SYNONYM, word)) {
                 return 25;
             } else if (wordContainsListItem(NOUNS_EXPECTATION_SYNONYM, word)) {
@@ -360,7 +613,6 @@ public class JobSkillsExtractor {
                 return -35;
             }
         }
-
         return 0;
     }
 
@@ -376,7 +628,7 @@ public class JobSkillsExtractor {
     private String getListTitle(JobOffer jobOffer, Elements listItems) {
         String firstListText = null;
         for (Element listItem : listItems) {
-            firstListText = jobOffer.getPlainTextFromHtml(listItem.html()).trim();
+            firstListText = HtmlUtils.getPlainTextFromHtml(listItem.html()).trim();
             firstListText = getLastLine(firstListText);
             if (firstListText != null) {
                 break;
@@ -394,7 +646,7 @@ public class JobSkillsExtractor {
     }
 
     private int getNumberOfSpecialChars(String text) {
-        Matcher specialCharMatcher = Pattern.compile("[^a-zA-Z .,:]").matcher(text);
+        Matcher specialCharMatcher = Pattern.compile("[^a-zA-Z .,:äöüÄÖÜ]").matcher(text);
         int specialCharCounter = 0;
         while (specialCharMatcher.find()) {
             specialCharCounter++;
@@ -428,19 +680,5 @@ public class JobSkillsExtractor {
             }
         }
         return null;
-    }
-
-    private boolean isSkillList(Element listElement) {
-        boolean isSkillList = true;
-        for (Element listItemElement : listElement.getElementsByTag("li")) {
-            if (listItemElement.getElementsByTag("a").size() > 0) {
-                isSkillList = false;
-            } else if (listItemElement.getElementsByTag("input").size() > 0) {
-                isSkillList = false;
-            } else if (listItemElement.getElementsByTag("button").size() > 0) {
-                isSkillList = false;
-            }
-        }
-        return isSkillList;
     }
 }

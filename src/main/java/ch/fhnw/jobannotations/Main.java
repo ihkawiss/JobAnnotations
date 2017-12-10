@@ -1,11 +1,10 @@
 package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
-import ch.fhnw.jobannotations.language.LanguageExtractor;
-import ch.fhnw.jobannotations.location.JobLocationExtractor;
+import ch.fhnw.jobannotations.jobtitle.TitleExtractor;
+import ch.fhnw.jobannotations.location.LocationExtractor;
 import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
-import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,6 +12,7 @@ import org.jsoup.nodes.Document;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
 
 /**
  * @author Hoang
@@ -50,6 +50,13 @@ public class Main {
                     String url = br.readLine();
                     System.out.println("\nSit tight, we're parsing the data...");
 
+                    if (StringUtils.isEmpty(url)) {
+                        System.err.println("Entered URL is empty. Please try again.");
+                        continue;
+                    }
+
+                    url = URLDecoder.decode(url);
+
                     Document document = Jsoup.connect(url).get();
 
                     if (document == null) {
@@ -62,15 +69,20 @@ public class Main {
                         JobTitleExtractor jobTitleParser = new JobTitleExtractor();
                         String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
 
+                        // extract skills from offer
+                        JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
+                        String jobSkills = jobSkillsExtractor.parseJobSkills(jobOffer);
+
                         // extract job location from offer
-                        JobLocationExtractor jobLocationExtractor = new JobLocationExtractor();
-                        String jobLocation = jobLocationExtractor.parseJobLocation(document);
+                        LocationExtractor locationExtractor = new LocationExtractor();
+                        String jobLocation = locationExtractor.parse(jobOffer);
 
                         // extract organisation from offer
                         // TODO: use found title to enhance extraction since the company name may be already present there (often in <title> tag)
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
-                        String jobOrganisation = organisationExtractor.parse(document);
+                        String jobOrganisation = organisationExtractor.parse(jobOffer);
 
+                        /*
                         // clean company from jobtitle
                         jobTitle = OrganisationExtractor.removeOrganisationFromString(jobOrganisation, jobTitle);
 
@@ -81,21 +93,23 @@ public class Main {
                         // extract work load from offer
                         JobWorkloadExtractor workloadExtractor = new JobWorkloadExtractor();
                         String jobWorkload = workloadExtractor.parseJobWorkload(jobOffer);
+                        */
 
-                        // extract skills from offer
-                        JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
-                        String jobSkills = jobSkillsExtractor.parseJobSkills(jobOffer);
+
+                        TitleExtractor titleExtractor = new TitleExtractor();
+                        System.out.println(titleExtractor.parse(jobOffer));
 
                         // PRINT REPORT OF FOUND RESULTS
                         System.out.println("\n" + StringUtils.repeat("-", 80));
                         System.out.println("RESULT REPORT");
                         System.out.println(StringUtils.repeat("-", 80));
+                        /*
                         System.out.println("Job title:\t\t" + jobTitle);
-                        System.out.println("Quota:\t\t\t" + jobWorkload);
-                        System.out.println("Company:\t\t" + jobOrganisation);
-                        System.out.println("Location:\t\t" + jobLocation);
+                        System.out.println("Quota:\t\t\t" + jobWorkload);*/
+                        System.out.println("Company:\t\t" + jobOrganisation);/*
                         System.out.println("Languages:\t\t" + jobLanguage);
-                        System.out.println("Skills:\t\n" + jobSkills);
+                        System.out.println("Location:\t\t" + jobLocation);
+                        System.out.println("Skills:\t\n" + jobSkills);*/
 
 
                     }

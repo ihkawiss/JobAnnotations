@@ -1,9 +1,15 @@
 package ch.fhnw.jobannotations;
 
+import ch.fhnw.jobannotations.utils.HtmlUtils;
+import ch.fhnw.jobannotations.utils.NlpHelper;
+import edu.stanford.nlp.util.CoreMap;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Hoang
@@ -11,9 +17,10 @@ import org.jsoup.select.Elements;
 public class JobOffer {
     // job offer document
     private final Document document;
+    private final Element headElement;
     private final Element bodyElement;
-    private final String plainText;
-    private final String bodyPlainText;
+    private final Element bodyElementWithoutFooter;
+    private final Element footerElement;
 
     // job attributes elements
     private Element titleElement;
@@ -24,40 +31,143 @@ public class JobOffer {
     private String title;
     private String workload;
     private String location;
+    private final List<CoreMap> annotatedSentences;
+    private final List<CoreMap> annotatedBodySentences;
+    private final List<CoreMap> annotatedFooterSentences;
+    private String plaintText;
+    private List<String> plainTextLines;
 
+
+    public List<String> getPlainTextLines() {
+        return plainTextLines;
+    }
 
     public JobOffer(Document document) {
         this.document = document;
-        this.bodyElement = this.document.getElementsByTag("body").first();
 
-        // remove footer element
+        headElement = this.document.head();
+
+        bodyElement = this.document.body();
+        bodyElementWithoutFooter = bodyElement.clone();
+
+        // remove footer elements from body and add to list
         Elements footers = new Elements();
-        footers.addAll(bodyElement.getElementsByTag("footer"));
-        footers.add(bodyElement.getElementById("footer"));
-        footers.addAll(bodyElement.getElementsByClass("footer"));
-        footers.remove(null);
-        for (Element footer : footers) {
-            footer.remove();
+        extractToElementsList(footers, bodyElementWithoutFooter.getElementsByTag("footer"));
+        extractToElementList(footers, bodyElementWithoutFooter.getElementById("footer"));
+        extractToElementsList(footers, bodyElementWithoutFooter.getElementsByClass("footer"));
+
+        // keep footer separately
+        if (footers.size() == 1) {
+            footerElement = footers.first();
+
+        } else if (footers.size() == 0) {
+            footerElement = null;
+
+        } else {
+            // merge multiple footer elements to a single element
+            StringBuilder mergedFooterHtml = new StringBuilder("<div>");
+            for (Element footer : footers) {
+                mergedFooterHtml.append(footer.html());
+            }
+            mergedFooterHtml.append("</div>");
+            footerElement = Jsoup.parse(mergedFooterHtml.toString()).body().child(0);
         }
 
-        this.plainText = getPlainTextFromHtml(this.document.html());
-        this.bodyPlainText = getPlainTextFromHtml(bodyElement.html());
+        // init nlp helper
+        NlpHelper.getInstance();
+
+        System.out.println("[general]\tAnnotating parsed job offer");
+        annotatedSentences = new ArrayList<>();
+        String bodyElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(bodyElementWithoutFooter.html());
+        String bodySentences = HtmlUtils.extractSentencesFromPlaintText(bodyElementWithoutFooterPlainText);
+        annotatedBodySentences = NlpHelper.getInstance().getAnnotatedSentences(bodySentences);
+        annotatedSentences.addAll(annotatedBodySentences);
+
+        if (footerElement != null) {
+            String footerElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(footerElement.html());
+            String footerSentences = HtmlUtils.extractSentencesFromPlaintText(footerElementWithoutFooterPlainText);
+            annotatedFooterSentences = NlpHelper.getInstance().getAnnotatedSentences(footerSentences);
+            annotatedSentences.addAll(annotatedFooterSentences);
+        } else {
+            annotatedFooterSentences = null;
+        }
+
+        plaintText = HtmlUtils.getPlainTextFromHtml(document.html());
+
+        plainTextLines = new ArrayList<>();
+        for (String line : plaintText.split("\n")) {
+            line = line.trim();
+            if (!line.isEmpty()) {
+                plainTextLines.add(line);
+            }
+        }
+
+
+    }
+
+    private void extractToElementsList(Elements elements, Elements elementsToAdd) {
+        for (Element element : elementsToAdd) {
+            extractToElementList(elements, element);
+        }
+
+    }
+
+    private void extractToElementList(Elements elements, Element elementToAdd) {
+        if (elementToAdd != null && !elements.contains(elementToAdd)) {
+            elements.add(elementToAdd);
+            elementToAdd.remove();
+        }
+    }
+
+    public List<CoreMap> getAnnotatedSentences() {
+        return annotatedSentences;
+    }
+
+    public List<CoreMap> getAnnotatedBodySentences() {
+        return annotatedBodySentences;
+    }
+
+    public List<CoreMap> getAnnotatedFooterSentences() {
+        return annotatedFooterSentences;
     }
 
     public Document getDocument() {
         return document;
     }
 
+    public Element getHeadElement() {
+        return headElement;
+    }
+
     public Element getBodyElement() {
         return bodyElement;
     }
 
+    public Element getBodyElementWithoutFooter() {
+        return bodyElementWithoutFooter;
+    }
+
+    public Element getFooterElement() {
+        return footerElement;
+    }
+
     public String getPlainText() {
-        return plainText;
+        return plaintText;
     }
 
     public String getBodyPlainText() {
-        return bodyPlainText;
+        return HtmlUtils.getPlainTextFromHtml(bodyElement.html());
+    }
+
+    public String getBodyWithoutFooterPlaintText() {
+        return HtmlUtils.getPlainTextFromHtml(bodyElementWithoutFooter.html());
+    }
+
+    public String getFooterPlaintTExt() {
+        if (footerElement == null) {
+            return null;
+        }
+        return HtmlUtils.getPlainTextFromHtml(footerElement.html());
     }
 
     public Element getTitleElement() {
@@ -108,26 +218,4 @@ public class JobOffer {
         this.location = location;
     }
 
-    public String getPlainTextFromHtml(String text) {
-        // keep line breaks of b-tags after other tags
-        text = text.replaceAll("(?i)>\\s*\\n*\\s*<b>", "><br><b>");
-
-        // replace b-tags with space to prevent line breaks
-        text = text.replaceAll("(?i)\\s*\\n*\\s*</?b>\\s*", " ");
-
-        // replace br-tags and line breaks with placeholder
-        String breakTagPlaceholder = "%BREAK%";
-        text = text.replaceAll("(?i)(<br[^>]*>|\\n)", breakTagPlaceholder);
-
-        // clean html
-        text = Jsoup.parse(text).text();
-
-        // replace non-breaking space with normal whitespace
-        text = text.replaceAll("\\u00A0"," ");
-
-        // replace placeholder with real line breaks
-        text = text.replaceAll(breakTagPlaceholder, "\n");
-
-        return text;
-    }
 }

@@ -24,9 +24,6 @@ import java.util.Set;
 
 public class PartOfSpeechUtil {
 
-    // regex to filter special characters
-    public static final String SPECIAL_CHARS = "[$&+,:;=?@#<>.^*%!-\"]";
-
     /**
      * Sentences of input text are detected and returned unchanged.
      * Detection is performed using OpenNLP sentence detection and the german model.
@@ -75,30 +72,17 @@ public class PartOfSpeechUtil {
         return null;
     }
 
-    /**
-     * Cleans special characters form given string.
-     *
-     * @param word to clean
-     * @return given word without any special character
-     */
-    public static String clearWord(String word) {
-        return word.replaceAll(SPECIAL_CHARS, "");
-    }
-
-
-    public static Map<String, Integer> getChunksByDictionary(TrieDictionary<String> dictionary, String textToAnalyse, double distance) {
-
+    public static Map<String, Integer> getChunksByDictionary(TrieDictionary<String> dictionary, String textToAnalyse, double distance, double matchWeight, double deleteWeight, double insertWeight, double substituteWeight, double transposeWeight) {
         Map<String, Integer> candidates = new HashMap<>();
 
         String[] sentences = detectSentences(textToAnalyse);
+        if (sentences == null) {
+            return candidates;
+        }
 
         TokenizerFactory tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
-
-        WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -1, -1, -1, Double.NaN);
-
-        double maxDistance = distance;
-
-        ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(dictionary, tokenizerFactory, editDistance, maxDistance);
+        WeightedEditDistance editDistance = new FixedWeightEditDistance(matchWeight, deleteWeight, insertWeight, substituteWeight, transposeWeight);
+        ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(dictionary, tokenizerFactory, editDistance, distance);
 
         for (String text : sentences) {
 
@@ -107,15 +91,41 @@ public class PartOfSpeechUtil {
             Set<Chunk> chunkSet = chunking.chunkSet();
 
             for (Chunk chunk : chunkSet) {
-
-                // get start an end position of chunk
                 int start = chunk.start();
                 int end = chunk.end();
-                double score = chunk.score();
+                int score = (int) chunk.score();
+                CharSequence str = cs.subSequence(start, end);
+                candidates.put(str.toString(), score);
 
-                CharSequence str = cs.subSequence(chunk.start(), chunk.end());
+            }
+        }
+        return candidates;
+    }
 
-                candidates.put(str.toString(), (int) score);
+    public static Map<String, Integer> getChunksByDictionary(TrieDictionary<String> dictionary, String textToAnalyse, double distance) {
+        Map<String, Integer> candidates = new HashMap<>();
+
+        String[] sentences = detectSentences(textToAnalyse);
+        if (sentences == null) {
+            return candidates;
+        }
+
+        TokenizerFactory tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
+        WeightedEditDistance editDistance = new FixedWeightEditDistance(0, -1, -1, -1, Double.NaN);
+        ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(dictionary, tokenizerFactory, editDistance, distance);
+
+        for (String text : sentences) {
+
+            Chunking chunking = chunker.chunk(text);
+            CharSequence cs = chunking.charSequence();
+            Set<Chunk> chunkSet = chunking.chunkSet();
+
+            for (Chunk chunk : chunkSet) {
+                int start = chunk.start();
+                int end = chunk.end();
+                int score = (int) chunk.score();
+                CharSequence str = cs.subSequence(start, end);
+                candidates.put(str.toString(), score);
 
             }
         }
@@ -125,10 +135,10 @@ public class PartOfSpeechUtil {
     }
 
     /**
-     * Loads known company names form resources and returns them as
+     * Loads known words form resources and returns them as
      * TrieDictionary - ready to use for the ApproxDictionaryChunker.
      *
-     * @return dictionary of known company names
+     * @return dictionary of known words
      */
     public static TrieDictionary<String> getTrieDictionaryByFile(String filename, String entityName) {
 

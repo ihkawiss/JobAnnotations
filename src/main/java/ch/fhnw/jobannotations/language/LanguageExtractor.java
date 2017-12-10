@@ -1,19 +1,15 @@
 package ch.fhnw.jobannotations.language;
 
 import ch.fhnw.jobannotations.Main;
-import ch.fhnw.jobannotations.utils.ConfigurationUtil;
-import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
+import com.aliasi.dict.TrieDictionary;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.jsoup.nodes.Document;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 public class LanguageExtractor {
-
-    final static Logger LOG = Logger.getLogger(LanguageExtractor.class);
 
     // TODO: extract level of language
     public String parse(Document document) {
@@ -27,7 +23,7 @@ public class LanguageExtractor {
         final String text = document.body().text();
 
         // search for known languages
-        /*Map<String, Integer> fuzzySearchCandidates = getFuzzySearchCandidates(text);
+        Map<String, Integer> fuzzySearchCandidates = getFuzzySearchCandidates(text);
 
         // return comma separated list
         String result = "";
@@ -39,37 +35,36 @@ public class LanguageExtractor {
         if (result != "") {
             return result.substring(0, result.length() - 2);
         } else {
-            LOG.debug("[language]\t" + "No languages found");
+            System.out.println("[language]\t" + "No languages found");
             return "";
-        }*/
+        }
 
-        return null;
+
     }
 
-    private Map<String, String> getFuzzySearchCandidates(String text) {
+    private Map<String, Integer> getFuzzySearchCandidates(String text) {
 
-        // get path to known languages model from configuration
-        String knownLanguagesFile = ConfigurationUtil.getInstance().get("extractors.model.language");
+        // get chunks for known organisation names which may be recognized within the text
+        TrieDictionary<String> knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_languages.txt", "LANG");
+        Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
 
-        // load known languages from model as list
-        List<String> languages = FileUtils.getFileContentAsList(knownLanguagesFile);
+        // return found chunks as simple List<String>
+        // TODO: use additional information such as score to enhance prediction
+        Map<String, Integer> candidates = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : foundChunks.entrySet()) {
 
-        // detect sentences to process
-        String[] sentences = PartOfSpeechUtil.detectSentences(text);
+            String cleanedChunk = entry.getKey().replaceAll("[(),!.-]", "");
 
-        for (String language : languages) {
+            if (!candidates.containsKey(cleanedChunk)) {
+                candidates.put(cleanedChunk, entry.getValue());
 
-            for (String sentence : sentences) {
-
-                if (sentence.toLowerCase().contains(language.toLowerCase())) {
-
-
-
-                }
-
+                System.out.println("[language-approx]\t" + entry.getKey());
             }
 
         }
+
+        return candidates;
+
     }
 
 
