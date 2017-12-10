@@ -1,20 +1,18 @@
 package ch.fhnw.jobannotations;
 
+import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
 import ch.fhnw.jobannotations.jobtitle.TitleExtractor;
 import ch.fhnw.jobannotations.location.LocationExtractor;
+import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URLDecoder;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author Hoang
@@ -25,95 +23,6 @@ public class Main {
     public static final boolean DEBUG = true;
 
     public static void main(String[] args) {
-
-        BufferedReader brPath = new BufferedReader(new InputStreamReader(System.in));
-        String path;
-        try {
-            System.out.print("Enter path of input file: ");
-            path = brPath.readLine();
-        } catch (IOException e) {
-            System.err.println("Failed to read file");
-            e.printStackTrace();
-            return;
-        } finally {
-            try {
-                brPath.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (path == null) {
-            System.out.println("Failed to get file path");
-            return;
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            Set<String> skillSet = new HashSet<>();
-
-            String url = br.readLine();
-            while (url != null && !url.trim().isEmpty()) {
-                try {
-                    System.out.println("Parsing: " + url);
-                    url = URLDecoder.decode(url);
-
-                    Document document = Jsoup.connect(url).get();
-                    if (document == null) {
-                        System.err.println("\nERROR: Failed to load web page, please try again and report used URL!");
-                        continue;
-                    }
-
-                    if (url.contains("www.jobs.ch")) {
-                        Elements iframes = document.getElementsByTag("iframe");
-                        if (iframes.size() > 1) {
-                            String directLink = Jsoup.parse((iframes.get(1)).attr("srcdoc")).getElementsByTag("a").attr("href");
-
-                            System.out.println("Parsing direct link: " + directLink);
-                            url = URLDecoder.decode(directLink);
-
-                            document = Jsoup.connect(url).get();
-                        }
-                    }
-
-
-                    if (document == null) {
-                        System.err.println("\nERROR: Failed to load web page, please try again and report used URL!");
-
-                    } else {
-                        JobOffer jobOffer = new JobOffer(document);
-
-                        // extract skills from offer
-                        JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
-                        String jobSkills = jobSkillsExtractor.parseJobSkills(jobOffer);
-                        for (String skill : jobSkills.split("\n")) {
-                            skill = skill.trim();
-                            if (!skill.isEmpty() && !skillSet.contains(skill)) {
-                                skillSet.add(skill);
-                                System.out.println("\t" + skill);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("ERROR: Exception thrown: " + e.toString());
-                }
-
-                url = br.readLine();
-            }
-
-            System.out.println();
-            System.out.println("FOUND SKILLS:");
-            for (String skill : skillSet) {
-                System.out.println(skill);
-            }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Failed to read file");
-        }
-    }
-
-    public static void mainBackup(String[] args) {
         boolean keepGoing = true;
 
         // print welcome message
@@ -156,11 +65,9 @@ public class Main {
                     } else {
                         JobOffer jobOffer = new JobOffer(document);
 
-                        /*
                         // extract job title from offer
                         JobTitleExtractor jobTitleParser = new JobTitleExtractor();
                         String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
-*/
 
                         // extract skills from offer
                         JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
@@ -170,12 +77,12 @@ public class Main {
                         LocationExtractor locationExtractor = new LocationExtractor();
                         String jobLocation = locationExtractor.parse(jobOffer);
 
-                        /*
                         // extract organisation from offer
                         // TODO: use found title to enhance extraction since the company name may be already present there (often in <title> tag)
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
-                        String jobOrganisation = organisationExtractor.parse(document);
+                        String jobOrganisation = organisationExtractor.parse(jobOffer);
 
+                        /*
                         // clean company from jobtitle
                         jobTitle = OrganisationExtractor.removeOrganisationFromString(jobOrganisation, jobTitle);
 
@@ -198,11 +105,11 @@ public class Main {
                         System.out.println(StringUtils.repeat("-", 80));
                         /*
                         System.out.println("Job title:\t\t" + jobTitle);
-                        System.out.println("Quota:\t\t\t" + jobWorkload);
-                        System.out.println("Company:\t\t" + jobOrganisation);
-                        System.out.println("Languages:\t\t" + jobLanguage);*/
+                        System.out.println("Quota:\t\t\t" + jobWorkload);*/
+                        System.out.println("Company:\t\t" + jobOrganisation);/*
+                        System.out.println("Languages:\t\t" + jobLanguage);
                         System.out.println("Location:\t\t" + jobLocation);
-                        System.out.println("Skills:\t\n" + jobSkills);
+                        System.out.println("Skills:\t\n" + jobSkills);*/
 
 
                     }

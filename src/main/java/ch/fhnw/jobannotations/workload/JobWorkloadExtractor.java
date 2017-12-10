@@ -72,7 +72,7 @@ public class JobWorkloadExtractor {
             }
 
             // remove workloads with invalid numbers of digits
-            if (digits.size() < 1 || digits.size() > 2) {
+            if (digits.size() < 1 || digits.size() > 3) {
                 ratedWorkloads.remove(i);
                 continue;
             }

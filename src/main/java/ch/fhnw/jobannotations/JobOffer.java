@@ -73,20 +73,20 @@ public class JobOffer {
             footerElement = Jsoup.parse(mergedFooterHtml.toString()).body().child(0);
         }
 
-        // init NLP helper
-        System.out.println("[general]\tInitialize NLP");
-        annotatedSentences = new ArrayList<>();
+        // init nlp helper
+        NlpHelper.getInstance();
 
-        System.out.println("[general]\tAnnotate job offer");
+        System.out.println("[general]\tAnnotating parsed job offer");
+        annotatedSentences = new ArrayList<>();
         String bodyElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(bodyElementWithoutFooter.html());
         String bodySentences = HtmlUtils.extractSentencesFromPlaintText(bodyElementWithoutFooterPlainText);
-        annotatedBodySentences = annotateSentences(bodySentences);
+        annotatedBodySentences = NlpHelper.getInstance().getAnnotatedSentences(bodySentences);
         annotatedSentences.addAll(annotatedBodySentences);
 
         if (footerElement != null) {
             String footerElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(footerElement.html());
             String footerSentences = HtmlUtils.extractSentencesFromPlaintText(footerElementWithoutFooterPlainText);
-            annotatedFooterSentences = annotateSentences(footerSentences);
+            annotatedFooterSentences = NlpHelper.getInstance().getAnnotatedSentences(footerSentences);
             annotatedSentences.addAll(annotatedFooterSentences);
         } else {
             annotatedFooterSentences = null;
@@ -103,12 +103,6 @@ public class JobOffer {
         }
 
 
-    }
-
-    public List<CoreMap> annotateSentences(String sentence) {
-        NlpHelper nlpHelper = NlpHelper.getInstance();
-        List<CoreMap> annotatedSentences = nlpHelper.getAnnotatedSentences(sentence);
-        return annotatedSentences;
     }
 
     private void extractToElementsList(Elements elements, Elements elementsToAdd) {

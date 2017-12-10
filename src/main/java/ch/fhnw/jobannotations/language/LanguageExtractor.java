@@ -45,7 +45,7 @@ public class LanguageExtractor {
     private Map<String, Integer> getFuzzySearchCandidates(String text) {
 
         // get chunks for known organisation names which may be recognized within the text
-        TrieDictionary knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_languages.txt", "LANG");
+        TrieDictionary<String> knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_languages.txt", "LANG");
         Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
 
         // return found chunks as simple List<String>

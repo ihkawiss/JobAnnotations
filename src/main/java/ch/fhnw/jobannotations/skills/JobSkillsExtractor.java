@@ -2,17 +2,14 @@ package ch.fhnw.jobannotations.skills;
 
 import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
-import ch.fhnw.jobannotations.utils.HtmlUtils;
-import ch.fhnw.jobannotations.utils.IntStringPair;
-import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreLabel;
+import ch.fhnw.jobannotations.utils.*;
+import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -29,7 +26,7 @@ public class JobSkillsExtractor {
     private static final List<String> DETERMINERS_OUR = Arrays.asList("unsere", "unser");
     private static final List<String> SUBJECTS_YOU = Arrays.asList("sie", "du");
     private static final List<String> SUBJECTS_WE = Arrays.asList("wir", "ich");
-    private static final List<String> NOUNS_SKILL_SYNONYM = Arrays.asList(
+    private static final List<String>   NOUNS_SKILL_SYNONYM = Arrays.asList(
             "qualifikation",
             "profil",
             "erfahrung",
@@ -50,7 +47,12 @@ public class JobSkillsExtractor {
             "tätigkeit",
             "arbeit"
     );
-    private static final List<String> NOUNS_EXPECTATION_SYNONYM = Arrays.asList("anforderung", "erwartung");
+    private static final List<String> NOUNS_EXPECTATION_SYNONYM = Arrays.asList(
+            "anforderung",
+            "anforderungen",
+            "erwartung",
+            "erwartungen"
+    );
     private static final List<String> NOUNS_OFFER_SYNONYM = Arrays.asList("angebot");
     private static final List<String> NOUNS_POSSIBILITY_SYNONYM = Arrays.asList("möglichkeit", "perspektive");
     private static final List<String> VERBS_OFFER = Arrays.asList(
@@ -60,7 +62,9 @@ public class JobSkillsExtractor {
             "bietest",
             "geboten",
             "mitbringen",
-            "mitbringst"
+            "mitbringst",
+            "haben",
+            "hast"
     );
     private static final List<String> VERBS_EXPECT = Arrays.asList(
             "erwarten",
@@ -103,31 +107,152 @@ public class JobSkillsExtractor {
 
     private void formatSkills(JobOffer jobOffer, Map<IntStringPair, List<String>> ratedSkillLists) {
         for (IntStringPair listTitle : ratedSkillLists.keySet()) {
-            List<String> formattedSkills = new ArrayList<>();
+            List<String> skillSentences = ratedSkillLists.get(listTitle);
 
-            // extract skill key words
-            List<String> skills = ratedSkillLists.get(listTitle);
-            for (String skill : skills) {
-                // annotate skill sentences
-                List<CoreMap> annotatedSentences = jobOffer.annotateSentences(skill);
-                for (CoreMap annotatedSentence : annotatedSentences) {
-                    // get tokens
-                    List<CoreLabel> tokens = annotatedSentence.get(CoreAnnotations.TokensAnnotation.class);
-                    for (CoreLabel token : tokens) {
-                        // get part of speech tags
-                        String posTag = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-                        if ("NN".equals(posTag)) {
-                            // add nouns
-                            String word = token.get(CoreAnnotations.TextAnnotation.class);
-                            formattedSkills.add(word);
-                        }
-                    }
-                }
-            }
+            List<String> formattedSkills = extractSkills(skillSentences);
 
             // replace old list
             ratedSkillLists.put(listTitle, formattedSkills);
         }
+    }
+
+    private List<String> extractSkills(List<String> skillSentences) {
+        List<String> extractedNouns = NlpHelper.getInstance().extractNouns(skillSentences);
+        return extractSkillNouns(extractedNouns);
+    }
+
+    private List<String> extractSkillNouns(List<String> nouns) {
+        List<IntStringPair> ratedSkillNouns = new ArrayList<>();
+        for (String noun : nouns) {
+            IntStringPair ratedSkillNoun = getSkillNounRating(noun);
+            if (ratedSkillNoun.getInt() >= 0) {
+                ratedSkillNouns.add(ratedSkillNoun);
+            }
+
+        }
+
+        ratedSkillNouns.sort(Comparator.comparingInt(IntStringPair::getInt));
+
+        List<String> skills = new ArrayList<>();
+        for (IntStringPair ratedSkillNoun : ratedSkillNouns) {
+            System.out.println("SKILL: " + ratedSkillNoun.getString() + " : " + ratedSkillNoun.getInt());
+            skills.add(ratedSkillNoun.getString());
+        }
+
+        return skills;
+    }
+
+    private IntStringPair getSkillNounRating(String noun) {
+        String simplifiedNoun = StringUtils.simplify(noun);
+
+        // dictionaries
+        TrieDictionary<String> skillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
+        TrieDictionary<String> antiSkillsDictionary = NlpHelper.getInstance().getAntiSkillsDictionary();
+        TrieDictionary<String> simplifiedSkillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
+        TrieDictionary<String> simplifiedAntiSkillsDictionary = NlpHelper.getInstance().getAntiSkillsDictionary();
+
+        // get distances
+        IntStringPair skillWordDistance = getDictionaryNounDistance(skillsDictionary, noun);
+        IntStringPair antiSkillWordDistance = getDictionaryNounDistance(antiSkillsDictionary, noun);
+        IntStringPair simplifiedSkillWordDistance = getDictionaryNounDistance(simplifiedSkillsDictionary, simplifiedNoun);
+        IntStringPair simplifiedAntiSkillWordDistance = getDictionaryNounDistance(simplifiedAntiSkillsDictionary, simplifiedNoun);
+
+        // combine distances
+        int skillDistance = 0;
+        if (skillWordDistance != null) {
+            skillDistance += skillWordDistance.getInt();
+        } else {
+            skillDistance += 3000;
+        }
+        if (simplifiedSkillWordDistance != null) {
+            skillDistance += simplifiedSkillWordDistance.getInt();
+        } else {
+            skillDistance += 3000;
+        }
+
+        int antiSkillDistance = 0;
+        if (antiSkillWordDistance != null) {
+            antiSkillDistance += antiSkillWordDistance.getInt();
+        } else {
+            antiSkillDistance += 3000;
+        }
+        if (simplifiedAntiSkillWordDistance != null) {
+            antiSkillDistance += simplifiedAntiSkillWordDistance.getInt();
+        } else {
+            antiSkillDistance += 3000;
+        }
+
+        if (antiSkillDistance > 2000) {
+            // special case for acronyms
+            if (noun.contains("-")) {
+                for (String part : noun.split("-")) {
+                    if (StringUtils.isAllUpperCase(part.trim())) {
+                        skillDistance -= 1500;
+                    }
+                }
+            } else if (StringUtils.isAllUpperCase(noun)) {
+                skillDistance -= 3000;
+            }
+        }
+
+        // check diff
+        int distanceDiff = antiSkillDistance - skillDistance;
+        return new IntStringPair(distanceDiff, noun);
+    }
+
+    private IntStringPair getDictionaryNounDistance(TrieDictionary<String> dictionary, String noun) {
+        // calculate max distance
+        int nounLength = noun.length();
+        int maxDistance = 0;
+        if (nounLength > 4) {
+            maxDistance = 1 + nounLength / 10;
+        }
+        return NlpHelper.getInstance().calcDistanceWithDictionary(dictionary, noun, maxDistance);
+    }
+
+    private List<String> extractSkillNouns(String skillSentence) {
+        List<String> formattedSkills = new ArrayList<>();
+        TrieDictionary<String> skillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
+        Map<String, Integer> chunks = PartOfSpeechUtil.getChunksByDictionary(skillsDictionary, skillSentence, 1);
+        for (String skill : chunks.keySet()) {
+            Integer distance = chunks.get(skill);
+            int nofChars = skill.length();
+            if (distance > nofChars / 2) {
+                // distance too high for this word length
+                continue;
+            }
+
+            addSkill(formattedSkills, skill);
+        }
+
+        List<String> skillNouns = new ArrayList<>();
+        for (String formattedSkill : formattedSkills) {
+            skillNouns.addAll(NlpHelper.getInstance().extractNouns(formattedSkill));
+        }
+
+        return skillNouns;
+    }
+
+    private void addSkill(List<String> formattedSkills, String skill) {
+        for (String formattedSkill : formattedSkills) {
+            String skillLowerCase = skill.toLowerCase();
+            String formattedSkillLowerCase = formattedSkill.toLowerCase();
+            if (formattedSkillLowerCase.contains(skillLowerCase)) {
+                // there is already a skill in the list containing this skill
+                // do nothing
+                return;
+
+            } else if (skillLowerCase.contains(formattedSkillLowerCase)) {
+                // there is a skill in the list that is contained by this skill
+                // replace it
+                formattedSkills.remove(formattedSkill);
+                formattedSkills.add(skill);
+                return;
+            }
+        }
+
+        // nothing special to handle, just add the new skill
+        formattedSkills.add(skill);
     }
 
     private Map<IntStringPair, List<String>> extractSkillListsByListParsing(JobOffer jobOffer) {
@@ -405,7 +530,7 @@ public class JobSkillsExtractor {
             rating -= nofWords * 5;
         }
 
-        List<CoreMap> annotatedSentences = jobOffer.annotateSentences(title);
+        List<CoreMap> annotatedSentences = NlpHelper.getInstance().getAnnotatedSentences(title);
         for (CoreMap annotatedSentence : annotatedSentences) {
             SemanticGraph semanticGraph = annotatedSentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
             Collection<TypedDependency> typedDependencies = semanticGraph.typedDependencies();
@@ -521,7 +646,7 @@ public class JobSkillsExtractor {
     }
 
     private int getNumberOfSpecialChars(String text) {
-        Matcher specialCharMatcher = Pattern.compile("[^a-zA-Z .,:]").matcher(text);
+        Matcher specialCharMatcher = Pattern.compile("[^a-zA-Z .,:äöüÄÖÜ]").matcher(text);
         int specialCharCounter = 0;
         while (specialCharMatcher.find()) {
             specialCharCounter++;

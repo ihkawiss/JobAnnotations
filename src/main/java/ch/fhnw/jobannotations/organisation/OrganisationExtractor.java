@@ -1,16 +1,18 @@
 package ch.fhnw.jobannotations.organisation;
 
+import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.FileUtils;
+import ch.fhnw.jobannotations.utils.NlpHelper;
 import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
+import ch.fhnw.jobannotations.utils.StringUtils;
 import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import org.apache.commons.lang3.StringUtils;
-import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +29,17 @@ public class OrganisationExtractor {
             "SNC", "SCm", "SCmA", "Sagl", "SAc", "SAcA", "Scrl", "SCl", "SACm"
     };
 
-    public String parse(Document document) {
+    private void extractAllTagTexts(Element parent, List<String> texts) {
+        texts.add(parent.ownText());
+        for (Element element : parent.children()) {
+            if (element != null) {
+                extractAllTagTexts(element, texts);
+            }
+        }
+
+    }
+
+    public String parse(JobOffer jobOffer) {
 
         if (Main.DEBUG) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
@@ -36,12 +48,27 @@ public class OrganisationExtractor {
 
         // get the visible text from document
         // TODO: instead of body().text(); analyse TAG-texts
-        final String text = document.body().text();
+        final String text = jobOffer.getPlainText();
+
+        List<CoreMap> annotatedSentences = new ArrayList<>();
+        for (String line : jobOffer.getPlainTextLines()) {
+            annotatedSentences.addAll(NlpHelper.getInstance().getAnnotatedSentences(line));
+        }
+
+
+        // List<CoreMap> annotatedSentences = jobOffer.getAnnotatedSentences();
+
+
+        // get text from all tags
+        List<String> texts = new ArrayList<>();
+        extractAllTagTexts(jobOffer.getDocument().body(), texts);
+
 
         // detect sentences from text
-        String[] sentences = PartOfSpeechUtil.detectSentences(text);
+        // String[] sentences = PartOfSpeechUtil.detectSentences(text);
 
-        List<String> legalFormCandidates = getLegalFormCandidates(sentences);
+        // List<String> legalFormCandidates = getLegalFormCandidates(texts.toArray(new String[0]));
+        List<String> legalFormCandidates = getLegalFormCandidates(annotatedSentences);
         Map<String, Integer> fuzzySearchCandidates = getFuzzySearchCandidates(text);
 
         // ---------------------------------------------------------
@@ -155,71 +182,85 @@ public class OrganisationExtractor {
      * Within the passed sentence, a search for possible organisation names is performed.
      * If a probable organisation name is found, it's returned with a score from [0 - 100].
      *
-     * @param sentences to analyse
+     * @param annotatedSentences to analyse
      * @return probable organisation name with score
      */
-    private List<String> getLegalFormCandidates(String[] sentences) {
+    private List<String> getLegalFormCandidates(List<CoreMap> annotatedSentences) {
 
         List<String> candidates = new ArrayList<>();
 
-        for (String sentence : sentences) {
-
-            // analyse sentence's part of speech structure
-            String[] posTags = PartOfSpeechUtil.analysePartOfSpeech(sentence);
+        for (CoreMap annotatedSentence : annotatedSentences) {
+            String sentence = annotatedSentence.get(CoreAnnotations.TextAnnotation.class);
 
             // search for known legal form postfixes in sentence
             for (String legalForm : KNOWN_LEGAL_FORMS) {
-
                 if (sentence.toLowerCase().contains(legalForm.toLowerCase())) {
 
-                    String[] words = sentence.split(" ");
+                    StringBuilder organisationNameBuilder = null;
 
-                    for (int i = 0; i < words.length; i++) {
+                    List<CoreLabel> tokens = annotatedSentence.get(CoreAnnotations.TokensAnnotation.class);
+                    for (int i = tokens.size() - 1; i >= 0; i--) {
+                        CoreLabel token = tokens.get(i);
+                        String word = token.get(CoreAnnotations.TextAnnotation.class);
 
-                        if (PartOfSpeechUtil.clearWord(words[i]).toLowerCase().equals(legalForm.toLowerCase())) {
+                        if (StringUtils.simplify(word).equalsIgnoreCase(legalForm)) {
+                            organisationNameBuilder = new StringBuilder();
 
-                            String organisationName = ""; // glue probable name together
+                        } else if (organisationNameBuilder != null) {
+                            String posTag = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                            boolean addToOrganisationName = (posTag.equals(NlpHelper.POS_TAG_COMMON_NOUN) || posTag.equals(NlpHelper.POS_TAG_PROPER_NOUN));
+                            if (addToOrganisationName) {
+                                // make sure word does not contain special chars
+                                Pattern p = Pattern.compile(StringUtils.SPECIAL_CHARS);
+                                Matcher m = p.matcher(word);
+                                addToOrganisationName = !m.find();
+                            }
 
-                            // check words left from found postfix
-                            // naive: NE NN NE Postfix == organisation name
-                            for (int j = i - 1; j >= 0; j--) {
-                                if (posTags[j].equals("NN") || posTags[j].equals("NE")) {
+                            if (addToOrganisationName) {
+                                organisationNameBuilder.insert(0, word + " ");
 
-                                    // make sure word does not contain special chars
-                                    Pattern p = Pattern.compile(PartOfSpeechUtil.SPECIAL_CHARS);
-                                    Matcher m = p.matcher(words[j]);
+                            } else {
+                                String organisationName = organisationNameBuilder.toString().trim();
+                                candidates.add(organisationName);
+                                organisationNameBuilder = null;
 
-                                    if (!m.find())
-                                        organisationName = words[j] + " " + organisationName;
+                                if (organisationName.length() > legalForm.length()) {
+                                    organisationName += " " + legalForm;
+                                    if (!candidates.contains(organisationName)) {
+                                        candidates.add(organisationName);
 
-                                } else {
-                                    break;
+                                        System.out.println("[organization-indicator]\t" + organisationName);
+                                    }
                                 }
                             }
-
-                            // build found organisation name
-                            if (organisationName.trim().length() > legalForm.length() && !candidates.contains(organisationName + legalForm)) {
-                                candidates.add(organisationName + legalForm);
-
-                                System.out.println("[organization-indicator]\t" + organisationName + legalForm);
-                            }
-
                         }
                     }
+                    if (organisationNameBuilder != null){
+                        String organisationName = organisationNameBuilder.toString().trim();
+                        candidates.add(organisationName);
 
+                        if (organisationName.length() > legalForm.length()) {
+                            organisationName += " " + legalForm;
+                            if (!candidates.contains(organisationName)) {
+                                candidates.add(organisationName);
+
+                                System.out.println("[organization-indicator]\t" + organisationName);
+                            }
+                        }
+                    }
                 }
-
             }
         }
-
         return candidates;
     }
+
+
 
     /**
      * Analyses given text with LingPipe's basic NER class
      * ApproxDictionaryChunker, similar to a basic fuzzy search.
      *
-     * @param sentences to analyse for organisation names
+     * @param text to analyse for organisation names
      * @return list of probable organisation names
      */
     private Map<String, Integer> getFuzzySearchCandidates(String text) {
