@@ -2,6 +2,7 @@ package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
 import ch.fhnw.jobannotations.jobtitle.TitleExtractor;
+import ch.fhnw.jobannotations.language.LanguageExtractor;
 import ch.fhnw.jobannotations.location.LocationExtractor;
 import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
@@ -65,7 +66,7 @@ public class Main {
                     } else {
                         JobOffer jobOffer = new JobOffer(document);
 
-                        // extract job title from offer
+                        /*/// extract job title from offer
                         JobTitleExtractor jobTitleParser = new JobTitleExtractor();
                         String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
 
@@ -82,15 +83,16 @@ public class Main {
                         OrganisationExtractor organisationExtractor = new OrganisationExtractor();
                         String jobOrganisation = organisationExtractor.parse(jobOffer);
 
-                        /*
+
                         // clean company from jobtitle
                         jobTitle = OrganisationExtractor.removeOrganisationFromString(jobOrganisation, jobTitle);
 
                         // extract languages from offer
+                        */
                         LanguageExtractor languageExtractor = new LanguageExtractor();
-                        String jobLanguage = languageExtractor.parse(document);
+                        String jobLanguage = languageExtractor.parse(jobOffer);
 
-                        // extract work load from offer
+                        /*// extract work load from offer
                         JobWorkloadExtractor workloadExtractor = new JobWorkloadExtractor();
                         String jobWorkload = workloadExtractor.parseJobWorkload(jobOffer);
                         */
@@ -105,9 +107,9 @@ public class Main {
                         System.out.println(StringUtils.repeat("-", 80));
                         /*
                         System.out.println("Job title:\t\t" + jobTitle);
-                        System.out.println("Quota:\t\t\t" + jobWorkload);*/
-                        System.out.println("Company:\t\t" + jobOrganisation);/*
-                        System.out.println("Languages:\t\t" + jobLanguage);
+                        System.out.println("Quota:\t\t\t" + jobWorkload);
+                        System.out.println("Company:\t\t" + jobOrganisation);*/
+                        System.out.println("Languages:\t\t" + jobLanguage);/*
                         System.out.println("Location:\t\t" + jobLocation);
                         System.out.println("Skills:\t\n" + jobSkills);*/
 

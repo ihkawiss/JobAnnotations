@@ -1,18 +1,28 @@
 package ch.fhnw.jobannotations.language;
 
+import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
-import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
-import com.aliasi.dict.TrieDictionary;
+import ch.fhnw.jobannotations.utils.FileUtils;
+import ch.fhnw.jobannotations.utils.NlpHelper;
+import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
+import edu.stanford.nlp.util.CoreMap;
 import org.apache.commons.lang3.StringUtils;
-import org.jsoup.nodes.Document;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LanguageExtractor {
 
+    final static Logger LOG = Logger.getLogger(LanguageExtractor.class);
+
     // TODO: extract level of language
-    public String parse(Document document) {
+    public String parse(JobOffer offer) {
 
         if (Main.DEBUG) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
@@ -20,16 +30,15 @@ public class LanguageExtractor {
         }
 
         // get the visible text from document
-        final String text = document.body().text();
+        List<String> lines = offer.getPlainTextLines();
 
-        // search for known languages
-        Map<String, Integer> fuzzySearchCandidates = getFuzzySearchCandidates(text);
+        Map<String, String> fuzzySearchCandidates = getFuzzySearchCandidates(lines);
 
         // return comma separated list
         String result = "";
 
-        for (Map.Entry<String, Integer> entry : fuzzySearchCandidates.entrySet()) {
-            result += entry.getKey() + ", ";
+        for (Map.Entry<String, String> entry : fuzzySearchCandidates.entrySet()) {
+            result += entry.getKey() + "(" + entry.getValue() + "), ";
         }
 
         if (result != "") {
@@ -38,33 +47,47 @@ public class LanguageExtractor {
             System.out.println("[language]\t" + "No languages found");
             return "";
         }
-
-
     }
 
-    private Map<String, Integer> getFuzzySearchCandidates(String text) {
+    private Map<String, String> getFuzzySearchCandidates(List<String> lines) {
 
-        // get chunks for known organisation names which may be recognized within the text
-        TrieDictionary<String> knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_languages.txt", "LANG");
-        Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
+        Map<String, String> candidates = new HashMap<>();
 
-        // return found chunks as simple List<String>
-        // TODO: use additional information such as score to enhance prediction
-        Map<String, Integer> candidates = new HashMap<>();
-        for (Map.Entry<String, Integer> entry : foundChunks.entrySet()) {
+        // load known languages from model as list
+        List<String> languages = FileUtils.getFileContentAsList("data/known_languages.txt");
 
-            String cleanedChunk = entry.getKey().replaceAll("[(),!.-]", "");
+        for (String language : languages) {
 
-            if (!candidates.containsKey(cleanedChunk)) {
-                candidates.put(cleanedChunk, entry.getValue());
+            for (String sentence : lines) {
 
-                System.out.println("[language-approx]\t" + entry.getKey());
+                if (sentence.toLowerCase().contains(language.toLowerCase())) {
+
+                    // annotate sentence
+                    CoreMap annotatedSentence = NlpHelper.getInstance().getAnnotatedSentences(sentence).get(0);
+
+                    SemanticGraph dependencies = annotatedSentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+
+                    // find word, which contains language
+                    IndexedWord root = dependencies.getNodeByWordPattern("(?i)" + language + ".*");
+
+                    if (root != null && root.word().toLowerCase().contains(language.toLowerCase())) {
+                        Set<IndexedWord> desc = dependencies.descendants(root);
+                        List<IndexedWord> predicates = desc.stream().filter(d -> d.tag().equals("ADV") || d.tag().equals("ADJA")).collect(Collectors.toList());
+
+                        String a = "";
+                        for (IndexedWord w : predicates)
+                            a += w.lemma() + " ";
+
+                        candidates.put(language, a);
+                    }
+
+                }
+
             }
 
         }
 
         return candidates;
-
     }
 
 
