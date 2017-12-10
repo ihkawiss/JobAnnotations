@@ -9,7 +9,6 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,9 +18,6 @@ import java.util.stream.Collectors;
 
 public class LanguageExtractor {
 
-    final static Logger LOG = Logger.getLogger(LanguageExtractor.class);
-
-    // TODO: extract level of language
     public String parse(JobOffer offer) {
 
         if (Main.DEBUG) {
@@ -32,13 +28,13 @@ public class LanguageExtractor {
         // get the visible text from document
         List<String> lines = offer.getPlainTextLines();
 
-        Map<String, String> fuzzySearchCandidates = getFuzzySearchCandidates(lines);
+        Map<String, String> fuzzySearchCandidates = getKnownLanguagesCandidates(lines);
 
         // return comma separated list
         String result = "";
 
         for (Map.Entry<String, String> entry : fuzzySearchCandidates.entrySet()) {
-            result += entry.getKey() + "(" + entry.getValue() + "), ";
+            result += entry.getKey() + " (" + entry.getValue() + "), ";
         }
 
         if (result != "") {
@@ -49,7 +45,13 @@ public class LanguageExtractor {
         }
     }
 
-    private Map<String, String> getFuzzySearchCandidates(List<String> lines) {
+    /**
+     * Find known languages in job offer and determine it's levels.
+     *
+     * @param lines of the job offer
+     * @return candidates which were found
+     */
+    private Map<String, String> getKnownLanguagesCandidates(List<String> lines) {
 
         Map<String, String> candidates = new HashMap<>();
 
@@ -65,20 +67,28 @@ public class LanguageExtractor {
                     // annotate sentence
                     CoreMap annotatedSentence = NlpHelper.getInstance().getAnnotatedSentences(sentence).get(0);
 
+                    // load dependency graph from annotated sentence
                     SemanticGraph dependencies = annotatedSentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
 
                     // find word, which contains language
-                    IndexedWord root = dependencies.getNodeByWordPattern("(?i)" + language + ".*");
+                    IndexedWord languageWord = dependencies.getNodeByWordPattern("(?i)" + language + ".*");
 
-                    if (root != null && root.word().toLowerCase().contains(language.toLowerCase())) {
-                        Set<IndexedWord> desc = dependencies.descendants(root);
-                        List<IndexedWord> predicates = desc.stream().filter(d -> d.tag().equals("ADV") || d.tag().equals("ADJA")).collect(Collectors.toList());
+                    if (languageWord != null) {
 
-                        String a = "";
-                        for (IndexedWord w : predicates)
-                            a += w.lemma() + " ";
+                        // find all words which are descendants of the language
+                        Set<IndexedWord> desc = dependencies.descendants(languageWord);
 
-                        candidates.put(language, a);
+                        // extract adjectives from dependencies
+                        List<String> predicates = desc.stream()
+                                .filter(d -> d.tag().equals("ADV") || d.tag().equals("ADJA") || d.tag().equals("ADJD"))
+                                .map(x -> x.word())
+                                .collect(Collectors.toList());
+
+                        // join found adjectives together
+                        String adjectives = String.join(" ", predicates);
+
+                        // save found language and adjectives
+                        candidates.put(language, adjectives);
                     }
 
                 }
@@ -89,6 +99,5 @@ public class LanguageExtractor {
 
         return candidates;
     }
-
 
 }
