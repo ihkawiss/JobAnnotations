@@ -591,6 +591,20 @@ public class JobSkillsExtractor {
                     return -50;
                 }
             }
+        } else if ((EnglishGrammaticalRelations.PUNCTUATION.getShortName().equals(shortName) ||
+                "root".equals(shortName))
+                && "NN".equals(govTag)) {
+            if (wordContainsListItem(NOUNS_SKILL_SYNONYM, govWord)) {
+                return 25;
+            } else if (wordContainsListItem(NOUNS_EXPECTATION_SYNONYM, govWord)) {
+                return 25;
+            } else if (wordContainsListItem(NOUNS_JOB_SYNONYM, govWord)) {
+                return -35;
+            } else if (wordContainsListItem(NOUNS_OFFER_SYNONYM, govWord)) {
+                return -35;
+            } else if (wordContainsListItem(NOUNS_POSSIBILITY_SYNONYM, govWord)) {
+                return -35;
+            }
         }
 
         return 0;
