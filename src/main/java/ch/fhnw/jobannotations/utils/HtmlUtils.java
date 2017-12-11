@@ -25,6 +25,9 @@ public class HtmlUtils {
         String breakTagPlaceholder = "%BREAK%";
         html = html.replaceAll("(?i)(<br[^>]*>|\\n)", breakTagPlaceholder);
 
+        // replace p-tags with placeholder
+        html = html.replaceAll("(?i)(<p>|\\n)", breakTagPlaceholder);
+
         // clean html
         html = Jsoup.parse(html).text();
 

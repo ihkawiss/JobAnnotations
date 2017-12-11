@@ -226,7 +226,6 @@ public class OrganisationExtractor {
 
                             } else {
                                 String organisationName = organisationNameBuilder.toString().trim();
-                                candidates.add(organisationName);
                                 organisationNameBuilder = null;
 
                                 if (organisationName.length() > legalForm.length()) {
@@ -242,7 +241,6 @@ public class OrganisationExtractor {
                     }
                     if (organisationNameBuilder != null){
                         String organisationName = organisationNameBuilder.toString().trim();
-                        candidates.add(organisationName);
 
                         if (organisationName.length() > legalForm.length()) {
                             organisationName += " " + legalForm;
