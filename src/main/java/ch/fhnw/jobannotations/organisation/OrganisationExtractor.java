@@ -85,6 +85,9 @@ public class OrganisationExtractor {
             int posScore = 0;
             for (String candidate : legalFormCandidates) {
 
+                if(StringUtils.isEmpty(candidate))
+                    continue;
+
                 // check against found fuzzy search chunks
                 for (Map.Entry<String, Integer> fuzzyCandidate : fuzzySearchCandidates.entrySet()) {
 
@@ -109,6 +112,8 @@ public class OrganisationExtractor {
 
                 posScore++;
             }
+
+
 
             return weightedIndicatorCandidates.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey().trim();
 

@@ -34,7 +34,12 @@ public class LanguageExtractor {
         String result = "";
 
         for (Map.Entry<String, String> entry : fuzzySearchCandidates.entrySet()) {
-            result += entry.getKey() + " (" + entry.getValue() + "), ";
+            result += entry.getKey();
+
+            if(entry.getValue() != null && entry.getValue() != "")
+                result += "(" + entry.getValue() + "), ";
+            else
+                result += ", ";
         }
 
         if (result != "") {
@@ -89,6 +94,15 @@ public class LanguageExtractor {
 
                         // save found language and adjectives
                         candidates.put(language, adjectives);
+
+                    } else {
+
+                        // fall back with trivial contains
+                        if(sentence.toLowerCase().indexOf(language.toLowerCase()) > -1) {
+                            if(candidates.get(language) == null)
+                                candidates.put(language, "");
+                        }
+
                     }
 
                 }
