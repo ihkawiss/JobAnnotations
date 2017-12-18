@@ -1,11 +1,11 @@
 package ch.fhnw.jobannotations.extractors.location;
 
-import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.domain.JobOffer;
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.utils.*;
+import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.CoreMap;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import org.apache.commons.lang3.StringUtils;
@@ -23,7 +23,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +49,6 @@ public class LocationExtractor implements IExtractor {
             "input",
             "button"
     };
-    private static final String LOCATION_NER_TAG = "LOCATION";
     private static final int RATING_LOCATION_BY_LOCATION_FLAGS = 150;
     private static final int RATING_LOCATION_BY_ZIP_CODE = 75;
     private static final int RATING_LOCATION_BY_NER = 50;
@@ -55,8 +57,7 @@ public class LocationExtractor implements IExtractor {
     private static final int RATING_VALIDATION_CONTAINS_ORIGINAL = 50;
     private static final int RATING_VALIDATION_CONTAINS_ORIGINAL_LOWER_CASE = 25;
     private static final int RATING_VALIDATION_FAILED = -25;
-    private List<IntStringPair> ratedJobLocations = new ArrayList<>();
-    private MaxentTagger tagger;
+    private static final int MAX_RATING_DICTIONARY = 200;
 
     @Override
     public String parse(JobOffer jobOffer) {
@@ -66,34 +67,35 @@ public class LocationExtractor implements IExtractor {
             System.out.println("[location]\t" + "Started to parse location from offer");
         }
 
-        findPotentialJobLocations(jobOffer);
-        return getLocationWithHighestPotential();
+        List<IntStringPair> ratedJobLocations = findPotentialJobLocations(jobOffer);
+        return getLocationWithHighestPotential(ratedJobLocations);
     }
 
     @Override
     public void learn(String data) {
-        // TODO: implement usage of file first!
+        FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.locations.train"), data);
     }
 
-    private void findPotentialJobLocations(JobOffer jobOffer) {
-        // TODO search in job title element
-
+    private List<IntStringPair> findPotentialJobLocations(JobOffer jobOffer) {
         // parse location in body without footer
         System.out.println("[location]\tFind potential job locations in body element without footer");
-        findPotentialJobLocations(jobOffer, false);
+        List<IntStringPair> ratedJobLocations = findPotentialJobLocations(jobOffer, false);
 
         // parse location in footer
         System.out.println("[location]\tFind potential job locations in footer element");
-        findPotentialJobLocations(jobOffer, true);
+        ratedJobLocations.addAll(findPotentialJobLocations(jobOffer, true));
+
+        return ratedJobLocations;
     }
 
-    private void findPotentialJobLocations(JobOffer jobOffer, boolean isFooter) {
+    private List<IntStringPair> findPotentialJobLocations(JobOffer jobOffer, boolean isFooter) {
+        List<IntStringPair> ratedJobLocations = new ArrayList<>();
         int ratingAdjustment = isFooter ? RATING_ELEMENT_IN_FOOTER : 0;
 
         Element element = isFooter ? jobOffer.getFooterElement() : jobOffer.getBodyElementWithoutFooter();
 
         if (element == null) {
-            return;
+            return ratedJobLocations;
         }
 
         String plainText = HtmlUtils.getPlainTextFromHtml(element.html());
@@ -150,6 +152,8 @@ public class LocationExtractor implements IExtractor {
                 }
             }
         }
+
+        return ratedJobLocations;
     }
 
     private List<String> getPotentialJobLocationByLocationFlags(Element bodyElement, String plainText) {
@@ -192,53 +196,7 @@ public class LocationExtractor implements IExtractor {
                 }
             }
         }
-
-/*
-        String nerModel = FileUtils.getStanfordCoreNLPGermanConfiguration().getProperty("ner.model");
-        CRFClassifier<CoreMap> classifier = CRFClassifier.getClassifierNoExceptions(nerModel);
-        List<List<CoreMap>> sentences = classifier.classify(plainText);
-        for (List<CoreMap> sentence : sentences) {
-            for (CoreMap word : sentence) {
-                String nerTag = word.get(CoreAnnotations.NamedEntityTagAnnotation.class);
-                if (LOCATION_NER_TAG.equals(nerTag)) {
-                    String string = word.toString();
-                    potentialJobLocations.add(string);
-                }
-            }
-
-        }
-
-
-        DocumentPreprocessor tokenizer = new DocumentPreprocessor(new StringReader(plainText));
-        for (List<HasWord> sentence : tokenizer) {
-            List<TaggedWord> taggedWords = tagger.tagSentence(sentence);
-            for (TaggedWord taggedWord : taggedWords) {
-                String tag = taggedWord.tag();
-                if (tag.equals(LOCATION_NER_TAG)) {
-                    String word = taggedWord.word();
-                    potentialJobLocations.add(word);
-                }
-            }
-        }*/
-
-        /*
-        edu.stanford.nlp.simple.Document document = new edu.stanford.nlp.simple.Document(plainText);
-        for (Sentence sentence : document.sentences()) {  // Will iterate over two sentences
-            List<String> tags = sentence.nerTags();
-            for (int i = 0; i < tags.size(); i++) {
-                if (LOCATION_NER_TAG.equals(tags.get(i))) {
-                    String location = sentence.word(i);
-                    potentialJobLocations.add(location);
-                }
-            }
-        }*/
         return potentialJobLocations;
-    }
-
-    private void initNer() {
-        Properties germanConfig = FileUtils.getStanfordCoreNLPGermanConfiguration();
-        String taggerPath = germanConfig.getProperty("pos.model");
-        tagger = new MaxentTagger(taggerPath);
     }
 
     private List<String> getPotentialJobLocationByZipCode(String plainText) {
@@ -250,15 +208,16 @@ public class LocationExtractor implements IExtractor {
         return potentialLocations;
     }
 
-    private String getLocationWithHighestPotential() {
+    private String getLocationWithHighestPotential(List<IntStringPair> ratedJobLocations) {
         if (ratedJobLocations.isEmpty()) {
             System.out.println("[location]\tNo locations found. Returning null.");
             return null;
         }
 
-        validateLocations();
-        removeDuplications();
-        filterByRatings();
+        ratedJobLocations = adjustRatingByDictionaryDistances(ratedJobLocations);
+//        ratedJobLocations = validateLocations(ratedJobLocations);
+        ratedJobLocations = removeDuplications(ratedJobLocations);
+        ratedJobLocations = filterByRatings(ratedJobLocations);
 
         // if there are still multiple locations left, just return location with shortest name
         if (ratedJobLocations.size() > 1) {
@@ -267,31 +226,37 @@ public class LocationExtractor implements IExtractor {
         return ratedJobLocations.get(0).getString();
     }
 
-
-    /**
-     * Removes duplicated entries and adjust rating by number of duplications.
-     */
-    private void removeDuplications() {
-        System.out.println("[location]\tRemove duplicates and adjust rating by number of identical entries");
-        ratedJobLocations.sort(Comparator.comparing(IntStringPair::getString));
-        String lastLocation = null;
-        for (int i = ratedJobLocations.size() - 1; i >= 0; i--) {
-            IntStringPair ratedJobLocation = ratedJobLocations.get(i);
-            if (ratedJobLocation.getString().equals(lastLocation)) {
-                int ratingDifference = ratedJobLocations.get(i + 1).getInt() - ratedJobLocation.getInt();
-                if (ratingDifference < 0) {
-                    ratingDifference = 0;
-                }
-                int additionalRating = RATING_REPETITION + ratingDifference;
-                ratedJobLocations.remove(i + 1);
-                ratedJobLocation.setInt(ratedJobLocation.getInt() + additionalRating);
-
-            }
-            lastLocation = ratedJobLocation.getString();
+    private List<IntStringPair> adjustRatingByDictionaryDistances(List<IntStringPair> ratedJobLocations) {
+        TrieDictionary<String> locationsDictionary = NlpHelper.getInstance().getLocationsDictionary();
+        for (IntStringPair ratedJobLocation : ratedJobLocations) {
+            int newRating = calculateLocationRatingByDictionaryDistance(locationsDictionary, ratedJobLocation);
+            ratedJobLocation.setInt(newRating);
         }
+        return ratedJobLocations;
     }
 
-    private void validateLocations() {
+    private int calculateLocationRatingByDictionaryDistance(TrieDictionary<String> locationsDictionary, IntStringPair ratedLocation) {
+        String locationName = ratedLocation.getString();
+        int rating = ratedLocation.getInt();
+
+        // calculate max distance
+        int nounLength = locationName.length();
+        int maxDistance = 0;
+        if (nounLength > 4) {
+            maxDistance = 1 + nounLength / 10;
+        }
+
+        IntStringPair locationDistance = NlpHelper.getInstance().calcDistanceWithDictionary(locationsDictionary, locationName, maxDistance);
+        if (locationDistance != null) {
+            int distance = (locationDistance.getInt() - 1000) / 20;
+            if (distance < MAX_RATING_DICTIONARY) {
+                rating += MAX_RATING_DICTIONARY - distance;
+            }
+        }
+        return rating;
+    }
+
+    private List<IntStringPair> validateLocations(List<IntStringPair> ratedJobLocations) {
         System.out.println("[location]\tValidate location names");
         boolean addressValidated = false;
         for (IntStringPair ratedLocation : ratedJobLocations) {
@@ -334,12 +299,37 @@ public class LocationExtractor implements IExtractor {
                 }
             }
         }
+        return ratedJobLocations;
+    }
+
+    /**
+     * Removes duplicated entries and adjust rating by number of duplications.
+     */
+    private List<IntStringPair> removeDuplications(List<IntStringPair> ratedJobLocations) {
+        System.out.println("[location]\tRemove duplicates and adjust rating by number of identical entries");
+        ratedJobLocations.sort(Comparator.comparing(IntStringPair::getString));
+        String lastLocation = null;
+        for (int i = ratedJobLocations.size() - 1; i >= 0; i--) {
+            IntStringPair ratedJobLocation = ratedJobLocations.get(i);
+            if (ratedJobLocation.getString().equals(lastLocation)) {
+                int ratingDifference = ratedJobLocations.get(i + 1).getInt() - ratedJobLocation.getInt();
+                if (ratingDifference < 0) {
+                    ratingDifference = 0;
+                }
+                int additionalRating = RATING_REPETITION + ratingDifference;
+                ratedJobLocations.remove(i + 1);
+                ratedJobLocation.setInt(ratedJobLocation.getInt() + additionalRating);
+
+            }
+            lastLocation = ratedJobLocation.getString();
+        }
+        return ratedJobLocations;
     }
 
     /**
      * Only keep entries with highest ratings
      */
-    private void filterByRatings() {
+    private List<IntStringPair> filterByRatings(List<IntStringPair> ratedJobLocations) {
         // sort by rating
         ratedJobLocations.sort((o1, o2) -> o2.getInt() - o1.getInt());
 
@@ -350,6 +340,7 @@ public class LocationExtractor implements IExtractor {
                 ratedJobLocations.remove(i);
             }
         }
+        return ratedJobLocations;
     }
 
     private int calculateValidationRating(String originalLocationName, String validatedLocationName) {
@@ -463,20 +454,5 @@ public class LocationExtractor implements IExtractor {
                 }
             }
         }
-    }
-
-    private boolean elementContainsText(Element element, String text) {
-        return element.text().contains(text);
-    }
-
-    private boolean elementIsInsideOtherElement(Element parent, Element child) {
-        for (Element element : parent.children()) {
-            if (element.equals(child)) {
-                return true;
-            } else if (elementIsInsideOtherElement(element, child)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

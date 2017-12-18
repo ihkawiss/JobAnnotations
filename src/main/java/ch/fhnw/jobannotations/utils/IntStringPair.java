@@ -1,25 +1,16 @@
 package ch.fhnw.jobannotations.utils;
 
-import org.jsoup.nodes.Element;
-
 /**
- * @author Hoang
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class IntStringPair {
     private static final String TO_STRING_FORMAT = "[rating=%d, string=%s]";
     private int intValue;
     private String string;
-    private Element element;
 
     public IntStringPair(int intValue, String string) {
         this.intValue = intValue;
         this.string = string;
-    }
-
-    public IntStringPair(int intValue, String string, Element element) {
-        this.intValue = intValue;
-        this.string = string;
-        this.element = element;
     }
 
     public int getInt() {
@@ -40,14 +31,6 @@ public class IntStringPair {
 
     public void setString(String string) {
         this.string = string;
-    }
-
-    public Element getElement() {
-        return element;
-    }
-
-    public void setElement(Element element) {
-        this.element = element;
     }
 
     @Override

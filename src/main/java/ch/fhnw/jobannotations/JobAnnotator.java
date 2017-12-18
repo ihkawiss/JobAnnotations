@@ -8,7 +8,6 @@ import ch.fhnw.jobannotations.extractors.location.LocationExtractor;
 import ch.fhnw.jobannotations.extractors.organisation.OrganisationExtractor;
 import ch.fhnw.jobannotations.extractors.skills.JobSkillsExtractor;
 import ch.fhnw.jobannotations.extractors.workload.JobWorkloadExtractor;
-import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.NlpHelper;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -19,9 +18,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ *
+ *
+ * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
+ */
 public class JobAnnotator {
 
-    final static Logger LOG = Logger.getLogger(FileUtils.class);
+    private final static Logger LOG = Logger.getLogger(JobAnnotator.class);
 
     private List<IExtractor> extractors;
 
@@ -29,9 +33,15 @@ public class JobAnnotator {
         this(true);
     }
 
+    /**
+     * Constructs a JobAnnotator instance.
+     *
+     * @param useDefaultExtractors <code>false</code> to prevent using the default extractors list, <code>true</code>
+     */
     public JobAnnotator(boolean useDefaultExtractors) {
 
         // load nlp models
+        LOG.debug("Initializing NLP");
         NlpHelper.getInstance();
 
         extractors = new ArrayList<>();
