@@ -73,9 +73,6 @@ public class JobOffer {
             footerElement = Jsoup.parse(mergedFooterHtml.toString()).body().child(0);
         }
 
-        // init nlp helper
-        NlpHelper.getInstance();
-
         System.out.println("[general]\tAnnotating parsed job offer");
         annotatedSentences = new ArrayList<>();
         String bodyElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(bodyElementWithoutFooter.html());

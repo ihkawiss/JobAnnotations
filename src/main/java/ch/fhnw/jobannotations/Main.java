@@ -1,12 +1,12 @@
 package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
-import ch.fhnw.jobannotations.jobtitle.TitleExtractor;
 import ch.fhnw.jobannotations.language.LanguageExtractor;
 import ch.fhnw.jobannotations.location.LocationExtractor;
 import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
+import ch.fhnw.jobannotations.utils.NlpHelper;
 import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -21,7 +21,7 @@ import java.net.URLDecoder;
  * @author Hoang
  */
 public class Main {
-    
+
     public static final boolean DEBUG = ConfigurationUtil.get("configuration.debug.enabled").equalsIgnoreCase("true");
 
     public static void main(String[] args) {
@@ -35,8 +35,12 @@ public class Main {
         System.out.println("Authors:\tHoang Tran, Kevin Kirn");
         System.out.println(StringUtils.repeat("-", 80));
 
+        // init nlp helper
+        NlpHelper.getInstance();
+
         if (DEBUG) {
-            System.out.println("NOTICE: DEBUG mode is enabled, extractors will print some messages.\n");
+            System.out.println(StringUtils.repeat("-", 80));
+            System.out.println("NOTICE: DEBUG mode is enabled, extractors will print some messages.");
         }
 
         while (keepGoing) {
@@ -44,7 +48,7 @@ public class Main {
             boolean repeat = true;
 
             while (repeat) {
-
+                System.out.println(StringUtils.repeat("-", 80) + "\n");
                 System.out.print("Please enter a job offer (URL) to parse: ");
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
                 try {

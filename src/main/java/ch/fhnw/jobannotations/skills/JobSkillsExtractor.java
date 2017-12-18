@@ -26,7 +26,7 @@ public class JobSkillsExtractor {
     private static final List<String> DETERMINERS_OUR = Arrays.asList("unsere", "unser");
     private static final List<String> SUBJECTS_YOU = Arrays.asList("sie", "du");
     private static final List<String> SUBJECTS_WE = Arrays.asList("wir", "ich");
-    private static final List<String>   NOUNS_SKILL_SYNONYM = Arrays.asList(
+    private static final List<String> NOUNS_SKILL_SYNONYM = Arrays.asList(
             "qualifikation",
             "profil",
             "erfahrung",
@@ -100,12 +100,22 @@ public class JobSkillsExtractor {
             }
         }
 
-        formatSkills(jobOffer, ratedSkillLists);
+        if (Main.DEBUG) {
+            System.out.println("[skills-nlp]\tExtract nouns from skill lists");
+        }
+        formatSkills(ratedSkillLists);
 
-        return generateSkillListPrintout(ratedSkillLists);
+        // create single skill list
+        HashSet<String> mergedSkillList = new HashSet<>();
+        for (IntStringPair ratedListTitle : ratedSkillLists.keySet()) {
+            List<String> skills = ratedSkillLists.get(ratedListTitle);
+            mergedSkillList.addAll(skills);
+        }
+
+        return generateSkillListPrintout(mergedSkillList);
     }
 
-    private void formatSkills(JobOffer jobOffer, Map<IntStringPair, List<String>> ratedSkillLists) {
+    private void formatSkills(Map<IntStringPair, List<String>> ratedSkillLists) {
         for (IntStringPair listTitle : ratedSkillLists.keySet()) {
             List<String> skillSentences = ratedSkillLists.get(listTitle);
 
@@ -135,7 +145,10 @@ public class JobSkillsExtractor {
 
         List<String> skills = new ArrayList<>();
         for (IntStringPair ratedSkillNoun : ratedSkillNouns) {
-            System.out.println("SKILL: " + ratedSkillNoun.getString() + " : " + ratedSkillNoun.getInt());
+            if (Main.DEBUG) {
+                System.out.println("[skills-nlp]\tRate skill noun with dictionary: "
+                        + ratedSkillNoun.getString() + " => " + ratedSkillNoun.getInt());
+            }
             skills.add(ratedSkillNoun.getString());
         }
 
@@ -277,6 +290,9 @@ public class JobSkillsExtractor {
         }
 
         // remove lists with low ratings
+        if (Main.DEBUG) {
+            System.out.println("[skills]\tRemove skill lists with low rating");
+        }
         ratedSkillListTitles.stream()
                 .filter(r -> r.getInt() <= 100)
                 .forEach(ratedSkillLists::remove);
@@ -421,18 +437,16 @@ public class JobSkillsExtractor {
         return skillLists;
     }
 
-    private String generateSkillListPrintout(Map<IntStringPair, List<String>> ratedSkillLists) {
+
+    private String generateSkillListPrintout(Collection<String> skills) {
         boolean isFirstLine = true;
         StringBuilder sbSkills = new StringBuilder();
-        for (IntStringPair ratedListTitle : ratedSkillLists.keySet()) {
-            List<String> skills = ratedSkillLists.get(ratedListTitle);
-            for (String skill : skills) {
-                if (!isFirstLine) {
-                    sbSkills.append("\n");
-                }
-                sbSkills.append(skill);
-                isFirstLine = false;
+        for (String skill : skills) {
+            if (!isFirstLine) {
+                sbSkills.append("\n");
             }
+            sbSkills.append(skill);
+            isFirstLine = false;
         }
 
         return sbSkills.toString();
