@@ -52,7 +52,6 @@ public class NlpHelper {
     private final TrieDictionary<String> simplifiedAntiSkillsDictionary;
 
     private NlpHelper() {
-        System.out.println(StringUtils.repeat("-", 80));
         System.out.println("[nlp]\tInitializing NLP");
         pipeline = new StanfordCoreNLP(FileUtils.getStanfordCoreNLPGermanConfiguration());
 /*
