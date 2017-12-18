@@ -1,7 +1,6 @@
 package ch.fhnw.jobannotations.language;
 
 import ch.fhnw.jobannotations.JobOffer;
-import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.NlpHelper;
@@ -21,7 +20,7 @@ public class LanguageExtractor {
 
     public String parse(JobOffer offer) {
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
             System.out.println("[language]\t" + "Started to parse language from offer");
         }

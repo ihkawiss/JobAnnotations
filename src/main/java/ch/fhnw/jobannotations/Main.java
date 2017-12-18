@@ -22,7 +22,7 @@ import java.net.URLDecoder;
  */
 public class Main {
 
-    public static final boolean DEBUG = ConfigurationUtil.get("configuration.debug.enabled").equalsIgnoreCase("true");
+    public static final boolean DEBUG = ConfigurationUtil.isDebugModeEnabled();
 
     public static void main(String[] args) {
         boolean keepGoing = true;

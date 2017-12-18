@@ -1,7 +1,6 @@
 package ch.fhnw.jobannotations.skills;
 
 import ch.fhnw.jobannotations.JobOffer;
-import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.*;
 import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -79,7 +78,7 @@ public class JobSkillsExtractor {
 
     public String parseJobSkills(JobOffer jobOffer) {
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
             System.out.println("[skills-indicator]\t" + "Started to parse skills from offer by checking lists");
         }
@@ -88,19 +87,19 @@ public class JobSkillsExtractor {
 
         if (ratedSkillLists.isEmpty()) {
             // no skills found
-            if (Main.DEBUG) {
+            if (ConfigurationUtil.isDebugModeEnabled()) {
                 System.out.println("[skills-nlp]\t" + "No skills found with list parsing. Started to parse skills from offer by analysing sentences with NLP");
             }
             ratedSkillLists = extractSkillListsBySentenceAnalyzing(jobOffer);
             if (ratedSkillLists.isEmpty()) {
-                if (Main.DEBUG) {
+                if (ConfigurationUtil.isDebugModeEnabled()) {
                     System.out.println("[skills]\t" + "No skills found.");
                 }
                 return null;
             }
         }
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("[skills-nlp]\tExtract nouns from skill lists");
         }
         formatSkills(ratedSkillLists);
@@ -145,7 +144,7 @@ public class JobSkillsExtractor {
 
         List<String> skills = new ArrayList<>();
         for (IntStringPair ratedSkillNoun : ratedSkillNouns) {
-            if (Main.DEBUG) {
+            if (ConfigurationUtil.isDebugModeEnabled()) {
                 System.out.println("[skills-nlp]\tRate skill noun with dictionary: "
                         + ratedSkillNoun.getString() + " => " + ratedSkillNoun.getInt());
             }
@@ -290,7 +289,7 @@ public class JobSkillsExtractor {
         }
 
         // remove lists with low ratings
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("[skills]\tRemove skill lists with low rating");
         }
         ratedSkillListTitles.stream()
@@ -516,7 +515,7 @@ public class JobSkillsExtractor {
         // adjust rating based on list title ratings
         rating += rateTitle(jobOffer, skillListTitle);
 
-        if (Main.DEBUG && rating > 50) {
+        if (ConfigurationUtil.isDebugModeEnabled() && rating > 50) {
             System.out.println("[skills]\t" + rating + "\t" + skillListTitle);
         }
 

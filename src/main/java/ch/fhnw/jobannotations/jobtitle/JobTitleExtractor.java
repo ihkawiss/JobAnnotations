@@ -1,8 +1,8 @@
 package ch.fhnw.jobannotations.jobtitle;
 
 import ch.fhnw.jobannotations.JobOffer;
-import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.jobtitle.rating.JobTitleStringRatingManager;
+import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
@@ -35,7 +35,7 @@ public class JobTitleExtractor {
     public String parseJobTitle(JobOffer jobOffer) {
         Document document = jobOffer.getDocument().clone();
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
             System.out.println("[jobtitle-indicator]\t" + "Started to parse job title from offer");
         }
@@ -111,7 +111,7 @@ public class JobTitleExtractor {
             System.out.println(ratedString.toString());
         }
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("[jobtitle-approx]\t" + "Adjusting rating by known job titles");
         }
 

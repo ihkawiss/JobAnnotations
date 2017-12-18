@@ -1,11 +1,7 @@
 package ch.fhnw.jobannotations.location;
 
 import ch.fhnw.jobannotations.JobOffer;
-import ch.fhnw.jobannotations.Main;
-import ch.fhnw.jobannotations.utils.FileUtils;
-import ch.fhnw.jobannotations.utils.HtmlUtils;
-import ch.fhnw.jobannotations.utils.IntStringPair;
-import ch.fhnw.jobannotations.utils.NlpHelper;
+import ch.fhnw.jobannotations.utils.*;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
@@ -63,7 +59,7 @@ public class LocationExtractor {
 
     public String parse(JobOffer jobOffer) {
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
             System.out.println("[location]\t" + "Started to parse location from offer");
         }

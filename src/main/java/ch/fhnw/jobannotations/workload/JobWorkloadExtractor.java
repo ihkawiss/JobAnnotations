@@ -1,7 +1,7 @@
 package ch.fhnw.jobannotations.workload;
 
 import ch.fhnw.jobannotations.JobOffer;
-import ch.fhnw.jobannotations.Main;
+import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import org.apache.commons.lang3.StringUtils;
 
@@ -23,7 +23,7 @@ public class JobWorkloadExtractor {
     // TODO search in job title element
     public String parseJobWorkload(JobOffer jobOffer) {
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
             System.out.println("[jobtitle-indicator]\t" + "Started to parse workload from offer");
         }

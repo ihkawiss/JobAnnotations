@@ -1,6 +1,5 @@
 package ch.fhnw.jobannotations.jobtitle.rating;
 
-import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
@@ -267,14 +266,14 @@ public class JobTitleStringRatingManager {
         for (IntStringPair ratedString : ratedStrings) {
             String text = ratedString.getString();
 
-            if (Main.DEBUG) {
+            if (ConfigurationUtil.isDebugModeEnabled()) {
                 System.out.println("[jobtitle-approx]\t" + text);
             }
 
             Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(dictionary, text, 1);
             for (String key : foundChunks.keySet()) {
                 Integer score = foundChunks.get(key);
-                if (Main.DEBUG) {
+                if (ConfigurationUtil.isDebugModeEnabled()) {
                     System.out.println("[jobtitle-approx]\t[" + score + "] " + key);
                 }
 

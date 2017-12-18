@@ -1,7 +1,6 @@
 package ch.fhnw.jobannotations.organisation;
 
 import ch.fhnw.jobannotations.JobOffer;
-import ch.fhnw.jobannotations.Main;
 import ch.fhnw.jobannotations.utils.*;
 import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -38,7 +37,7 @@ public class OrganisationExtractor {
 
     public String parse(JobOffer jobOffer) {
 
-        if (Main.DEBUG) {
+        if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
             System.out.println("[organisation]\t" + "Started to parse organisation from offer");
         }
