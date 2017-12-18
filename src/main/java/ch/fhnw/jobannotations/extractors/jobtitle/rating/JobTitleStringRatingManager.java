@@ -1,12 +1,13 @@
 package ch.fhnw.jobannotations.extractors.jobtitle.rating;
 
+import ch.fhnw.jobannotations.extractors.workload.JobWorkloadExtractor;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
-import ch.fhnw.jobannotations.extractors.workload.JobWorkloadExtractor;
 import com.aliasi.dict.DictionaryEntry;
 import com.aliasi.dict.TrieDictionary;
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
@@ -22,6 +23,8 @@ import java.util.regex.Pattern;
  * @author Hoang
  */
 public class JobTitleStringRatingManager {
+
+    final static Logger LOG = Logger.getLogger(JobTitleStringRatingManager.class);
 
     public static final int LOW_RATING_THRESHOLD = 10;
 
@@ -266,23 +269,19 @@ public class JobTitleStringRatingManager {
         for (IntStringPair ratedString : ratedStrings) {
             String text = ratedString.getString();
 
-            if (ConfigurationUtil.isDebugModeEnabled()) {
-                System.out.println("[jobtitle-approx]\t" + text);
-            }
+            LOG.debug(text);
 
             Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(dictionary, text, 1);
             for (String key : foundChunks.keySet()) {
                 Integer score = foundChunks.get(key);
-                if (ConfigurationUtil.isDebugModeEnabled()) {
-                    System.out.println("[jobtitle-approx]\t[" + score + "] " + key);
-                }
+
+                LOG.debug("[" + score + "] " + key);
 
                 if (score == 0) {
                     ratedString.setInt(ratedString.getInt() + 100);
                 }
 
             }
-
 
         }
     }

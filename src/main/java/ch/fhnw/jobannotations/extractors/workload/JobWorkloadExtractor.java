@@ -2,9 +2,8 @@ package ch.fhnw.jobannotations.extractors.workload;
 
 import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.IExtractor;
-import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.IntStringPair;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,6 +16,8 @@ import java.util.regex.Pattern;
  */
 public class JobWorkloadExtractor implements IExtractor {
 
+    final static Logger LOG = Logger.getLogger(JobWorkloadExtractor.class);
+
     public static final String WORKLOAD_REGEX = "(\\d+\\s*%?\\s*(.|\\w+)\\s*)?\\d+\\s*%";
     private static final int RATING_REPETITION = 25;
     private static final int RATING_UNLIKELY_WORKLOAD = -50;
@@ -24,10 +25,7 @@ public class JobWorkloadExtractor implements IExtractor {
     @Override
     public String parse(JobOffer jobOffer) {
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[jobtitle-indicator]\t" + "Started to parse workload from offer");
-        }
+        LOG.debug("Started to parse workload from offer");
 
         String text = jobOffer.getPlainText();
 
