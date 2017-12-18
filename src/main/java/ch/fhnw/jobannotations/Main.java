@@ -1,13 +1,14 @@
 package ch.fhnw.jobannotations;
 
-import ch.fhnw.jobannotations.jobtitle.JobTitleExtractor;
-import ch.fhnw.jobannotations.language.LanguageExtractor;
-import ch.fhnw.jobannotations.location.LocationExtractor;
-import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
-import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
+import ch.fhnw.jobannotations.extractors.jobtitle.JobTitleExtractor;
+import ch.fhnw.jobannotations.extractors.language.LanguageExtractor;
+import ch.fhnw.jobannotations.extractors.location.LocationExtractor;
+import ch.fhnw.jobannotations.extractors.organisation.OrganisationExtractor;
+import ch.fhnw.jobannotations.extractors.skills.JobSkillsExtractor;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.NlpHelper;
-import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
+import ch.fhnw.jobannotations.extractors.workload.JobWorkloadExtractor;
+import com.google.protobuf.MapEntry;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URLDecoder;
+import java.util.Map;
 
 /**
  * @author Hoang
@@ -31,12 +33,8 @@ public class Main {
         System.out.println(StringUtils.repeat("-", 80));
         System.out.println("Welcome to JobAnnotations!\n");
         System.out.println("Project:\tJobAnnotations FHNW IP5 2017");
-        System.out.println("Version:\tBeta");
         System.out.println("Authors:\tHoang Tran, Kevin Kirn");
         System.out.println(StringUtils.repeat("-", 80));
-
-        // init nlp helper
-        NlpHelper.getInstance();
 
         if (DEBUG) {
             System.out.println(StringUtils.repeat("-", 80));
@@ -69,47 +67,22 @@ public class Main {
                         System.err.println("\nERROR: Failed to load web page, please try again and report used URL!");
 
                     } else {
-                        JobOffer jobOffer = new JobOffer(document);
 
-                        /// extract job title from offer
-                        JobTitleExtractor jobTitleParser = new JobTitleExtractor();
-                        String jobTitle = jobTitleParser.parseJobTitle(jobOffer);
+                        JobAnnotator annotator = new JobAnnotator();
 
-                        // extract skills from offer
-                        JobSkillsExtractor jobSkillsExtractor = new JobSkillsExtractor();
-                        String jobSkills = jobSkillsExtractor.parseJobSkills(jobOffer);
+                        Map<String, String> results = annotator.parse(url);
 
-                        // extract job location from offer
-                        LocationExtractor locationExtractor = new LocationExtractor();
-                        String jobLocation = locationExtractor.parse(jobOffer);
-
-                        // extract organisation from offer
-                        OrganisationExtractor organisationExtractor = new OrganisationExtractor();
-                        String jobOrganisation = organisationExtractor.parse(jobOffer);
-
-                        // clean company from jobtitle
-                        jobTitle = OrganisationExtractor.removeOrganisationFromString(jobOrganisation, jobTitle);
-
-                        // extract languages from offer
-                        LanguageExtractor languageExtractor = new LanguageExtractor();
-                        String jobLanguage = languageExtractor.parse(jobOffer);
-
-                        // extract work load from offer
-                        JobWorkloadExtractor workloadExtractor = new JobWorkloadExtractor();
-                        String jobWorkload = workloadExtractor.parseJobWorkload(jobOffer);
-
-                        // PRINT REPORT OF FOUND RESULTS
+                        // print report
                         System.out.println("\n" + StringUtils.repeat("-", 80));
                         System.out.println("RESULT REPORT");
                         System.out.println(StringUtils.repeat("-", 80));
 
-                        System.out.println("Job title:\t\t" + jobTitle);
-                        System.out.println("Quota:\t\t\t" + jobWorkload);
-                        System.out.println("Company:\t\t" + jobOrganisation);
-                        System.out.println("Languages:\t\t" + jobLanguage);
-                        System.out.println("Location:\t\t" + jobLocation);
-                        System.out.println("Skills:\t\n" + jobSkills);
+                        for(Map.Entry<String, String> entry : results.entrySet()) {
+                            System.out.println(entry.getKey() + ":\n" + entry.getValue() + "\n");
+                        }
 
+                        // clean company from jobtitle
+//                        jobTitle = OrganisationExtractor.removeOrganisationFromString(jobOrganisation, jobTitle);
 
                     }
                 } catch (IOException e) {

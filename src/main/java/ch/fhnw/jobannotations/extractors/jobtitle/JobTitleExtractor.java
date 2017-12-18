@@ -1,7 +1,8 @@
-package ch.fhnw.jobannotations.jobtitle;
+package ch.fhnw.jobannotations.extractors.jobtitle;
 
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.JobOffer;
-import ch.fhnw.jobannotations.jobtitle.rating.JobTitleStringRatingManager;
+import ch.fhnw.jobannotations.extractors.jobtitle.rating.JobTitleStringRatingManager;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +15,8 @@ import java.util.regex.Pattern;
 /**
  * @author Hoang
  */
-public class JobTitleExtractor {
+public class JobTitleExtractor implements IExtractor {
+
     private static final String REGEX_SPECIAL_CHARS_TO_REMOVE = "[$+,:;=?@#<>.^*%!-\"]";
     private static final String[] IRRELEVANT_TAGS = {
             "style",
@@ -32,7 +34,8 @@ public class JobTitleExtractor {
         jobTitleStringRatingManager = new JobTitleStringRatingManager();
     }
 
-    public String parseJobTitle(JobOffer jobOffer) {
+    @Override
+    public String parse(JobOffer jobOffer) {
         Document document = jobOffer.getDocument().clone();
 
         if (ConfigurationUtil.isDebugModeEnabled()) {

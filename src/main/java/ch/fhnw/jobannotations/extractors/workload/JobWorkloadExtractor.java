@@ -1,6 +1,7 @@
-package ch.fhnw.jobannotations.workload;
+package ch.fhnw.jobannotations.extractors.workload;
 
 import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import org.apache.commons.lang3.StringUtils;
@@ -14,14 +15,14 @@ import java.util.regex.Pattern;
 /**
  * @author Hoang
  */
-public class JobWorkloadExtractor {
+public class JobWorkloadExtractor implements IExtractor {
 
     public static final String WORKLOAD_REGEX = "(\\d+\\s*%?\\s*(.|\\w+)\\s*)?\\d+\\s*%";
     private static final int RATING_REPETITION = 25;
     private static final int RATING_UNLIKELY_WORKLOAD = -50;
 
-    // TODO search in job title element
-    public String parseJobWorkload(JobOffer jobOffer) {
+    @Override
+    public String parse(JobOffer jobOffer) {
 
         if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));

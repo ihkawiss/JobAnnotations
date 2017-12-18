@@ -1,5 +1,6 @@
-package ch.fhnw.jobannotations.location;
+package ch.fhnw.jobannotations.extractors.location;
 
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.utils.*;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -29,7 +30,7 @@ import java.util.regex.Pattern;
 /**
  * @author Hoang
  */
-public class LocationExtractor {
+public class LocationExtractor implements IExtractor {
 
     private static final String GEO_ADMIN_API_URL_TEMPLATE = "https://api3.geo.admin.ch/rest/services/api/SearchServer?type=locations&limit=1&searchText=%s";
     private static final String[] ALLOWED_SPECIAL_LABELS_GEO_ADMIN_API = {"Ort", "Quartier", "Zug", "Bus"};
@@ -57,6 +58,7 @@ public class LocationExtractor {
     private List<IntStringPair> ratedJobLocations = new ArrayList<>();
     private MaxentTagger tagger;
 
+    @Override
     public String parse(JobOffer jobOffer) {
 
         if (ConfigurationUtil.isDebugModeEnabled()) {

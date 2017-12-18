@@ -1,6 +1,7 @@
-package ch.fhnw.jobannotations.organisation;
+package ch.fhnw.jobannotations.extractors.organisation;
 
 import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.utils.*;
 import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OrganisationExtractor {
+public class OrganisationExtractor implements IExtractor{
 
     // official legal form postfixes in switzerland
         private static final String[] KNOWN_LEGAL_FORMS = {
@@ -35,6 +36,7 @@ public class OrganisationExtractor {
 
     }
 
+    @Override
     public String parse(JobOffer jobOffer) {
 
         if (ConfigurationUtil.isDebugModeEnabled()) {

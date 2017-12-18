@@ -1,5 +1,6 @@
-package ch.fhnw.jobannotations.language;
+package ch.fhnw.jobannotations.extractors.language;
 
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
@@ -16,8 +17,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class LanguageExtractor {
+public class LanguageExtractor implements IExtractor{
 
+    @Override
     public String parse(JobOffer offer) {
 
         if (ConfigurationUtil.isDebugModeEnabled()) {

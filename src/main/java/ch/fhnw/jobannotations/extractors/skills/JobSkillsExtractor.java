@@ -1,6 +1,7 @@
-package ch.fhnw.jobannotations.skills;
+package ch.fhnw.jobannotations.extractors.skills;
 
 import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.utils.*;
 import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -19,7 +20,7 @@ import java.util.regex.Pattern;
 /**
  * @author Hoang
  */
-public class JobSkillsExtractor {
+public class JobSkillsExtractor implements IExtractor{
 
     private static final List<String> DETERMINERS_YOUR = Arrays.asList("ihre", "ihr", "deine", "dein");
     private static final List<String> DETERMINERS_OUR = Arrays.asList("unsere", "unser");
@@ -76,7 +77,8 @@ public class JobSkillsExtractor {
             "findest"
     );
 
-    public String parseJobSkills(JobOffer jobOffer) {
+    @Override
+    public String parse(JobOffer jobOffer) {
 
         if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));

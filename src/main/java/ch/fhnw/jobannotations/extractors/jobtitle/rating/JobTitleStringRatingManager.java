@@ -1,10 +1,10 @@
-package ch.fhnw.jobannotations.jobtitle.rating;
+package ch.fhnw.jobannotations.extractors.jobtitle.rating;
 
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
-import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
+import ch.fhnw.jobannotations.extractors.workload.JobWorkloadExtractor;
 import com.aliasi.dict.DictionaryEntry;
 import com.aliasi.dict.TrieDictionary;
 import org.jsoup.Jsoup;
