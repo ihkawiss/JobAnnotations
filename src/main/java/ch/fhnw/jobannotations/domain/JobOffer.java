@@ -1,4 +1,4 @@
-package ch.fhnw.jobannotations;
+package ch.fhnw.jobannotations.domain;
 
 import ch.fhnw.jobannotations.utils.HtmlUtils;
 import ch.fhnw.jobannotations.utils.NlpHelper;

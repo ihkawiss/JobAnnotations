@@ -1,13 +1,15 @@
 package ch.fhnw.jobannotations.extractors.jobtitle;
 
 import ch.fhnw.jobannotations.extractors.IExtractor;
-import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.jobtitle.rating.JobTitleStringRatingManager;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
+import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -123,6 +125,11 @@ public class JobTitleExtractor implements IExtractor {
         jobTitleStringRatingManager.adjustRatingsByKnownJobTitleList(ratedStrings);
 
         return ratedStrings.get(0).getString();
+    }
+
+    @Override
+    public void learn(String data) {
+        FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.titles.train"), data);
     }
 
     public JobTitleStringRatingManager getJobTitleStringRatingManager() {

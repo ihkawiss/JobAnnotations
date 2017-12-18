@@ -1,6 +1,6 @@
 package ch.fhnw.jobannotations.extractors.workload;
 
-import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.IntStringPair;
@@ -53,6 +53,11 @@ public class JobWorkloadExtractor implements IExtractor {
         }
 
         return ratedWorkloads.get(0).getString();
+    }
+
+    @Override
+    public void learn(String data) {
+        // NOP - makes currently no sense
     }
 
     /**

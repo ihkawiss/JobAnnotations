@@ -1,6 +1,6 @@
 package ch.fhnw.jobannotations.extractors.skills;
 
-import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.utils.*;
 import com.aliasi.dict.TrieDictionary;
@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 /**
  * @author Hoang
  */
-public class JobSkillsExtractor implements IExtractor{
+public class JobSkillsExtractor implements IExtractor {
 
     private static final List<String> DETERMINERS_YOUR = Arrays.asList("ihre", "ihr", "deine", "dein");
     private static final List<String> DETERMINERS_OUR = Arrays.asList("unsere", "unser");
@@ -114,6 +114,11 @@ public class JobSkillsExtractor implements IExtractor{
         }
 
         return generateSkillListPrintout(mergedSkillList);
+    }
+
+    @Override
+    public void learn(String data) {
+        FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.skills.train.positive"), data);
     }
 
     private void formatSkills(Map<IntStringPair, List<String>> ratedSkillLists) {

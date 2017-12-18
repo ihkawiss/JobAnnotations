@@ -1,6 +1,6 @@
 package ch.fhnw.jobannotations.extractors.organisation;
 
-import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.utils.*;
 import com.aliasi.dict.TrieDictionary;
@@ -18,10 +18,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OrganisationExtractor implements IExtractor{
+public class OrganisationExtractor implements IExtractor {
 
     // official legal form postfixes in switzerland
-        private static final String[] KNOWN_LEGAL_FORMS = {
+    private static final String[] KNOWN_LEGAL_FORMS = {
             "AG", "Gen", "Genossenschaft", "GmbH", "KlG", "KmG", "KmAG", "SA", "SCoop", "Sàrl",
             "SNC", "SCm", "SCmA", "Sagl", "SAc", "SAcA", "Scrl", "SCl", "SACm"
     };
@@ -53,17 +53,10 @@ public class OrganisationExtractor implements IExtractor{
             annotatedSentences.addAll(NlpHelper.getInstance().getAnnotatedSentences(line));
         }
 
-
-        // List<CoreMap> annotatedSentences = jobOffer.getAnnotatedSentences();
-
-
         // get text from all tags
         List<String> texts = new ArrayList<>();
         extractAllTagTexts(jobOffer.getDocument().body(), texts);
 
-
-        // detect sentences from text
-        // String[] sentences = PartOfSpeechUtil.detectSentences(text);
 
         // List<String> legalFormCandidates = getLegalFormCandidates(texts.toArray(new String[0]));
         List<String> legalFormCandidates = getLegalFormCandidates(annotatedSentences);
@@ -74,16 +67,12 @@ public class OrganisationExtractor implements IExtractor{
         // ---------------------------------------------------------
         if (!legalFormCandidates.isEmpty()) {
 
-            // TODO: rate "ACTIV FITNESS AG" higher
-            // [organization-indicator]	ACTIV FITNESS AG
-            // [organization-indicator]	Bewerben ACTIV FITNESS AG
-
             Map<String, Integer> weightedIndicatorCandidates = new HashMap<>();
 
             int posScore = 0;
             for (String candidate : legalFormCandidates) {
 
-                if(StringUtils.isEmpty(candidate))
+                if (StringUtils.isEmpty(candidate))
                     continue;
 
                 // check against found fuzzy search chunks
@@ -110,7 +99,6 @@ public class OrganisationExtractor implements IExtractor{
 
                 posScore++;
             }
-
 
 
             return weightedIndicatorCandidates.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey().trim();
@@ -180,6 +168,10 @@ public class OrganisationExtractor implements IExtractor{
         }
     }
 
+    @Override
+    public void learn(String data) {
+        FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.organisations.train"), data);
+    }
 
     /**
      * Within the passed sentence, a search for possible organisation names is performed.
@@ -237,7 +229,7 @@ public class OrganisationExtractor implements IExtractor{
                             }
                         }
                     }
-                    if (organisationNameBuilder != null){
+                    if (organisationNameBuilder != null) {
                         String organisationName = organisationNameBuilder.toString().trim();
 
                         if (organisationName.length() > legalForm.length()) {
@@ -254,7 +246,6 @@ public class OrganisationExtractor implements IExtractor{
         }
         return candidates;
     }
-
 
 
     /**

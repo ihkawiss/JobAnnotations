@@ -54,7 +54,7 @@ public final class ConfigurationUtil {
      * @return the value of a found key
      */
     public static String get(String key) {
-        return getInstance().properties.getProperty(key);
+        return getInstance().properties.getProperty(key).trim();
     }
 
     public static boolean isDebugModeEnabled() {

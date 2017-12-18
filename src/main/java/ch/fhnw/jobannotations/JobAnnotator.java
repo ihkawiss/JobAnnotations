@@ -1,5 +1,6 @@
 package ch.fhnw.jobannotations;
 
+import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.extractors.jobtitle.JobTitleExtractor;
 import ch.fhnw.jobannotations.extractors.language.LanguageExtractor;
@@ -57,7 +58,13 @@ public class JobAnnotator {
             JobOffer jobOffer = new JobOffer(document);
 
             for (IExtractor extractor : extractors) {
-                result.put(extractor.getClass().getSimpleName(), extractor.parse(jobOffer));
+
+                String candidates = extractor.parse(jobOffer);
+
+                extractor.learn(candidates);
+
+                result.put(extractor.getClass().getSimpleName(), candidates);
+
             }
 
         } catch (IOException e) {
@@ -78,5 +85,6 @@ public class JobAnnotator {
     public boolean remove(IExtractor extractor) {
         return extractors.remove(extractor);
     }
+
 
 }

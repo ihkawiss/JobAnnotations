@@ -1,7 +1,7 @@
 package ch.fhnw.jobannotations.extractors.location;
 
 import ch.fhnw.jobannotations.extractors.IExtractor;
-import ch.fhnw.jobannotations.JobOffer;
+import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.utils.*;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -68,6 +68,11 @@ public class LocationExtractor implements IExtractor {
 
         findPotentialJobLocations(jobOffer);
         return getLocationWithHighestPotential();
+    }
+
+    @Override
+    public void learn(String data) {
+        // TODO: implement usage of file first!
     }
 
     private void findPotentialJobLocations(JobOffer jobOffer) {

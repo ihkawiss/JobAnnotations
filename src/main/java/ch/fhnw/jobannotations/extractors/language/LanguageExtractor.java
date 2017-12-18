@@ -1,7 +1,7 @@
 package ch.fhnw.jobannotations.extractors.language;
 
+import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.IExtractor;
-import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.NlpHelper;
@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class LanguageExtractor implements IExtractor{
+public class LanguageExtractor implements IExtractor {
 
     @Override
     public String parse(JobOffer offer) {
@@ -38,7 +38,7 @@ public class LanguageExtractor implements IExtractor{
         for (Map.Entry<String, String> entry : fuzzySearchCandidates.entrySet()) {
             result += entry.getKey();
 
-            if(entry.getValue() != null && entry.getValue() != "")
+            if (entry.getValue() != null && entry.getValue() != "")
                 result += "(" + entry.getValue() + "), ";
             else
                 result += ", ";
@@ -50,6 +50,11 @@ public class LanguageExtractor implements IExtractor{
             System.out.println("[language]\t" + "No languages found");
             return "";
         }
+    }
+
+    @Override
+    public void learn(String data) {
+        // NOP - makes currently no sense
     }
 
     /**
@@ -100,8 +105,8 @@ public class LanguageExtractor implements IExtractor{
                     } else {
 
                         // fall back with trivial contains
-                        if(sentence.toLowerCase().indexOf(language.toLowerCase()) > -1) {
-                            if(candidates.get(language) == null)
+                        if (sentence.toLowerCase().indexOf(language.toLowerCase()) > -1) {
+                            if (candidates.get(language) == null)
                                 candidates.put(language, "");
                         }
 
