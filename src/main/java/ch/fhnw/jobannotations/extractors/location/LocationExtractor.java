@@ -9,6 +9,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.util.CoreMap;
 import me.xdrop.fuzzywuzzy.FuzzySearch;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -31,33 +32,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Hoang
+ * This class is responsible to identify potential locations in a job offer document. To prevent false results and
+ * to improve performance, various techniques are used.
+ *
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class LocationExtractor implements IExtractor {
 
-    private static final String GEO_ADMIN_API_URL_TEMPLATE = "https://api3.geo.admin.ch/rest/services/api/SearchServer?type=locations&limit=1&searchText=%s";
-    private static final String[] ALLOWED_SPECIAL_LABELS_GEO_ADMIN_API = {"Ort", "Quartier", "Zug", "Bus"};
-    private static final int MAX_WORDS_IN_LOCATION_NAME = 10;
-    private static final String[] LOCATION_FLAGS = {
-            "city", "town", "region", "location", "locality", "state", "address", "place", "map", "district",
-            "province", "village", "canton", "adresse", "arbeitsort", "standort", "ort", "stadt", "gebiet",
-            "viertel", "bezirk", "quartier", "gemeinde", "dorf", "kanton", "arbeitsregion"
-    };
-    private static final String[] RELEVANT_LOCATION_HTML_ATTRIBUTES = {"class", "property", "id", "alt", "src"};
-    private static final String[] IRRELEVANT_TAGS = {
-            "a",
-            "input",
-            "button"
-    };
-    private static final int RATING_LOCATION_BY_LOCATION_FLAGS = 150;
-    private static final int RATING_LOCATION_BY_ZIP_CODE = 75;
-    private static final int RATING_LOCATION_BY_NER = 50;
-    private static final int RATING_ELEMENT_IN_FOOTER = -50;
-    private static final int RATING_REPETITION = 15;
-    private static final int RATING_VALIDATION_CONTAINS_ORIGINAL = 50;
-    private static final int RATING_VALIDATION_CONTAINS_ORIGINAL_LOWER_CASE = 25;
-    private static final int RATING_VALIDATION_FAILED = -25;
-    private static final int MAX_RATING_DICTIONARY = 200;
+    final static Logger LOG = Logger.getLogger(LocationExtractor.class);
 
     @Override
     public String parse(JobOffer jobOffer) {
@@ -90,7 +72,7 @@ public class LocationExtractor implements IExtractor {
 
     private List<IntStringPair> findPotentialJobLocations(JobOffer jobOffer, boolean isFooter) {
         List<IntStringPair> ratedJobLocations = new ArrayList<>();
-        int ratingAdjustment = isFooter ? RATING_ELEMENT_IN_FOOTER : 0;
+        int ratingAdjustment = isFooter ? LocationExtractorConstants.RATING_ELEMENT_IN_FOOTER : 0;
 
         Element element = isFooter ? jobOffer.getFooterElement() : jobOffer.getBodyElementWithoutFooter();
 
@@ -101,7 +83,7 @@ public class LocationExtractor implements IExtractor {
         String plainText = HtmlUtils.getPlainTextFromHtml(element.html());
 
         for (String potentialJobLocation : getPotentialJobLocationByLocationFlags(element, plainText)) {
-            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_LOCATION_FLAGS + ratingAdjustment, potentialJobLocation);
+            IntStringPair ratedJobLocation = new IntStringPair(LocationExtractorConstants.RATING_LOCATION_BY_LOCATION_FLAGS + ratingAdjustment, potentialJobLocation);
             ratedJobLocations.add(ratedJobLocation);
             System.out.println("[location-indicator]\tFound location by location flags: " + potentialJobLocation);
         }
@@ -109,7 +91,7 @@ public class LocationExtractor implements IExtractor {
         // use parsing with zip code regex
         for (String location : getPotentialJobLocationByZipCode(plainText)) {
             System.out.println("[location-indicator]\tFound location with ZIP code: " + location);
-            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_ZIP_CODE + ratingAdjustment, location);
+            IntStringPair ratedJobLocation = new IntStringPair(LocationExtractorConstants.RATING_LOCATION_BY_ZIP_CODE + ratingAdjustment, location);
             ratedJobLocations.add(ratedJobLocation);
         }
 
@@ -118,7 +100,7 @@ public class LocationExtractor implements IExtractor {
         List<CoreMap> annotatedSentences = isFooter ? jobOffer.getAnnotatedFooterSentences() : jobOffer.getAnnotatedBodySentences();
         for (String location : getPotentialJobLocationByNamedEntityRecognition(annotatedSentences)) {
             System.out.println("[location-ner]\tFound location with NER: " + location);
-            IntStringPair ratedJobLocation = new IntStringPair(RATING_LOCATION_BY_NER + ratingAdjustment, location);
+            IntStringPair ratedJobLocation = new IntStringPair(LocationExtractorConstants.RATING_LOCATION_BY_NER + ratingAdjustment, location);
             ratedJobLocations.add(ratedJobLocation);
         }
 
@@ -128,7 +110,7 @@ public class LocationExtractor implements IExtractor {
         int previousSize = ratedJobLocations.size();
         for (int i = previousSize - 1; i >= 0; i--) {
             String location = ratedJobLocations.get(i).getString();
-            if (StringUtils.countMatches(location, " ") > MAX_WORDS_IN_LOCATION_NAME - 1) {
+            if (StringUtils.countMatches(location, " ") > LocationExtractorConstants.MAX_WORDS_IN_LOCATION_NAME - 1) {
                 ratedJobLocations.remove(i);
 
             } else {
@@ -159,11 +141,11 @@ public class LocationExtractor implements IExtractor {
     private List<String> getPotentialJobLocationByLocationFlags(Element bodyElement, String plainText) {
         List<String> potentialJobLocations = new ArrayList<>();
 
-        for (String locationFlag : LOCATION_FLAGS) {
+        for (String locationFlag : LocationExtractorConstants.LOCATION_FLAGS) {
             // get elements with relevant attributes values containing a location flag
-            for (String attribute : RELEVANT_LOCATION_HTML_ATTRIBUTES) {
+            for (String attribute : LocationExtractorConstants.RELEVANT_LOCATION_HTML_ATTRIBUTES) {
                 Elements potentialElements = bodyElement.getElementsByAttributeValueContaining(attribute, locationFlag);
-                addPotentialJobLocationToList(potentialJobLocations, potentialElements);
+                potentialJobLocations.addAll(addPotentialJobLocationToList(potentialElements));
             }
 
             // by text
@@ -215,7 +197,7 @@ public class LocationExtractor implements IExtractor {
         }
 
         ratedJobLocations = adjustRatingByDictionaryDistances(ratedJobLocations);
-//        ratedJobLocations = validateLocations(ratedJobLocations);
+        ratedJobLocations = validateLocations(ratedJobLocations);
         ratedJobLocations = removeDuplications(ratedJobLocations);
         ratedJobLocations = filterByRatings(ratedJobLocations);
 
@@ -249,8 +231,8 @@ public class LocationExtractor implements IExtractor {
         IntStringPair locationDistance = NlpHelper.getInstance().calcDistanceWithDictionary(locationsDictionary, locationName, maxDistance);
         if (locationDistance != null) {
             int distance = (locationDistance.getInt() - 1000) / 20;
-            if (distance < MAX_RATING_DICTIONARY) {
-                rating += MAX_RATING_DICTIONARY - distance;
+            if (distance < LocationExtractorConstants.MAX_RATING_DICTIONARY) {
+                rating += LocationExtractorConstants.MAX_RATING_DICTIONARY - distance;
             }
         }
         return rating;
@@ -271,7 +253,7 @@ public class LocationExtractor implements IExtractor {
 
             } else {
                 System.out.println("[location]\tFailed to validate location: [" + location + "]");
-                ratedLocation.setInt(ratedLocation.getInt() + RATING_VALIDATION_FAILED);
+                ratedLocation.setInt(ratedLocation.getInt() + LocationExtractorConstants.RATING_VALIDATION_FAILED);
             }
         }
 
@@ -316,7 +298,7 @@ public class LocationExtractor implements IExtractor {
                 if (ratingDifference < 0) {
                     ratingDifference = 0;
                 }
-                int additionalRating = RATING_REPETITION + ratingDifference;
+                int additionalRating = LocationExtractorConstants.RATING_REPETITION + ratingDifference;
                 ratedJobLocations.remove(i + 1);
                 ratedJobLocation.setInt(ratedJobLocation.getInt() + additionalRating);
 
@@ -352,10 +334,10 @@ public class LocationExtractor implements IExtractor {
         rating *= 2;
 
         if (validatedLocationName.contains(originalLocationName)) {
-            rating += RATING_VALIDATION_CONTAINS_ORIGINAL;
+            rating += LocationExtractorConstants.RATING_VALIDATION_CONTAINS_ORIGINAL;
 
         } else if (validatedLocationName.toLowerCase().contains(originalLocationName.toLowerCase())) {
-            rating += RATING_VALIDATION_CONTAINS_ORIGINAL_LOWER_CASE;
+            rating += LocationExtractorConstants.RATING_VALIDATION_CONTAINS_ORIGINAL_LOWER_CASE;
         }
 
         return rating;
@@ -363,7 +345,7 @@ public class LocationExtractor implements IExtractor {
 
 
     private String getValidatedAddressFromGeoApi(String location) {
-        JSONArray jsonArray = doApiRestCall(GEO_ADMIN_API_URL_TEMPLATE, location);
+        JSONArray jsonArray = doApiRestCall(LocationExtractorConstants.GEO_ADMIN_API_URL_TEMPLATE, location);
         if (jsonArray != null && jsonArray.length() > 0) {
             JSONObject jsonObject = jsonArray.getJSONObject(0);
             JSONObject attrs = jsonObject.getJSONObject("attrs");
@@ -371,7 +353,7 @@ public class LocationExtractor implements IExtractor {
 
             if (validatedAddress.contains("<i>")) {
                 boolean allowedSpecialLabel = false;
-                for (String specialLabel : ALLOWED_SPECIAL_LABELS_GEO_ADMIN_API) {
+                for (String specialLabel : LocationExtractorConstants.ALLOWED_SPECIAL_LABELS_GEO_ADMIN_API) {
                     String specialLabelTag = "<i>" + specialLabel + "</i>";
                     if (validatedAddress.contains(specialLabelTag)) {
                         allowedSpecialLabel = true;
@@ -433,26 +415,35 @@ public class LocationExtractor implements IExtractor {
         return null;
     }
 
-    private void addPotentialJobLocationToList(List<String> textToCheck, Elements potentialElements) {
+    /**
+     * Creates List of potential locations and returns it. Returns an empty List if the given Elements contains
+     * irrelevant tags.
+     *
+     * @param potentialElements Elements object containing the potential locations
+     */
+    private List<String> addPotentialJobLocationToList(Elements potentialElements) {
+        List<String> potentialJobLocations = new ArrayList<>();
         for (Element element : potentialElements) {
             String tagName = element.tagName();
-            if (Arrays.asList(IRRELEVANT_TAGS).contains(tagName)) {
-                return;
+            if (Arrays.asList(LocationExtractorConstants.IRRELEVANT_TAGS).contains(tagName)) {
+                return new ArrayList<>();
             }
             String text = element.text();
             for (String textParts : text.split(":")) {
                 textParts = textParts.trim();
                 if (!textParts.isEmpty()) {
-                    textToCheck.add(textParts);
+                    potentialJobLocations.add(textParts);
                 }
             }
             text = element.parent().text();
             for (String textParts : text.split(":")) {
                 textParts = textParts.trim();
                 if (!textParts.isEmpty()) {
-                    textToCheck.add(textParts);
+                    potentialJobLocations.add(textParts);
                 }
             }
         }
+
+        return potentialJobLocations;
     }
 }
