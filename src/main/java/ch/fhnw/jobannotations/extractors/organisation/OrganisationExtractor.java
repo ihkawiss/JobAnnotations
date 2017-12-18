@@ -9,6 +9,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
+import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
@@ -18,7 +19,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * This class is responsible to identify potential organisation
+ * names in a job offer document. To prevent false results and
+ * to improve performance, various techniques are used.
+ *
+ * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
+ */
 public class OrganisationExtractor implements IExtractor {
+
+    final static Logger LOG = Logger.getLogger(OrganisationExtractor.class);
 
     // official legal form postfixes in switzerland
     private static final String[] KNOWN_LEGAL_FORMS = {
@@ -26,6 +36,12 @@ public class OrganisationExtractor implements IExtractor {
             "SNC", "SCm", "SCmA", "Sagl", "SAc", "SAcA", "Scrl", "SCl", "SACm"
     };
 
+    /**
+     * Extract texts from html node and it's children.
+     *
+     * @param parent which should be processed
+     * @param texts  list where texts should be added
+     */
     private void extractAllTagTexts(Element parent, List<String> texts) {
         texts.add(parent.ownText());
         for (Element element : parent.children()) {
@@ -36,18 +52,20 @@ public class OrganisationExtractor implements IExtractor {
 
     }
 
+    /**
+     * Identifies organisation candidates found in jobOffer.
+     *
+     * @param jobOffer to process
+     */
     @Override
     public String parse(JobOffer jobOffer) {
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[organisation]\t" + "Started to parse organisation from offer");
-        }
+        LOG.debug("Started to parse organisation from offer");
 
         // get the visible text from document
-        // TODO: instead of body().text(); analyse TAG-texts
         final String text = jobOffer.getPlainText();
 
+        // annotate sentences
         List<CoreMap> annotatedSentences = new ArrayList<>();
         for (String line : jobOffer.getPlainTextLines()) {
             annotatedSentences.addAll(NlpHelper.getInstance().getAnnotatedSentences(line));
@@ -100,7 +118,6 @@ public class OrganisationExtractor implements IExtractor {
                 posScore++;
             }
 
-
             return weightedIndicatorCandidates.entrySet().stream().max((a, b) -> a.getValue() > b.getValue() ? 1 : -1).get().getKey().trim();
 
         }
@@ -128,7 +145,7 @@ public class OrganisationExtractor implements IExtractor {
         // ---------------------------------------------------------
         // (3) analyse fuzzy and ner for cross results
         // ---------------------------------------------------------
-        System.out.println("[organization] Need to look for NER - WARNING: this may take a while...");
+        LOG.debug("Need to look for NER - WARNING: this may take a while...");
 
         List<String> merged = new ArrayList<>();
 
@@ -168,6 +185,11 @@ public class OrganisationExtractor implements IExtractor {
         }
     }
 
+    /**
+     * Save found organisations into train file
+     *
+     * @param data found in job offer
+     */
     @Override
     public void learn(String data) {
         FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.organisations.train"), data);
@@ -218,28 +240,14 @@ public class OrganisationExtractor implements IExtractor {
                                 String organisationName = organisationNameBuilder.toString().trim();
                                 organisationNameBuilder = null;
 
-                                if (organisationName.length() > legalForm.length()) {
-                                    organisationName += " " + legalForm;
-                                    if (!candidates.contains(organisationName)) {
-                                        candidates.add(organisationName);
-
-                                        System.out.println("[organization-indicator]\t" + organisationName);
-                                    }
-                                }
+                                getOrganisationName(candidates, legalForm, organisationName);
                             }
                         }
                     }
                     if (organisationNameBuilder != null) {
                         String organisationName = organisationNameBuilder.toString().trim();
 
-                        if (organisationName.length() > legalForm.length()) {
-                            organisationName += " " + legalForm;
-                            if (!candidates.contains(organisationName)) {
-                                candidates.add(organisationName);
-
-                                System.out.println("[organization-indicator]\t" + organisationName);
-                            }
-                        }
+                        getOrganisationName(candidates, legalForm, organisationName);
                     }
                 }
             }
@@ -247,6 +255,23 @@ public class OrganisationExtractor implements IExtractor {
         return candidates;
     }
 
+    /**
+     * Builds the potential company name based on input
+     *
+     * @param candidates
+     * @param legalForm
+     * @param organisationName
+     */
+    private void getOrganisationName(List<String> candidates, String legalForm, String organisationName) {
+        if (organisationName.length() > legalForm.length()) {
+            organisationName += " " + legalForm;
+            if (!candidates.contains(organisationName)) {
+                candidates.add(organisationName);
+
+                LOG.debug("potential organisation found: " + organisationName);
+            }
+        }
+    }
 
     /**
      * Analyses given text with LingPipe's basic NER class
@@ -262,12 +287,11 @@ public class OrganisationExtractor implements IExtractor {
         Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
 
         // return found chunks as simple List<String>
-        // TODO: use additional information such as score to enhance prediction
         Map<String, Integer> candidates = new HashMap<>();
         for (Map.Entry<String, Integer> entry : foundChunks.entrySet()) {
             candidates.put(entry.getKey(), entry.getValue());
 
-            System.out.println("[organization-approx]\t" + entry.getKey());
+            LOG.debug("potential organisation found: " + entry.getKey());
         }
 
         return candidates;
@@ -290,8 +314,7 @@ public class OrganisationExtractor implements IExtractor {
         try {
             pipeline.annotate(document);
         } catch (Exception e) {
-            // TODO pipeline.annotate(document) can throw NullPointerException
-            // also if neither pipeline nor document are null
+            LOG.error("Something went wrong while getting NER candidates!", e);
         }
 
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
@@ -316,7 +339,7 @@ public class OrganisationExtractor implements IExtractor {
                 } else if (currentOrganisation != "") {
                     candidates.add(currentOrganisation);
 
-                    System.out.println("[organization-ner]\t" + currentOrganisation);
+                    LOG.debug("potential organisation found: " + currentOrganisation);
 
                     currentOrganisation = "";
                 }
@@ -327,22 +350,5 @@ public class OrganisationExtractor implements IExtractor {
 
         return candidates;
     }
-
-    public static String removeOrganisationFromString(String organisation, String jobTitle) {
-
-        String organisationWithoutLegalIdentifier = organisation;
-
-        // remove known legal identifiers
-        for (String identifier : KNOWN_LEGAL_FORMS) {
-            organisationWithoutLegalIdentifier = organisationWithoutLegalIdentifier.replaceAll("\\s(?i)" + identifier, "");
-        }
-
-        // replace organisation from job title
-        String cleaned = jobTitle.replaceAll("(?i)" + organisation, "");
-        cleaned = cleaned.replaceAll("(?i)" + organisationWithoutLegalIdentifier, "");
-
-        return cleaned.trim();
-    }
-
 
 }
