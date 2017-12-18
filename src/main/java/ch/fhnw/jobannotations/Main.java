@@ -41,6 +41,8 @@ public class Main {
             System.out.println("NOTICE: DEBUG mode is enabled, extractors will print some messages.");
         }
 
+        JobAnnotator annotator = new JobAnnotator();
+
         while (keepGoing) {
 
             boolean repeat = true;
@@ -68,8 +70,6 @@ public class Main {
 
                     } else {
 
-                        JobAnnotator annotator = new JobAnnotator();
-
                         Map<String, String> results = annotator.parse(url);
 
                         // print report
@@ -80,9 +80,6 @@ public class Main {
                         for(Map.Entry<String, String> entry : results.entrySet()) {
                             System.out.println(entry.getKey() + ":\n" + entry.getValue() + "\n");
                         }
-
-                        // clean company from jobtitle
-//                        jobTitle = OrganisationExtractor.removeOrganisationFromString(jobOrganisation, jobTitle);
 
                     }
                 } catch (IOException e) {
