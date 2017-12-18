@@ -30,9 +30,6 @@ public final class ConfigurationUtil {
             properties = new Properties();
             properties.load(input);
 
-            // load debug mode
-            debugModeEnabled = properties.get("configuration.debug.enabled").toString().equalsIgnoreCase("true");
-
         } catch (IOException e) {
             LOG.error("Failed to load " + CONFIGURATION_FILE + ". Please see documentation.");
         }
@@ -55,10 +52,6 @@ public final class ConfigurationUtil {
      */
     public static String get(String key) {
         return getInstance().properties.getProperty(key).trim();
-    }
-
-    public static boolean isDebugModeEnabled() {
-        return getInstance().debugModeEnabled;
     }
 
 }

@@ -1,6 +1,5 @@
 package ch.fhnw.jobannotations;
 
-import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,8 +15,6 @@ import java.util.Map;
  */
 public class Main {
 
-    public static final boolean DEBUG = ConfigurationUtil.isDebugModeEnabled();
-
     public static void main(String[] args) {
         boolean keepGoing = true;
 
@@ -27,11 +24,6 @@ public class Main {
         System.out.println("Project:\tJobAnnotations FHNW IP5 2017");
         System.out.println("Authors:\tHoang Tran, Kevin Kirn");
         System.out.println(StringUtils.repeat("-", 80));
-
-        if (DEBUG) {
-            System.out.println(StringUtils.repeat("-", 80));
-            System.out.println("NOTICE: DEBUG mode is enabled, extractors will print some messages.");
-        }
 
         JobAnnotator annotator = new JobAnnotator();
 
@@ -69,7 +61,7 @@ public class Main {
                         System.out.println("RESULT REPORT");
                         System.out.println(StringUtils.repeat("-", 80));
 
-                        for(Map.Entry<String, String> entry : results.entrySet()) {
+                        for (Map.Entry<String, String> entry : results.entrySet()) {
                             System.out.println(entry.getKey() + ":\n" + entry.getValue() + "\n");
                         }
 

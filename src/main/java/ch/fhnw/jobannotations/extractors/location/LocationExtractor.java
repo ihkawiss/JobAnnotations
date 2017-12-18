@@ -44,10 +44,7 @@ public class LocationExtractor implements IExtractor {
     @Override
     public String parse(JobOffer jobOffer) {
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[location]\t" + "Started to parse location from offer");
-        }
+        LOG.debug("Started to parse location from offer");
 
         List<IntStringPair> ratedJobLocations = findPotentialJobLocations(jobOffer);
         return getLocationWithHighestPotential(ratedJobLocations);

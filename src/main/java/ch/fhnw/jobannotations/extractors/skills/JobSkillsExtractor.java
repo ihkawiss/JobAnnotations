@@ -10,6 +10,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.trees.EnglishGrammaticalRelations;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
+import org.apache.log4j.Logger;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -21,6 +22,8 @@ import java.util.regex.Pattern;
  * @author Hoang
  */
 public class JobSkillsExtractor implements IExtractor {
+
+    final static Logger LOG = Logger.getLogger(JobSkillsExtractor.class);
 
     private static final List<String> DETERMINERS_YOUR = Arrays.asList("ihre", "ihr", "deine", "dein");
     private static final List<String> DETERMINERS_OUR = Arrays.asList("unsere", "unser");
@@ -80,30 +83,23 @@ public class JobSkillsExtractor implements IExtractor {
     @Override
     public String parse(JobOffer jobOffer) {
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[skills-indicator]\t" + "Started to parse skills from offer by checking lists");
-        }
+        LOG.debug("Started to parse skills from offer by checking lists");
 
         Map<IntStringPair, List<String>> ratedSkillLists = extractSkillListsByListParsing(jobOffer);
 
         if (ratedSkillLists.isEmpty()) {
             // no skills found
-            if (ConfigurationUtil.isDebugModeEnabled()) {
-                System.out.println("[skills-nlp]\t" + "No skills found with list parsing. Started to parse skills from offer by analysing sentences with NLP");
-            }
+            LOG.debug("No skills found with list parsing. Started to parse skills from offer by analysing sentences with NLP");
+
             ratedSkillLists = extractSkillListsBySentenceAnalyzing(jobOffer);
             if (ratedSkillLists.isEmpty()) {
-                if (ConfigurationUtil.isDebugModeEnabled()) {
-                    System.out.println("[skills]\t" + "No skills found.");
-                }
+                LOG.debug("No skills found.");
                 return null;
             }
         }
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("[skills-nlp]\tExtract nouns from skill lists");
-        }
+        LOG.debug("Extract nouns from skill lists");
+
         formatSkills(ratedSkillLists);
 
         // create single skill list
@@ -151,10 +147,9 @@ public class JobSkillsExtractor implements IExtractor {
 
         List<String> skills = new ArrayList<>();
         for (IntStringPair ratedSkillNoun : ratedSkillNouns) {
-            if (ConfigurationUtil.isDebugModeEnabled()) {
-                System.out.println("[skills-nlp]\tRate skill noun with dictionary: "
-                        + ratedSkillNoun.getString() + " => " + ratedSkillNoun.getInt());
-            }
+
+            LOG.debug("Rate skill noun with dictionary: " + ratedSkillNoun.getString() + " => " + ratedSkillNoun.getInt());
+
             skills.add(ratedSkillNoun.getString());
         }
 
@@ -296,9 +291,8 @@ public class JobSkillsExtractor implements IExtractor {
         }
 
         // remove lists with low ratings
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("[skills]\tRemove skill lists with low rating");
-        }
+        LOG.debug("Remove skill lists with low rating");
+
         ratedSkillListTitles.stream()
                 .filter(r -> r.getInt() <= 100)
                 .forEach(ratedSkillLists::remove);
@@ -522,9 +516,7 @@ public class JobSkillsExtractor implements IExtractor {
         // adjust rating based on list title ratings
         rating += rateTitle(jobOffer, skillListTitle);
 
-        if (ConfigurationUtil.isDebugModeEnabled() && rating > 50) {
-            System.out.println("[skills]\t" + rating + "\t" + skillListTitle);
-        }
+        LOG.debug(rating + "\t" + skillListTitle);
 
         return (int) rating;
     }

@@ -9,7 +9,7 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,18 +17,29 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * This class is responsible to identify potential languages
+ * in a job offer document. To prevent false results and
+ * to improve performance, various techniques are used.
+ *
+ * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
+ */
 public class LanguageExtractor implements IExtractor {
 
-    @Override
-    public String parse(JobOffer offer) {
+    final static Logger LOG = Logger.getLogger(LanguageExtractor.class);
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[language]\t" + "Started to parse language from offer");
-        }
+    /**
+     * Identifies language candidates found in jobOffer.
+     *
+     * @param jobOffer to process
+     */
+    @Override
+    public String parse(JobOffer jobOffer) {
+
+        LOG.debug("Started to parse language from offer");
 
         // get the visible text from document
-        List<String> lines = offer.getPlainTextLines();
+        List<String> lines = jobOffer.getPlainTextLines();
 
         Map<String, String> fuzzySearchCandidates = getKnownLanguagesCandidates(lines);
 
@@ -47,14 +58,10 @@ public class LanguageExtractor implements IExtractor {
         if (result != "") {
             return result.substring(0, result.length() - 2);
         } else {
-            System.out.println("[language]\t" + "No languages found");
+            LOG.debug("No languages found");
+
             return "";
         }
-    }
-
-    @Override
-    public void learn(String data) {
-        // NOP - makes currently no sense
     }
 
     /**
@@ -119,6 +126,11 @@ public class LanguageExtractor implements IExtractor {
         }
 
         return candidates;
+    }
+
+    @Override
+    public void learn(String data) {
+        // NOP - makes currently no sense
     }
 
 }

@@ -1,23 +1,28 @@
 package ch.fhnw.jobannotations.extractors.jobtitle;
 
-import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.domain.JobOffer;
+import ch.fhnw.jobannotations.extractors.IExtractor;
 import ch.fhnw.jobannotations.extractors.jobtitle.rating.JobTitleStringRatingManager;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.jsoup.nodes.Document;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Hoang
+ * This class is responsible to identify potential job titles
+ * in a job offer document. To prevent false results and to
+ * improve performance, various techniques are used.
+ *
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class JobTitleExtractor implements IExtractor {
+
+    final static Logger LOG = Logger.getLogger(JobTitleExtractor.class);
 
     private static final String REGEX_SPECIAL_CHARS_TO_REMOVE = "[$+,:;=?@#<>.^*%!-\"]";
     private static final String[] IRRELEVANT_TAGS = {
@@ -29,6 +34,7 @@ public class JobTitleExtractor implements IExtractor {
             "input",
             "button"
     };
+
     private JobTitleStringRatingManager jobTitleStringRatingManager;
     private boolean cleanJobTitle = true;
 
@@ -36,14 +42,17 @@ public class JobTitleExtractor implements IExtractor {
         jobTitleStringRatingManager = new JobTitleStringRatingManager();
     }
 
+    /**
+     * Identifies job title candidates found in jobOffer.
+     *
+     * @param jobOffer to process
+     */
     @Override
     public String parse(JobOffer jobOffer) {
+
         Document document = jobOffer.getDocument().clone();
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[jobtitle-indicator]\t" + "Started to parse job title from offer");
-        }
+        LOG.debug("Started to parse job title from offer");
 
         // remove irrelevant tags
         for (String irrelevantTag : IRRELEVANT_TAGS) {
@@ -116,27 +125,22 @@ public class JobTitleExtractor implements IExtractor {
             System.out.println(ratedString.toString());
         }
 
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("[jobtitle-approx]\t" + "Adjusting rating by known job titles");
-        }
+        LOG.debug("Adjusting rating by known job titles");
 
         // adjust rating by check with known job title list
-        // TODO: adjust rating from above here
         jobTitleStringRatingManager.adjustRatingsByKnownJobTitleList(ratedStrings);
 
         return ratedStrings.get(0).getString();
     }
 
+    /**
+     * Save found job title into train file
+     *
+     * @param data found in job offer
+     */
     @Override
     public void learn(String data) {
         FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.titles.train"), data);
     }
 
-    public JobTitleStringRatingManager getJobTitleStringRatingManager() {
-        return jobTitleStringRatingManager;
-    }
-
-    public void setCleanJobTitle(boolean cleanJobTitle) {
-        this.cleanJobTitle = cleanJobTitle;
-    }
 }
