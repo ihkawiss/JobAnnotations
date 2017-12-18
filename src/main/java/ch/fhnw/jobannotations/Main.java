@@ -6,6 +6,7 @@ import ch.fhnw.jobannotations.language.LanguageExtractor;
 import ch.fhnw.jobannotations.location.LocationExtractor;
 import ch.fhnw.jobannotations.organisation.OrganisationExtractor;
 import ch.fhnw.jobannotations.skills.JobSkillsExtractor;
+import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.workload.JobWorkloadExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -20,9 +21,8 @@ import java.net.URLDecoder;
  * @author Hoang
  */
 public class Main {
-
-    // TODO: transfer to configuration file
-    public static final boolean DEBUG = true;
+    
+    public static final boolean DEBUG = ConfigurationUtil.get("configuration.debug.enabled").equalsIgnoreCase("true");
 
     public static void main(String[] args) {
         boolean keepGoing = true;
