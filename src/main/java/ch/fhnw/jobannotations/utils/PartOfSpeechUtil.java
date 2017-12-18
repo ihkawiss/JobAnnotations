@@ -33,7 +33,7 @@ public class PartOfSpeechUtil {
      */
     public static String[] detectSentences(String text) {
 
-        try (InputStream modelIn = FileUtils.getFileAsInputStream("de-sent.bin")) {
+        try (InputStream modelIn = FileUtils.getFileAsInputStream(ConfigurationUtil.get("external.OpenNLP.models.sentence"))) {
 
             SentenceModel sentenceModel = new SentenceModel(modelIn);
 
@@ -46,60 +46,6 @@ public class PartOfSpeechUtil {
         }
 
         return null;
-    }
-
-
-    /**
-     * Analyses the given sentence and returns it's part-of-speech structure
-     *
-     * @param sentence to analyse
-     * @return array of pos-tags for each word of the sentence
-     */
-    public static String[] analysePartOfSpeech(String sentence) {
-
-        try (InputStream modelIn = FileUtils.getFileAsInputStream("de-pos-maxent.bin")) {
-
-            POSModel posModel = new POSModel(modelIn);
-
-            POSTaggerME tagger = new POSTaggerME(posModel);
-
-            return tagger.tag(sentence.split(" "));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public static Map<String, Integer> getChunksByDictionary(TrieDictionary<String> dictionary, String textToAnalyse, double distance, double matchWeight, double deleteWeight, double insertWeight, double substituteWeight, double transposeWeight) {
-        Map<String, Integer> candidates = new HashMap<>();
-
-        String[] sentences = detectSentences(textToAnalyse);
-        if (sentences == null) {
-            return candidates;
-        }
-
-        TokenizerFactory tokenizerFactory = IndoEuropeanTokenizerFactory.INSTANCE;
-        WeightedEditDistance editDistance = new FixedWeightEditDistance(matchWeight, deleteWeight, insertWeight, substituteWeight, transposeWeight);
-        ApproxDictionaryChunker chunker = new ApproxDictionaryChunker(dictionary, tokenizerFactory, editDistance, distance);
-
-        for (String text : sentences) {
-
-            Chunking chunking = chunker.chunk(text);
-            CharSequence cs = chunking.charSequence();
-            Set<Chunk> chunkSet = chunking.chunkSet();
-
-            for (Chunk chunk : chunkSet) {
-                int start = chunk.start();
-                int end = chunk.end();
-                int score = (int) chunk.score();
-                CharSequence str = cs.subSequence(start, end);
-                candidates.put(str.toString(), score);
-
-            }
-        }
-        return candidates;
     }
 
     public static Map<String, Integer> getChunksByDictionary(TrieDictionary<String> dictionary, String textToAnalyse, double distance) {

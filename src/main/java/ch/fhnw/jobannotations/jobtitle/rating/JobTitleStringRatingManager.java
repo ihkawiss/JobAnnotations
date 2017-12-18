@@ -1,6 +1,7 @@
 package ch.fhnw.jobannotations.jobtitle.rating;
 
 import ch.fhnw.jobannotations.Main;
+import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.IntStringPair;
 import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
@@ -80,7 +81,6 @@ public class JobTitleStringRatingManager {
 
     // known job titles
     private static final String DICTIONARY_CATEGORY_JOB_TITLE = "JobTitle";
-    private static final String JOB_TITLES_TRAIN_FILE_NAME = "jobtitles.fhnw.raw";
     private static final int CHUNK_INFO_POS_START = 0;
     private static final int CHUNK_INFO_POS_END = 1;
     private static final int CHUNK_INFO_POS_SCORE = 2;
@@ -99,7 +99,7 @@ public class JobTitleStringRatingManager {
         TrieDictionary<String> dictionary = new TrieDictionary<>();
         List<String> knownJobTitles = new ArrayList<>();
 
-        InputStream inputStream = FileUtils.getFileAsInputStream(JOB_TITLES_TRAIN_FILE_NAME);
+        InputStream inputStream = FileUtils.getResourceInputStream(ConfigurationUtil.get("extraction.titles.train"));
         if (inputStream != null) {
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
