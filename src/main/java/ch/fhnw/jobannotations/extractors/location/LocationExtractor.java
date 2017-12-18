@@ -46,7 +46,7 @@ public class LocationExtractor implements IExtractor {
 
         if (ConfigurationUtil.isDebugModeEnabled()) {
             System.out.println("\n" + StringUtils.repeat("-", 80));
-            System.out.println("[location]\t" + "Started to parse location from offer");
+            LOG.debug("" + "Started to parse location from offer");
         }
 
         List<IntStringPair> ratedJobLocations = findPotentialJobLocations(jobOffer);
@@ -58,18 +58,31 @@ public class LocationExtractor implements IExtractor {
         FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.locations.train"), data);
     }
 
+    /**
+     * Extracts locations of given job offer.
+     *
+     * @param jobOffer Job offer to analyse
+     * @return List or rated locations
+     */
     private List<IntStringPair> findPotentialJobLocations(JobOffer jobOffer) {
         // parse location in body without footer
-        System.out.println("[location]\tFind potential job locations in body element without footer");
+        LOG.debug("Find potential job locations in body element without footer");
         List<IntStringPair> ratedJobLocations = findPotentialJobLocations(jobOffer, false);
 
         // parse location in footer
-        System.out.println("[location]\tFind potential job locations in footer element");
+        LOG.debug("Find potential job locations in footer element");
         ratedJobLocations.addAll(findPotentialJobLocations(jobOffer, true));
 
         return ratedJobLocations;
     }
 
+    /**
+     * Extracts locations of given job offer by using different types of extraction methods.
+     *
+     * @param jobOffer Job offer to analyse
+     * @param isFooter Whether the footer element should be checked or the body element
+     * @return List or rated locations
+     */
     private List<IntStringPair> findPotentialJobLocations(JobOffer jobOffer, boolean isFooter) {
         List<IntStringPair> ratedJobLocations = new ArrayList<>();
         int ratingAdjustment = isFooter ? LocationExtractorConstants.RATING_ELEMENT_IN_FOOTER : 0;
@@ -104,8 +117,8 @@ public class LocationExtractor implements IExtractor {
             ratedJobLocations.add(ratedJobLocation);
         }
 
-        System.out.println("[location]\tRemove entries that contain too many words");
-        System.out.println("[location]\tRemove leading lower case words");
+        LOG.debug("Remove entries that contain too many words");
+        LOG.debug("Remove leading lower case words");
 
         int previousSize = ratedJobLocations.size();
         for (int i = previousSize - 1; i >= 0; i--) {
@@ -138,6 +151,14 @@ public class LocationExtractor implements IExtractor {
         return ratedJobLocations;
     }
 
+    /**
+     * Extracts locations of given body element by using flags. Flags are searched in some HTML attributes and in plain
+     * text.
+     *
+     * @param bodyElement Body element to analyse
+     * @param plainText   Plain text to analyse
+     * @return Extracted locations
+     */
     private List<String> getPotentialJobLocationByLocationFlags(Element bodyElement, String plainText) {
         List<String> potentialJobLocations = new ArrayList<>();
 
@@ -165,6 +186,12 @@ public class LocationExtractor implements IExtractor {
         return potentialJobLocations;
     }
 
+    /**
+     * Extracts locations of given annotated sentences by using named entity recognition.
+     *
+     * @param annotatedSentences Annotated sentences to analyse
+     * @return Extracted locations
+     */
     private List<String> getPotentialJobLocationByNamedEntityRecognition(Iterable<? extends CoreMap> annotatedSentences) {
         List<String> potentialJobLocations = new ArrayList<>();
 
@@ -181,6 +208,12 @@ public class LocationExtractor implements IExtractor {
         return potentialJobLocations;
     }
 
+    /**
+     * Extracts locations from given plain text by using a regex to find text containing a zip code and a location.
+     *
+     * @param plainText Text to analyse
+     * @return List of extracted location
+     */
     private List<String> getPotentialJobLocationByZipCode(String plainText) {
         List<String> potentialLocations = new ArrayList<>();
         Matcher zipCodeMatcher = Pattern.compile("\\d{4,5}\\s(.{2,})\\W").matcher(plainText);
@@ -190,9 +223,16 @@ public class LocationExtractor implements IExtractor {
         return potentialLocations;
     }
 
+    /**
+     * Calculates ratings of locations in given List by using different types of rating methods and returns the location
+     * with the highest rating.
+     *
+     * @param ratedJobLocations List of locations
+     * @return Location with highest rating or null if nothing found
+     */
     private String getLocationWithHighestPotential(List<IntStringPair> ratedJobLocations) {
         if (ratedJobLocations.isEmpty()) {
-            System.out.println("[location]\tNo locations found. Returning null.");
+            LOG.debug("No locations found. Returning null.");
             return null;
         }
 
@@ -208,6 +248,12 @@ public class LocationExtractor implements IExtractor {
         return ratedJobLocations.get(0).getString();
     }
 
+    /**
+     * Adjusted ratings of locations in given List by calculating distances with location dictionary.
+     *
+     * @param ratedJobLocations List of locations to be rated
+     * @return Adjusted List
+     */
     private List<IntStringPair> adjustRatingByDictionaryDistances(List<IntStringPair> ratedJobLocations) {
         TrieDictionary<String> locationsDictionary = NlpHelper.getInstance().getLocationsDictionary();
         for (IntStringPair ratedJobLocation : ratedJobLocations) {
@@ -217,6 +263,13 @@ public class LocationExtractor implements IExtractor {
         return ratedJobLocations;
     }
 
+    /**
+     * Calculates rating based on distance between given location and the entries in given dictionary.
+     *
+     * @param locationsDictionary Dictionary of locations to be used to calculate rating
+     * @param ratedLocation       Location to be rated
+     * @return Calculated rating
+     */
     private int calculateLocationRatingByDictionaryDistance(TrieDictionary<String> locationsDictionary, IntStringPair ratedLocation) {
         String locationName = ratedLocation.getString();
         int rating = ratedLocation.getInt();
@@ -238,28 +291,34 @@ public class LocationExtractor implements IExtractor {
         return rating;
     }
 
+    /**
+     * Adjust ratings of locations in given list by validating the location names with the geo admin API.
+     *
+     * @param ratedJobLocations List of locations to be rated.
+     * @return Adjusted List
+     */
     private List<IntStringPair> validateLocations(List<IntStringPair> ratedJobLocations) {
-        System.out.println("[location]\tValidate location names");
+        LOG.debug("Validate location names");
         boolean addressValidated = false;
         for (IntStringPair ratedLocation : ratedJobLocations) {
             String location = ratedLocation.getString();
             String validatedAddress = getValidatedAddressFromGeoApi(location);
             if (validatedAddress != null) {
-                System.out.println("[location]\tLocation validated: [" + location + "] => [" + validatedAddress + "]");
+                LOG.debug("Location validated: [" + location + "] => [" + validatedAddress + "]");
                 addressValidated = true;
                 int validationRating = calculateValidationRating(location, validatedAddress);
                 ratedLocation.setString(validatedAddress);
                 ratedLocation.setInt(ratedLocation.getInt() + validationRating);
 
             } else {
-                System.out.println("[location]\tFailed to validate location: [" + location + "]");
+                LOG.debug("Failed to validate location: [" + location + "]");
                 ratedLocation.setInt(ratedLocation.getInt() + LocationExtractorConstants.RATING_VALIDATION_FAILED);
             }
         }
 
         // if failed to validate address, try again with separate words of each location string
         if (!addressValidated) {
-            System.out.println("[location]\tNo locations could be validated. Validating separate words in location names now...");
+            LOG.debug("No locations could be validated. Validating separate words in location names now...");
             int previousListSize = ratedJobLocations.size();
             for (int i = 0; i < previousListSize; i++) {
                 IntStringPair ratedLocation = ratedJobLocations.get(i);
@@ -271,7 +330,7 @@ public class LocationExtractor implements IExtractor {
                             && Character.isUpperCase(partialLocationName.charAt(0))) {
                         String validatedAddress = getValidatedAddressFromGeoApi(partialLocationName);
                         if (validatedAddress != null) {
-                            System.out.println("[location]\tLocation validated: [" + location + "] => [" + partialLocationName + "] => [" + validatedAddress + "]");
+                            LOG.debug("Location validated: [" + location + "] => [" + partialLocationName + "] => [" + validatedAddress + "]");
                             int partialLocationRating = ratedLocation.getInt() - 25;
                             partialLocationRating += calculateValidationRating(partialLocationName, validatedAddress);
                             IntStringPair ratedPartialLocation = new IntStringPair(partialLocationRating, validatedAddress);
@@ -285,10 +344,13 @@ public class LocationExtractor implements IExtractor {
     }
 
     /**
-     * Removes duplicated entries and adjust rating by number of duplications.
+     * Removes duplicated entries and adjust ratings of entries by number of duplications.
+     *
+     * @param ratedJobLocations List of locations to be adjusted
+     * @return Adjusted List
      */
     private List<IntStringPair> removeDuplications(List<IntStringPair> ratedJobLocations) {
-        System.out.println("[location]\tRemove duplicates and adjust rating by number of identical entries");
+        LOG.debug("Remove duplicates and adjust rating by number of identical entries");
         ratedJobLocations.sort(Comparator.comparing(IntStringPair::getString));
         String lastLocation = null;
         for (int i = ratedJobLocations.size() - 1; i >= 0; i--) {
@@ -309,7 +371,11 @@ public class LocationExtractor implements IExtractor {
     }
 
     /**
-     * Only keep entries with highest ratings
+     * Filters given list by ratings. Only keeps entries with highest ratings so that in the end all entries have the
+     * same rating.
+     *
+     * @param ratedJobLocations List of locations to filter
+     * @return Filtered List
      */
     private List<IntStringPair> filterByRatings(List<IntStringPair> ratedJobLocations) {
         // sort by rating
@@ -325,6 +391,14 @@ public class LocationExtractor implements IExtractor {
         return ratedJobLocations;
     }
 
+    /**
+     * Calculates rating of location by comparing distance between originally found location name and validated
+     * location name.
+     *
+     * @param originalLocationName  Original location name
+     * @param validatedLocationName Validated location name
+     * @return Calculated rating
+     */
     private int calculateValidationRating(String originalLocationName, String validatedLocationName) {
         // remove text in parentheses for better rating calculation
         validatedLocationName = validatedLocationName.replaceAll("\\s*\\(.*\\)\\s*", "");
@@ -343,9 +417,14 @@ public class LocationExtractor implements IExtractor {
         return rating;
     }
 
-
+    /**
+     * Uses given location to validate it with geo admin API.
+     *
+     * @param location Location name to validate
+     * @return Validated and formatted location name or null if nothing found
+     */
     private String getValidatedAddressFromGeoApi(String location) {
-        JSONArray jsonArray = doApiRestCall(LocationExtractorConstants.GEO_ADMIN_API_URL_TEMPLATE, location);
+        JSONArray jsonArray = doApiRestCall(location);
         if (jsonArray != null && jsonArray.length() > 0) {
             JSONObject jsonObject = jsonArray.getJSONObject(0);
             JSONObject attrs = jsonObject.getJSONObject("attrs");
@@ -372,18 +451,24 @@ public class LocationExtractor implements IExtractor {
         return null;
     }
 
-    private JSONArray doApiRestCall(String urlTemplate, String value) {
+    /**
+     * Executes an REST Call to geo admin API with given value as parameter.
+     *
+     * @param value Value to be used as parameter
+     * @return Result as {@link JSONArray} or null if something failed
+     */
+    private JSONArray doApiRestCall(String value) {
         HttpURLConnection conn = null;
         try {
             String urlEncoded = URLEncoder.encode(value, Charset.defaultCharset().displayName());
-            String restURl = String.format(urlTemplate, urlEncoded);
+            String restURl = String.format(LocationExtractorConstants.GEO_ADMIN_API_URL_TEMPLATE, urlEncoded);
             URL url = new URL(restURl);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
 
             if (conn.getResponseCode() != 200) {
-                System.err.println("[location]\tFailed to validate location: [" + value + "] HTTP error code: " + conn.getResponseCode());
+                LOG.warn("Failed to validate location: [" + value + "] HTTP error code: " + conn.getResponseCode());
                 return null;
             }
 
@@ -405,7 +490,7 @@ public class LocationExtractor implements IExtractor {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.warn("Failed to do API REST call: ", e);
         } finally {
             if (conn != null) {
                 conn.disconnect();
