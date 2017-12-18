@@ -1,14 +1,6 @@
 package ch.fhnw.jobannotations;
 
-import ch.fhnw.jobannotations.extractors.jobtitle.JobTitleExtractor;
-import ch.fhnw.jobannotations.extractors.language.LanguageExtractor;
-import ch.fhnw.jobannotations.extractors.location.LocationExtractor;
-import ch.fhnw.jobannotations.extractors.organisation.OrganisationExtractor;
-import ch.fhnw.jobannotations.extractors.skills.JobSkillsExtractor;
 import ch.fhnw.jobannotations.utils.ConfigurationUtil;
-import ch.fhnw.jobannotations.utils.NlpHelper;
-import ch.fhnw.jobannotations.extractors.workload.JobWorkloadExtractor;
-import com.google.protobuf.MapEntry;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
