@@ -43,7 +43,7 @@ public class JobTitleStringRatingManager {
             new IntStringPair(RATING_TAG_H1 / 4, "h4"),
             new IntStringPair(RATING_TAG_H1 / 4, "h5"),
             new IntStringPair(RATING_TAG_H1 / 4, "h6"),
-            new IntStringPair(RATING_TAG_H1 / 4 * 3, "title"),
+            new IntStringPair(RATING_TAG_H1 / 4, "title"),
             new IntStringPair(RATING_TAG_H1 / 4, "b"),
             new IntStringPair(RATING_TAG_H1 / 4, "strong"),
             new IntStringPair(-RATING_TAG_H1, "li")
