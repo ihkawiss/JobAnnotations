@@ -39,15 +39,11 @@ import java.util.regex.Pattern;
  */
 public class LocationExtractor implements IExtractor {
 
-    final static Logger LOG = Logger.getLogger(LocationExtractor.class);
+    private final static Logger LOG = Logger.getLogger(LocationExtractor.class);
 
     @Override
     public String parse(JobOffer jobOffer) {
-
-        if (ConfigurationUtil.isDebugModeEnabled()) {
-            System.out.println("\n" + StringUtils.repeat("-", 80));
-            LOG.debug("" + "Started to parse location from offer");
-        }
+        LOG.debug("Started to parse location from offer");
 
         List<IntStringPair> ratedJobLocations = findPotentialJobLocations(jobOffer);
         return getLocationWithHighestPotential(ratedJobLocations);
@@ -98,21 +94,21 @@ public class LocationExtractor implements IExtractor {
         for (String potentialJobLocation : getPotentialJobLocationByLocationFlags(element, plainText)) {
             IntStringPair ratedJobLocation = new IntStringPair(LocationExtractorConstants.RATING_LOCATION_BY_LOCATION_FLAGS + ratingAdjustment, potentialJobLocation);
             ratedJobLocations.add(ratedJobLocation);
-            System.out.println("[location-indicator]\tFound location by location flags: " + potentialJobLocation);
+            LOG.debug("Found location by location flags: " + potentialJobLocation);
         }
 
         // use parsing with zip code regex
         for (String location : getPotentialJobLocationByZipCode(plainText)) {
-            System.out.println("[location-indicator]\tFound location with ZIP code: " + location);
+            LOG.debug("Found location with ZIP code: " + location);
             IntStringPair ratedJobLocation = new IntStringPair(LocationExtractorConstants.RATING_LOCATION_BY_ZIP_CODE + ratingAdjustment, location);
             ratedJobLocations.add(ratedJobLocation);
         }
 
         // find locations using NLP
-        System.out.println("[location-ner]\tUsing Named Entity Recognition...");
+        LOG.debug("Using Named Entity Recognition...");
         List<CoreMap> annotatedSentences = isFooter ? jobOffer.getAnnotatedFooterSentences() : jobOffer.getAnnotatedBodySentences();
         for (String location : getPotentialJobLocationByNamedEntityRecognition(annotatedSentences)) {
-            System.out.println("[location-ner]\tFound location with NER: " + location);
+            LOG.debug("Found location with NER: " + location);
             IntStringPair ratedJobLocation = new IntStringPair(LocationExtractorConstants.RATING_LOCATION_BY_NER + ratingAdjustment, location);
             ratedJobLocations.add(ratedJobLocation);
         }
