@@ -2,6 +2,7 @@ package ch.fhnw.jobannotations.language;
 
 import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
+import ch.fhnw.jobannotations.utils.ConfigurationUtil;
 import ch.fhnw.jobannotations.utils.FileUtils;
 import ch.fhnw.jobannotations.utils.NlpHelper;
 import edu.stanford.nlp.ling.IndexedWord;
@@ -61,7 +62,7 @@ public class LanguageExtractor {
         Map<String, String> candidates = new HashMap<>();
 
         // load known languages from model as list
-        List<String> languages = FileUtils.getFileContentAsList("data/known_languages.txt");
+        List<String> languages = FileUtils.getFileContentAsList(ConfigurationUtil.get("extraction.languages.train"));
 
         for (String language : languages) {
 

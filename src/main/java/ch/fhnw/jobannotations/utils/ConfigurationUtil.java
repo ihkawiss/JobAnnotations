@@ -6,30 +6,36 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+/**
+ * This class it responsible to ensure access to the application's
+ * configurations, defined in the job-annotations.properties file.
+ * Those settings determine how this library is supposed to work.
+ *
+ * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
+ */
 public final class ConfigurationUtil {
 
     private final static Logger LOG = Logger.getLogger(ConfigurationUtil.class);
+    private final static String CONFIGURATION_FILE = "job-annotations.properties";
 
     private static ConfigurationUtil instance;
-
-    private Properties p;
+    private Properties properties;
 
     private ConfigurationUtil() {
 
         try {
 
-            InputStream input = FileUtils.getFileAsInputStream("configuration/job-annotations.properties");
-
-            p = new Properties();
-            p.load(input);
+            InputStream input = FileUtils.getResourceInputStream(CONFIGURATION_FILE);
+            properties = new Properties();
+            properties.load(input);
 
         } catch (IOException e) {
-            LOG.error("Failed to load ./job-annotations.properties. Please see documentation.");
+            LOG.error("Failed to load " + CONFIGURATION_FILE + ". Please see documentation.");
         }
 
     }
 
-    public static ConfigurationUtil getInstance() {
+    private static ConfigurationUtil getInstance() {
 
         if (instance == null)
             instance = new ConfigurationUtil();
@@ -37,8 +43,14 @@ public final class ConfigurationUtil {
         return instance;
     }
 
-    public String get(String key) {
-        return p.getProperty(key);
+    /**
+     * Wrapper to grab properties from holder
+     *
+     * @param key the desired property name
+     * @return the value of a found key
+     */
+    public static String get(String key) {
+        return getInstance().properties.getProperty(key);
     }
 
 }

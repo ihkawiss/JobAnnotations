@@ -54,16 +54,10 @@ public class NlpHelper {
     private NlpHelper() {
         System.out.println("[nlp]\tInitializing NLP");
         pipeline = new StanfordCoreNLP(FileUtils.getStanfordCoreNLPGermanConfiguration());
-/*
-        Properties germanConfig = FileUtils.getStanfordCoreNLPGermanConfiguration();
-        String taggerPath = germanConfig.getProperty("pos.model");
-        String modelPath = germanConfig.getProperty("depparse.model");
-        tagger = new MaxentTagger(taggerPath);
-        parser = DependencyParser.loadFromModelFile(modelPath);*/
 
         System.out.println("[nlp]\tLoading dictionaries");
-        skillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_skills.txt", "SKILL");
-        antiSkillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_anti_skills.txt", "ANTISKILL");
+        skillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.skills.train.positive"), "SKILL");
+        antiSkillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.skills.train.negative"), "ANTISKILL");
 
         // create dictionaries with cleaned entries (lower case without special chars)
         simplifiedSkillsDictionary = createSimplifiedDictionary(skillsDictionary);
@@ -192,7 +186,7 @@ public class NlpHelper {
 
     private Properties getDependencyParserProperties() {
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileAsInputStream("configuration/StanfordCoreNLP-german-dependency-parser.properties"), "UTF8"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getResourceInputStream("configuration/StanfordCoreNLP-german-dependency-parser.properties"), "UTF8"));
 
             Properties props = new Properties();
             props.load(reader);

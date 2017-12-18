@@ -2,34 +2,59 @@ package ch.fhnw.jobannotations.utils;
 
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 /**
- * @author Hoang
+ * This class covers recurring file handling tasks.
+ *
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class FileUtils {
 
     final static Logger LOG = Logger.getLogger(FileUtils.class);
 
     private FileUtils() {
-        // private constructor
     }
 
-    public static InputStream getFileAsInputStream(String fileName) {
+    /**
+     * Gets a stream to a file stored in resources of the project.
+     *
+     * @param path where file is located
+     * @return InputStream to file
+     */
+    public static InputStream getResourceInputStream(String path) {
         ClassLoader classLoader = FileUtils.class.getClassLoader();
-        return classLoader.getResourceAsStream(fileName);
+        return classLoader.getResourceAsStream(path);
     }
 
+    /**
+     * Gets a stream to a file path.
+     *
+     * @param path where file is located
+     * @return InputStream to file
+     * @throws IOException if file could not be read
+     */
+    public static InputStream getFileAsInputStream(String path) throws IOException {
+        return Files.newInputStream(Paths.get(path));
+    }
+
+    /**
+     * Gets configuration of external StanfordCoreNLP library
+     *
+     * @return Properties read from configuration file
+     */
     public static Properties getStanfordCoreNLPGermanConfiguration() {
 
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileAsInputStream("configuration/StanfordCoreNLP-german.properties"), "UTF8"));
+            final String STANFORD_CONFIGURATION = ConfigurationUtil.get("external.StanfordCoreNLP.configuration");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtils.getFileAsInputStream(STANFORD_CONFIGURATION), "UTF8"));
 
             Properties props = new Properties();
             props.load(reader);
@@ -43,6 +68,12 @@ public class FileUtils {
         return null;
     }
 
+    /**
+     * Gets a List containing any line the file contains.
+     *
+     * @param filename to parse
+     * @return List of lines
+     */
     public static List<String> getFileContentAsList(String filename) {
 
         if (filename == "" || filename == null)

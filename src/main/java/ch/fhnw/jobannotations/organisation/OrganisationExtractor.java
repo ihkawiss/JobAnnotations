@@ -2,10 +2,7 @@ package ch.fhnw.jobannotations.organisation;
 
 import ch.fhnw.jobannotations.JobOffer;
 import ch.fhnw.jobannotations.Main;
-import ch.fhnw.jobannotations.utils.FileUtils;
-import ch.fhnw.jobannotations.utils.NlpHelper;
-import ch.fhnw.jobannotations.utils.PartOfSpeechUtil;
-import ch.fhnw.jobannotations.utils.StringUtils;
+import ch.fhnw.jobannotations.utils.*;
 import com.aliasi.dict.TrieDictionary;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -269,7 +266,7 @@ public class OrganisationExtractor {
     private Map<String, Integer> getFuzzySearchCandidates(String text) {
 
         // get chunks for known organisation names which may be recognized within the text
-        TrieDictionary knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile("data/known_companies.txt", "ORG");
+        TrieDictionary knownCompanies = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.organisations.train"), "ORG");
         Map<String, Integer> foundChunks = PartOfSpeechUtil.getChunksByDictionary(knownCompanies, text, 1);
 
         // return found chunks as simple List<String>
