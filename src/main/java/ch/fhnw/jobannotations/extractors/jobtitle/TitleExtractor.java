@@ -297,10 +297,9 @@ public class TitleExtractor implements IExtractor {
         for (IntStringPair ratedString : ratedStrings) {
             String text = ratedString.getString();
 
-
             IntStringPair titleDistance = NlpHelper.getInstance().calcDistanceWithDictionary(titlesDictionary, text, 1);
-            if (titleDistance != null && titleDistance.getInt() == 1000) {
-                ratedString.setInt(ratedString.getInt() + 100);
+            if (titleDistance != null && titleDistance.getInt() == NlpHelper.DICTIONARY_DISTANCE_MIN_VALUE) {
+                ratedString.setInt(ratedString.getInt() + TitleExtractorConstants.RATING_DICTIONARY_MATCH);
             }
         }
     }

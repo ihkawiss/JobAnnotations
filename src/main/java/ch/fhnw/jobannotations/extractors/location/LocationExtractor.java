@@ -279,7 +279,7 @@ public class LocationExtractor implements IExtractor {
 
         IntStringPair locationDistance = NlpHelper.getInstance().calcDistanceWithDictionary(locationsDictionary, locationName, maxDistance);
         if (locationDistance != null) {
-            int distance = (locationDistance.getInt() - 1000) / 20;
+            int distance = (locationDistance.getInt() - NlpHelper.DICTIONARY_DISTANCE_MIN_VALUE) / 20;
             if (distance < LocationExtractorConstants.MAX_RATING_DICTIONARY) {
                 rating += LocationExtractorConstants.MAX_RATING_DICTIONARY - distance;
             }

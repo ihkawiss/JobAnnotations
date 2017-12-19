@@ -21,6 +21,7 @@ class TitleExtractorConstants {
     static final int RATING_REPETITION = RATING_JOB_TITLE_INDICATOR / 2 * RATING_TAG_H1;
     static final int RATING_NEGATIVE_MAX_SPECIAL_CHARS = -RATING_JOB_TITLE_INDICATOR;
     static final int RATING_NEGATIVE_TEXT_TOO_LONG = -RATING_JOB_TITLE_INDICATOR;
+    static final int RATING_DICTIONARY_MATCH = 100;
 
     /**
      * Array of high priority tags with corresponding rating value

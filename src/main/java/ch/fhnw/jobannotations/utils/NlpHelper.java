@@ -28,6 +28,7 @@ import java.util.Set;
 public class NlpHelper {
     private final static Logger LOG = Logger.getLogger(NlpHelper.class);
 
+    public static final int DICTIONARY_DISTANCE_MIN_VALUE = 1000;
     public static final String NER_TAG_LOCATION = "I-LOC";
     public static final String POS_TAG_COMMON_NOUN = "NN";
     public static final String POS_TAG_PROPER_NOUN = "NE"; // includes names, cities, etc
@@ -142,7 +143,7 @@ public class NlpHelper {
             int analyzedLength = analyzedWord.length();
 
             // calculate distance ratio
-            int ratio = (int) (1000 * (wordLength / analyzedLength + distance / analyzedLength));
+            int ratio = (int) (DICTIONARY_DISTANCE_MIN_VALUE * (wordLength / analyzedLength + distance / analyzedLength));
 
             if (bestMatch != null) {
 
