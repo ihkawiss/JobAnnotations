@@ -10,6 +10,9 @@ import ch.fhnw.jobannotations.utils.IntStringPair;
  */
 class TitleExtractorConstants {
 
+    static final String REGEX_SPECIAL_CHARS_TO_REMOVE = "[$+,:;=?@#<>.^*%!-\"]";
+    static final String[] IRRELEVANT_TAGS = {"style", "script", "meta", "link", "a", "input", "button"};
+
     static final int LOW_RATING_THRESHOLD = 10;
 
     // rating values

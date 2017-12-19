@@ -26,9 +26,6 @@ public class TitleExtractor implements IExtractor {
 
     private final static Logger LOG = Logger.getLogger(TitleExtractor.class);
 
-    private static final String REGEX_SPECIAL_CHARS_TO_REMOVE = "[$+,:;=?@#<>.^*%!-\"]";
-    private static final String[] IRRELEVANT_TAGS = {"style", "script", "meta", "link", "a", "input", "button"};
-
     /**
      * Identifies job title candidates found in jobOffer.
      *
@@ -42,7 +39,7 @@ public class TitleExtractor implements IExtractor {
         LOG.debug("Started to parse job title from offer");
 
         // remove irrelevant tags
-        for (String irrelevantTag : IRRELEVANT_TAGS) {
+        for (String irrelevantTag : TitleExtractorConstants.IRRELEVANT_TAGS) {
             document.getElementsByTag(irrelevantTag).remove();
         }
 
@@ -56,7 +53,7 @@ public class TitleExtractor implements IExtractor {
         adjustRatingsByJobTitleIndicator(ratedStrings);
 
         // clean all entries and remove entries with empty strings
-        Pattern patternSpecialChars = Pattern.compile(REGEX_SPECIAL_CHARS_TO_REMOVE);
+        Pattern patternSpecialChars = Pattern.compile(TitleExtractorConstants.REGEX_SPECIAL_CHARS_TO_REMOVE);
         for (int i = ratedStrings.size() - 1; i > -1; i--) {
             // remove special characters
             IntStringPair ratedString = ratedStrings.get(i);
