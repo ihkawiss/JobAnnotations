@@ -3,6 +3,7 @@ package ch.fhnw.jobannotations.domain;
 import ch.fhnw.jobannotations.JobAnnotator;
 import ch.fhnw.jobannotations.utils.HtmlUtils;
 import ch.fhnw.jobannotations.utils.NlpHelper;
+import ch.fhnw.jobannotations.utils.StringUtils;
 import edu.stanford.nlp.util.CoreMap;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -49,12 +50,12 @@ public class JobOffer {
 
         LOG.debug("Annotating parsed job offer");
         String bodyElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(bodyElementWithoutFooter.html());
-        String bodySentences = HtmlUtils.extractSentencesFromPlaintText(bodyElementWithoutFooterPlainText);
+        String bodySentences = StringUtils.extractSentencesFromPlaintText(bodyElementWithoutFooterPlainText);
         annotatedBodySentences = NlpHelper.getInstance().getAnnotatedSentences(bodySentences);
 
         if (footerElement != null) {
             String footerElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(footerElement.html());
-            String footerSentences = HtmlUtils.extractSentencesFromPlaintText(footerElementWithoutFooterPlainText);
+            String footerSentences = StringUtils.extractSentencesFromPlaintText(footerElementWithoutFooterPlainText);
             annotatedFooterSentences = NlpHelper.getInstance().getAnnotatedSentences(footerSentences);
         } else {
             annotatedFooterSentences = null;

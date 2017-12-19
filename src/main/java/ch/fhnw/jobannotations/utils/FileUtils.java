@@ -1,7 +1,6 @@
 package ch.fhnw.jobannotations.utils;
 
 import org.apache.log4j.Logger;
-import sun.rmi.runtime.Log;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -15,6 +14,7 @@ import java.util.Properties;
  * This class covers recurring file handling tasks.
  *
  * @author Hoang Tran <hoang.tran@students.fhnw.ch>
+ * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
  */
 public class FileUtils {
 
@@ -108,7 +108,7 @@ public class FileUtils {
     /**
      * Gets configuration of external StanfordCoreNLP library
      *
-     * @return Properties read from configuration file
+     * @return Properties read from configuration file or null if reading property file failed
      */
     public static Properties getStanfordCoreNLPGermanConfiguration() {
 
@@ -133,11 +133,11 @@ public class FileUtils {
      * Gets a List containing any line the file contains.
      *
      * @param filename to parse
-     * @return List of lines
+     * @return List of lines or null if reading file failed
      */
     public static List<String> getFileContentAsList(String filename) {
 
-        if (filename == "" || filename == null)
+        if (StringUtils.isEmpty(filename))
             throw new IllegalArgumentException("Filename must not be empty!");
 
         try {

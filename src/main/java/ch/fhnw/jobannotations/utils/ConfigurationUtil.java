@@ -18,7 +18,6 @@ public final class ConfigurationUtil {
     private final static Logger LOG = Logger.getLogger(ConfigurationUtil.class);
     private final static String CONFIGURATION_FILE = "job-annotations.properties";
 
-    private boolean debugModeEnabled;
     private static ConfigurationUtil instance;
     private Properties properties;
 

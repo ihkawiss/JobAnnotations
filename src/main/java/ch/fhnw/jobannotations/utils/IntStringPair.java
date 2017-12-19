@@ -1,6 +1,9 @@
 package ch.fhnw.jobannotations.utils;
 
+
 /**
+ * Holder class for holding an int value and String value.
+ *
  * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class IntStringPair {

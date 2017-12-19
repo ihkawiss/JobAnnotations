@@ -2,18 +2,22 @@ package ch.fhnw.jobannotations.utils;
 
 import org.jsoup.Jsoup;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
- * @author Hoang
+ * Utility class providing utility methods for HTML String handling.
+ *
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class HtmlUtils {
     private HtmlUtils() {
         // util class
     }
 
-
+    /**
+     * Extracts plain text from given HTML String.
+     *
+     * @param html HTML String to be used for plain text extraction
+     * @return Extracted plain text
+     */
     public static String getPlainTextFromHtml(String html) {
         // keep line breaks of b-tags after other tags
         html = html.replaceAll("(?i)>\\s*\\n*\\s*<b>", "><br><b>");
@@ -38,35 +42,5 @@ public class HtmlUtils {
         html = html.replaceAll(breakTagPlaceholder, "\n");
 
         return html;
-    }
-
-    public static String extractSentencesFromPlaintText(String plainText) {
-        StringBuilder sentences = new StringBuilder();
-        boolean firstLine = true;
-        for (String line : plainText.split("\n")) {
-            line = line.trim();
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            String sentenceRegex = "[^.!?:]+[.!?:]";
-            Matcher sentenceMatcher = Pattern.compile(sentenceRegex).matcher(line);
-            while (sentenceMatcher.find()) {
-                String sentence = sentenceMatcher.group().trim();
-                if (sentence.isEmpty()) {
-                    continue;
-                }
-                if (sentence.split(" ").length < 2) {
-                    continue;
-                }
-
-                if (!firstLine) {
-                    sentences.append("\n");
-                }
-                firstLine = false;
-                sentences.append(sentence);
-            }
-        }
-        return sentences.toString();
     }
 }

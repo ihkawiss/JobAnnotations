@@ -1,7 +1,12 @@
 package ch.fhnw.jobannotations.utils;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
- * @author Hoang
+ * Utility class for String operations.
+ *
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class StringUtils extends org.apache.commons.lang3.StringUtils {
 
@@ -32,5 +37,42 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
      */
     public static String removeSpecialChars(String text) {
         return text.replaceAll(SPECIAL_CHARS, "");
+    }
+
+
+    /**
+     * Extracts complete sentences from given String.
+     *
+     * @param plainText Plain text to be used for sentence extraction
+     * @return Extracted sentences as a single String
+     */
+    public static String extractSentencesFromPlaintText(String plainText) {
+        StringBuilder sentences = new StringBuilder();
+        boolean firstLine = true;
+        for (String line : plainText.split("\n")) {
+            line = line.trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+
+            String sentenceRegex = "[^.!?:]+[.!?:]";
+            Matcher sentenceMatcher = Pattern.compile(sentenceRegex).matcher(line);
+            while (sentenceMatcher.find()) {
+                String sentence = sentenceMatcher.group().trim();
+                if (sentence.isEmpty()) {
+                    continue;
+                }
+                if (sentence.split(" ").length < 2) {
+                    continue;
+                }
+
+                if (!firstLine) {
+                    sentences.append("\n");
+                }
+                firstLine = false;
+                sentences.append(sentence);
+            }
+        }
+        return sentences.toString();
     }
 }

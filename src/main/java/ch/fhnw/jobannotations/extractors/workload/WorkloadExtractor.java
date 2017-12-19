@@ -13,8 +13,7 @@ import java.util.regex.Pattern;
 
 
 /**
- * This class is responsible to identify potential skills in a job offer document. To prevent false results and to
- * improve performance, various techniques are used.
+ * This class is responsible to identify workload in a job offer document.
  *
  * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
@@ -63,7 +62,7 @@ public class WorkloadExtractor implements IExtractor {
     }
 
     /**
-     * Remove invalid workloads and decrease ratings of unlikely workloads
+     * Removes invalid workloads and decreases ratings of unlikely workloads
      *
      * @param ratedWorkloads List of rated workloads
      */
@@ -103,7 +102,9 @@ public class WorkloadExtractor implements IExtractor {
     }
 
     /**
-     * Removes duplicated entries and adjust rating by number of duplications.
+     * Removes duplicated entries and adjusts rating by number of duplications.
+     *
+     * @param ratedWorkloads List of workloads to be rated
      */
     private void removeDuplications(List<IntStringPair> ratedWorkloads) {
         LOG.debug("Remove duplicates and adjust rating by number of identical entries");
@@ -125,6 +126,12 @@ public class WorkloadExtractor implements IExtractor {
         }
     }
 
+    /**
+     * Filters given List of workloads by removing workloads that do not have the highest rating in the Lists so that
+     * after filtering all workloads have the same rating.
+     *
+     * @param ratedWorkloads List of workloads to be rated
+     */
     private void filterByRatings(List<IntStringPair> ratedWorkloads) {
         // sort by rating
         ratedWorkloads.sort((o1, o2) -> o2.getInt() - o1.getInt());
