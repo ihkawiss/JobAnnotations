@@ -224,29 +224,6 @@ public class JobSkillsExtractor implements IExtractor {
         return NlpHelper.getInstance().calcDistanceWithDictionary(dictionary, noun, maxDistance);
     }
 
-    private List<String> extractSkillNouns(String skillSentence) {
-        List<String> formattedSkills = new ArrayList<>();
-        TrieDictionary<String> skillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
-        Map<String, Integer> chunks = PartOfSpeechUtil.getChunksByDictionary(skillsDictionary, skillSentence, 1);
-        for (String skill : chunks.keySet()) {
-            Integer distance = chunks.get(skill);
-            int nofChars = skill.length();
-            if (distance > nofChars / 2) {
-                // distance too high for this word length
-                continue;
-            }
-
-            addSkill(formattedSkills, skill);
-        }
-
-        List<String> skillNouns = new ArrayList<>();
-        for (String formattedSkill : formattedSkills) {
-            skillNouns.addAll(NlpHelper.getInstance().extractNouns(formattedSkill));
-        }
-
-        return skillNouns;
-    }
-
     private void addSkill(List<String> formattedSkills, String skill) {
         for (String formattedSkill : formattedSkills) {
             String skillLowerCase = skill.toLowerCase();

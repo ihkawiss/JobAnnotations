@@ -28,6 +28,7 @@ public class NlpHelper {
 
     private static NlpHelper instance;
     private StanfordCoreNLP pipeline;
+    private final TrieDictionary<String> titlesDictionary;
     private final TrieDictionary<String> skillsDictionary;
     private final TrieDictionary<String> antiSkillsDictionary;
     private final TrieDictionary<String> locationsDictionary;
@@ -37,6 +38,7 @@ public class NlpHelper {
         pipeline = new StanfordCoreNLP(FileUtils.getStanfordCoreNLPGermanConfiguration());
 
         System.out.println("[nlp]\tLoading dictionaries");
+        titlesDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.titles.train"), "TITLE");
         skillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.skills.train.positive"), "SKILL");
         antiSkillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.skills.train.negative"), "ANTISKILL");
         locationsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.locations.train"), "LOCATION");
@@ -124,6 +126,10 @@ public class NlpHelper {
         }
 
         return bestMatch;
+    }
+
+    public TrieDictionary<String> getTitlesDictionary() {
+        return titlesDictionary;
     }
 
     public TrieDictionary<String> getSkillsDictionary() {

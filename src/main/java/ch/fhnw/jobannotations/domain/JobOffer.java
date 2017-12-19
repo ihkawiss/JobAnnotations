@@ -1,8 +1,10 @@
 package ch.fhnw.jobannotations.domain;
 
+import ch.fhnw.jobannotations.JobAnnotator;
 import ch.fhnw.jobannotations.utils.HtmlUtils;
 import ch.fhnw.jobannotations.utils.NlpHelper;
 import edu.stanford.nlp.util.CoreMap;
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,9 +21,9 @@ import java.util.List;
  */
 public class JobOffer {
 
+    private final static Logger LOG = Logger.getLogger(JobAnnotator.class);
     private static final String FOOTER_TAG_NAME = "footer";
 
-    // job offer document
     private final Document document;
     private final Element bodyElement;
     private final Element bodyElementWithoutFooter;
@@ -45,7 +47,7 @@ public class JobOffer {
         extractToElementsList(footers, bodyElementWithoutFooter.getElementsByClass(FOOTER_TAG_NAME));
         footerElement = mergeFooterElements(footers);
 
-        System.out.println("[general]\tAnnotating parsed job offer");
+        LOG.debug("Annotating parsed job offer");
         String bodyElementWithoutFooterPlainText = HtmlUtils.getPlainTextFromHtml(bodyElementWithoutFooter.html());
         String bodySentences = HtmlUtils.extractSentencesFromPlaintText(bodyElementWithoutFooterPlainText);
         annotatedBodySentences = NlpHelper.getInstance().getAnnotatedSentences(bodySentences);
@@ -69,6 +71,12 @@ public class JobOffer {
         }
     }
 
+    /**
+     * Merges given footer elements to one single footer element.
+     *
+     * @param footers Footer elements to be merged
+     * @return Single merged footer element
+     */
     private Element mergeFooterElements(Elements footers) {
         if (footers.size() == 1) {
             return footers.first();
@@ -87,22 +95,35 @@ public class JobOffer {
         }
     }
 
-    private void extractToElementsList(Elements elements, Elements elementsToAdd) {
-        for (Element element : elementsToAdd) {
-            extractToElementList(elements, element);
+    /**
+     * Removes given elements from body and adds them to the given elements object.
+     *
+     * @param elementList       Elements object to add removed elements to
+     * @param elementsToExtract Elements to be removed and added to the elements object
+     */
+    private void extractToElementsList(Elements elementList, Elements elementsToExtract) {
+        for (Element element : elementsToExtract) {
+            extractToElementList(elementList, element);
         }
 
     }
 
-    private void extractToElementList(Elements elements, Element elementToAdd) {
-        if (elementToAdd != null && !elements.contains(elementToAdd)) {
-            elements.add(elementToAdd);
-            elementToAdd.remove();
+    /**
+     * Removes given element from body and adds it to the given elements object.
+     *
+     * @param elementList      Elements object to add removed element to
+     * @param elementToExtract Element to be removed and added to the elements object
+     */
+    private void extractToElementList(Elements elementList, Element elementToExtract) {
+        if (elementToExtract != null && !elementList.contains(elementToExtract)) {
+            elementList.add(elementToExtract);
+            elementToExtract.remove();
         }
     }
 
     /**
      * Returns the whole job offer document.
+     *
      * @return Document
      */
     public Document getDocument() {
@@ -111,6 +132,7 @@ public class JobOffer {
 
     /**
      * Returns body element of the job offer document.
+     *
      * @return Body element
      */
     public Element getBodyElement() {
@@ -119,6 +141,7 @@ public class JobOffer {
 
     /**
      * Returns body element of the job offer document without footer element.
+     *
      * @return Body element without footer element
      */
     public Element getBodyElementWithoutFooter() {
@@ -127,6 +150,7 @@ public class JobOffer {
 
     /**
      * Returns footer element of the job offer document.
+     *
      * @return Footer element
      */
     public Element getFooterElement() {
@@ -135,6 +159,7 @@ public class JobOffer {
 
     /**
      * Returns the whole job offer document as plain text.
+     *
      * @return Document plain text
      */
     public String getPlainText() {
@@ -143,6 +168,7 @@ public class JobOffer {
 
     /**
      * Returns whole job offer document as List with every line as List entry in plain text.
+     *
      * @return List of plain text lines
      */
     public List<String> getPlainTextLines() {
@@ -151,6 +177,7 @@ public class JobOffer {
 
     /**
      * Returns annotated sentences of the body element.
+     *
      * @return Annotated body sentences
      */
     public List<CoreMap> getAnnotatedBodySentences() {
@@ -159,6 +186,7 @@ public class JobOffer {
 
     /**
      * Returns annotated sentences of the footer element.
+     *
      * @return Annotated footer sentences
      */
     public List<CoreMap> getAnnotatedFooterSentences() {

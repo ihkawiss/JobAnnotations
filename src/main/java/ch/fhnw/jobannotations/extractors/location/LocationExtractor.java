@@ -322,8 +322,7 @@ public class LocationExtractor implements IExtractor {
                 Matcher wordMatcher = Pattern.compile("\\w+").matcher(location);
                 while (wordMatcher.find()) {
                     String partialLocationName = wordMatcher.group();
-                    if (partialLocationName.length() > 1
-                            && Character.isUpperCase(partialLocationName.charAt(0))) {
+                    if (partialLocationName.length() > 1 && Character.isUpperCase(partialLocationName.charAt(0))) {
                         String validatedAddress = getValidatedAddressFromGeoApi(partialLocationName);
                         if (validatedAddress != null) {
                             LOG.debug("Location validated: [" + location + "] => [" + partialLocationName + "] => [" + validatedAddress + "]");

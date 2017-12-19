@@ -2,7 +2,7 @@ package ch.fhnw.jobannotations;
 
 import ch.fhnw.jobannotations.domain.JobOffer;
 import ch.fhnw.jobannotations.extractors.IExtractor;
-import ch.fhnw.jobannotations.extractors.jobtitle.JobTitleExtractor;
+import ch.fhnw.jobannotations.extractors.jobtitle.TitleExtractor;
 import ch.fhnw.jobannotations.extractors.language.LanguageExtractor;
 import ch.fhnw.jobannotations.extractors.location.LocationExtractor;
 import ch.fhnw.jobannotations.extractors.organisation.OrganisationExtractor;
@@ -19,7 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- *
+ * Parses job offer information from job offer documents by using extractors that implement the {@link IExtractor}
+ * interface.
  *
  * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
  */
@@ -29,6 +30,9 @@ public class JobAnnotator {
 
     private List<IExtractor> extractors;
 
+    /**
+     * Constructs a JobAnnotator instance with default extractor List.
+     */
     public JobAnnotator() {
         this(true);
     }
@@ -36,7 +40,7 @@ public class JobAnnotator {
     /**
      * Constructs a JobAnnotator instance.
      *
-     * @param useDefaultExtractors <code>false</code> to prevent using the default extractors list, <code>true</code>
+     * @param useDefaultExtractors <code>false</code> to prevent using the default extractors list, <code>true</code> otherwise
      */
     public JobAnnotator(boolean useDefaultExtractors) {
 
@@ -47,7 +51,8 @@ public class JobAnnotator {
         extractors = new ArrayList<>();
 
         if (useDefaultExtractors) {
-            extractors.add(new JobTitleExtractor());
+            LOG.debug("Using default extractors");
+            extractors.add(new TitleExtractor());
             extractors.add(new JobSkillsExtractor());
             extractors.add(new LocationExtractor());
             extractors.add(new OrganisationExtractor());
@@ -57,12 +62,17 @@ public class JobAnnotator {
 
     }
 
+    /**
+     * Parses job offer information from given url by using the added extractors and returns the results as a map with
+     * extractor class name as key and parsed results as value. An empty map may be returned if parsing fails.
+     *
+     * @param url Url of job offer document to be parsed
+     * @return Parsed job offer information as a map or an empty map if something failed
+     */
     public HashMap<String, String> parse(String url) {
-
         HashMap<String, String> result = new HashMap<>();
 
         try {
-
             // create job offer by url
             Document document = Jsoup.connect(url).get();
             JobOffer jobOffer = new JobOffer(document);
@@ -84,17 +94,47 @@ public class JobAnnotator {
         return result;
     }
 
+    /**
+     * Adds extractor to extractor List.
+     *
+     * @param extractor Extractor to be added
+     * @return <code>true</code> if extractor added, <code>false</code> otherwise
+     * @see List#add(Object)
+     */
     public boolean add(IExtractor extractor) {
         return extractors.add(extractor);
     }
 
+    /**
+     * Removes extractor from List with given index.
+     *
+     * @param index Index of extractor to be removed
+     * @return Extractor that has been removed
+     * @see List#remove(int)
+     */
     public IExtractor remove(int index) {
         return extractors.remove(index);
     }
 
+    /**
+     * Removes given extractor from List.
+     *
+     * @param extractor Extractor to be removed
+     * @return <code>true</code> if extractor removed, <code>false</code> otherwise
+     * @see List#remove(Object)
+     */
     public boolean remove(IExtractor extractor) {
         return extractors.remove(extractor);
     }
 
-
+    /**
+     * Checks whether the given extractor is present in the List or not.
+     *
+     * @param extractor Extractor to check
+     * @return <code>true</code> if extractor present, <code>false</code> otherwise
+     * @see List#contains(Object)
+     */
+    public boolean contains(IExtractor extractor) {
+        return extractors.contains(extractor);
+    }
 }
