@@ -106,10 +106,6 @@ public class TitleExtractor implements IExtractor {
             ratedStrings = ratedStrings.subList(0, 5);
         }
 
-        for (IntStringPair ratedString : ratedStrings) {
-            System.out.println(ratedString.toString());
-        }
-
         LOG.debug("Adjusting rating by known job titles");
 
         // adjust rating by check with known job title list

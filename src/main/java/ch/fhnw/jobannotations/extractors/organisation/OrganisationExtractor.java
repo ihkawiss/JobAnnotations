@@ -20,15 +20,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This class is responsible to identify potential organisation
- * names in a job offer document. To prevent false results and
- * to improve performance, various techniques are used.
+ * This class is responsible to identify potential organisation names in a job offer document. To prevent false results
+ * and to improve performance, various techniques are used.
  *
  * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
  */
 public class OrganisationExtractor implements IExtractor {
 
-    final static Logger LOG = Logger.getLogger(OrganisationExtractor.class);
+    private final static Logger LOG = Logger.getLogger(OrganisationExtractor.class);
 
     // official legal form postfixes in switzerland
     private static final String[] KNOWN_LEGAL_FORMS = {

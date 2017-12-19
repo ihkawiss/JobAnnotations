@@ -18,15 +18,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * This class is responsible to identify potential languages
- * in a job offer document. To prevent false results and
- * to improve performance, various techniques are used.
+ * This class is responsible to identify potential languages in a job offer document. To prevent false results and to
+ * improve performance, various techniques are used.
  *
  * @author Kevin Kirn <kevin.kirn@students.fhnw.ch>
  */
 public class LanguageExtractor implements IExtractor {
 
-    final static Logger LOG = Logger.getLogger(LanguageExtractor.class);
+    private final static Logger LOG = Logger.getLogger(LanguageExtractor.class);
 
     /**
      * Identifies language candidates found in jobOffer.

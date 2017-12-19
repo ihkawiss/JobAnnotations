@@ -11,12 +11,16 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author Hoang
- */
-public class JobWorkloadExtractor implements IExtractor {
 
-    final static Logger LOG = Logger.getLogger(JobWorkloadExtractor.class);
+/**
+ * This class is responsible to identify potential skills in a job offer document. To prevent false results and to
+ * improve performance, various techniques are used.
+ *
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
+ */
+public class WorkloadExtractor implements IExtractor {
+
+    final static Logger LOG = Logger.getLogger(WorkloadExtractor.class);
 
     public static final String WORKLOAD_REGEX = "(\\d+\\s*%?\\s*(.|\\w+)\\s*)?\\d+\\s*%";
     private static final int RATING_REPETITION = 25;
@@ -102,7 +106,7 @@ public class JobWorkloadExtractor implements IExtractor {
      * Removes duplicated entries and adjust rating by number of duplications.
      */
     private void removeDuplications(List<IntStringPair> ratedWorkloads) {
-        System.out.println("[workload]\tRemove duplicates and adjust rating by number of identical entries");
+        LOG.debug("Remove duplicates and adjust rating by number of identical entries");
         ratedWorkloads.sort(Comparator.comparing(IntStringPair::getString));
         String lastLocation = null;
         for (int i = ratedWorkloads.size() - 1; i >= 0; i--) {

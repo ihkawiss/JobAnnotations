@@ -6,8 +6,8 @@ import ch.fhnw.jobannotations.extractors.jobtitle.TitleExtractor;
 import ch.fhnw.jobannotations.extractors.language.LanguageExtractor;
 import ch.fhnw.jobannotations.extractors.location.LocationExtractor;
 import ch.fhnw.jobannotations.extractors.organisation.OrganisationExtractor;
-import ch.fhnw.jobannotations.extractors.skills.JobSkillsExtractor;
-import ch.fhnw.jobannotations.extractors.workload.JobWorkloadExtractor;
+import ch.fhnw.jobannotations.extractors.skills.SkillExtractor;
+import ch.fhnw.jobannotations.extractors.workload.WorkloadExtractor;
 import ch.fhnw.jobannotations.utils.NlpHelper;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -43,9 +43,7 @@ public class JobAnnotator {
      * @param useDefaultExtractors <code>false</code> to prevent using the default extractors list, <code>true</code> otherwise
      */
     public JobAnnotator(boolean useDefaultExtractors) {
-
         // load nlp models
-        LOG.debug("Initializing NLP");
         NlpHelper.getInstance();
 
         extractors = new ArrayList<>();
@@ -53,13 +51,12 @@ public class JobAnnotator {
         if (useDefaultExtractors) {
             LOG.debug("Using default extractors");
             extractors.add(new TitleExtractor());
-            extractors.add(new JobSkillsExtractor());
+            extractors.add(new SkillExtractor());
             extractors.add(new LocationExtractor());
             extractors.add(new OrganisationExtractor());
             extractors.add(new LanguageExtractor());
-            extractors.add(new JobWorkloadExtractor());
+            extractors.add(new WorkloadExtractor());
         }
-
     }
 
     /**

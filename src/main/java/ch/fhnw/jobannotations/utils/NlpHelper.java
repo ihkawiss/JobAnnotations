@@ -1,5 +1,6 @@
 package ch.fhnw.jobannotations.utils;
 
+import ch.fhnw.jobannotations.JobAnnotator;
 import com.aliasi.chunk.Chunk;
 import com.aliasi.chunk.Chunking;
 import com.aliasi.dict.ApproxDictionaryChunker;
@@ -13,6 +14,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +24,9 @@ import java.util.Set;
  * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
 public class NlpHelper {
+
+    private final static Logger LOG = Logger.getLogger(JobAnnotator.class);
+
     public static final String NER_TAG_LOCATION = "I-LOC";
     public static final String POS_TAG_COMMON_NOUN = "NN";
     public static final String POS_TAG_PROPER_NOUN = "NE"; // includes names, cities, etc
@@ -34,10 +39,10 @@ public class NlpHelper {
     private final TrieDictionary<String> locationsDictionary;
 
     private NlpHelper() {
-        System.out.println("[nlp]\tInitializing NLP");
+        LOG.debug("Initializing NLP");
         pipeline = new StanfordCoreNLP(FileUtils.getStanfordCoreNLPGermanConfiguration());
 
-        System.out.println("[nlp]\tLoading dictionaries");
+        LOG.debug("Loading dictionaries");
         titlesDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.titles.train"), "TITLE");
         skillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.skills.train.positive"), "SKILL");
         antiSkillsDictionary = PartOfSpeechUtil.getTrieDictionaryByFile(ConfigurationUtil.get("extraction.skills.train.negative"), "ANTISKILL");

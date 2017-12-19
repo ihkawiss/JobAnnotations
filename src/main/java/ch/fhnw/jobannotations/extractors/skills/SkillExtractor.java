@@ -19,66 +19,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author Hoang
+ * This class is responsible to identify potential skills in a job offer document. To prevent false results and to
+ * improve performance, various techniques are used.
+ *
+ * @author Hoang Tran <hoang.tran@students.fhnw.ch>
  */
-public class JobSkillsExtractor implements IExtractor {
+public class SkillExtractor implements IExtractor {
 
-    final static Logger LOG = Logger.getLogger(JobSkillsExtractor.class);
-
-    private static final List<String> DETERMINERS_YOUR = Arrays.asList("ihre", "ihr", "deine", "dein");
-    private static final List<String> DETERMINERS_OUR = Arrays.asList("unsere", "unser");
-    private static final List<String> SUBJECTS_YOU = Arrays.asList("sie", "du");
-    private static final List<String> SUBJECTS_WE = Arrays.asList("wir", "ich");
-    private static final List<String> NOUNS_SKILL_SYNONYM = Arrays.asList(
-            "qualifikation",
-            "profil",
-            "erfahrung",
-            "voraussetzung",
-            "anforderung",
-            "kompetenz",
-            "fähigkeit",
-            "kenntniss",
-            "eigenschaft",
-            "talent"
-    );
-    private static final List<String> NOUNS_JOB_SYNONYM = Arrays.asList(
-            "aufgabe",
-            "herausforderung",
-            "wirkungsfeld",
-            "job",
-            "funktion",
-            "tätigkeit",
-            "arbeit"
-    );
-    private static final List<String> NOUNS_EXPECTATION_SYNONYM = Arrays.asList(
-            "anforderung",
-            "anforderungen",
-            "erwartung",
-            "erwartungen"
-    );
-    private static final List<String> NOUNS_OFFER_SYNONYM = Arrays.asList("angebot");
-    private static final List<String> NOUNS_POSSIBILITY_SYNONYM = Arrays.asList("möglichkeit", "perspektive");
-    private static final List<String> VERBS_OFFER = Arrays.asList(
-            "bringen",
-            "bringst",
-            "bieten",
-            "bietest",
-            "geboten",
-            "mitbringen",
-            "mitbringst",
-            "haben",
-            "hast"
-    );
-    private static final List<String> VERBS_EXPECT = Arrays.asList(
-            "erwarten",
-            "erwartet",
-            "erwartest",
-            "verlangen",
-            "verlangst",
-            "verlangt",
-            "finden",
-            "findest"
-    );
+    private final static Logger LOG = Logger.getLogger(SkillExtractor.class);
 
     @Override
     public String parse(JobOffer jobOffer) {
@@ -93,11 +41,11 @@ public class JobSkillsExtractor implements IExtractor {
 
             ratedSkillLists = extractSkillListsBySentenceAnalyzing(jobOffer);
             if (ratedSkillLists.isEmpty()) {
-                LOG.debug("No skills found.");
                 return null;
             }
         }
 
+        LOG.debug("No skills found.");
         LOG.debug("Extract nouns from skill lists");
 
         formatSkills(ratedSkillLists);
@@ -114,9 +62,15 @@ public class JobSkillsExtractor implements IExtractor {
 
     @Override
     public void learn(String data) {
+        data = data.replaceAll(SkillExtractorConstants.SEPARATOR, "\n");
         FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.skills.train.positive"), data);
     }
 
+    /**
+     * Formats skills of given skill List Map by extracting nouns from the sentences.
+     *
+     * @param ratedSkillLists Formatted skill List Map
+     */
     private void formatSkills(Map<IntStringPair, List<String>> ratedSkillLists) {
         for (IntStringPair listTitle : ratedSkillLists.keySet()) {
             List<String> skillSentences = ratedSkillLists.get(listTitle);
@@ -128,15 +82,29 @@ public class JobSkillsExtractor implements IExtractor {
         }
     }
 
+    /**
+     * Extracts nouns of given List of skill sentences
+     *
+     * @param skillSentences List of skill sentences
+     * @return List of skill nouns
+     */
     private List<String> extractSkills(List<String> skillSentences) {
         List<String> extractedNouns = NlpHelper.getInstance().extractNouns(skillSentences);
-        return extractSkillNouns(extractedNouns);
+        return filterSkillNouns(extractedNouns);
     }
 
-    private List<String> extractSkillNouns(List<String> nouns) {
+    /**
+     * Filters given List of potential skill nouns by rating the probability of being a skill noun and removing those
+     * with bad rating.
+     *
+     * @param nouns List of potential skill nouns
+     * @return Filtered List
+     */
+    private List<String> filterSkillNouns(List<String> nouns) {
         List<IntStringPair> ratedSkillNouns = new ArrayList<>();
         for (String noun : nouns) {
-            IntStringPair ratedSkillNoun = getSkillNounRating(noun);
+            int rating = calcSkillNounRating(noun);
+            IntStringPair ratedSkillNoun = new IntStringPair(rating, noun);
             if (ratedSkillNoun.getInt() >= 0) {
                 ratedSkillNouns.add(ratedSkillNoun);
             }
@@ -156,7 +124,14 @@ public class JobSkillsExtractor implements IExtractor {
         return skills;
     }
 
-    private IntStringPair getSkillNounRating(String noun) {
+    /**
+     * Calculates rating of given potential skill noun by comparing it with dictionaries of known skills and known anti
+     * skill.
+     *
+     * @param noun Potential skill noun
+     * @return Calculated rating
+     */
+    private int calcSkillNounRating(String noun) {
         String simplifiedNoun = StringUtils.simplify(noun);
 
         // dictionaries
@@ -176,44 +151,50 @@ public class JobSkillsExtractor implements IExtractor {
         if (skillWordDistance != null) {
             skillDistance += skillWordDistance.getInt();
         } else {
-            skillDistance += 3000;
+            skillDistance += SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE;
         }
         if (simplifiedSkillWordDistance != null) {
             skillDistance += simplifiedSkillWordDistance.getInt();
         } else {
-            skillDistance += 3000;
+            skillDistance += SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE;
         }
 
         int antiSkillDistance = 0;
         if (antiSkillWordDistance != null) {
             antiSkillDistance += antiSkillWordDistance.getInt();
         } else {
-            antiSkillDistance += 3000;
+            antiSkillDistance += SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE;
         }
         if (simplifiedAntiSkillWordDistance != null) {
             antiSkillDistance += simplifiedAntiSkillWordDistance.getInt();
         } else {
-            antiSkillDistance += 3000;
+            antiSkillDistance += SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE;
         }
 
-        if (antiSkillDistance > 2000) {
+        if (antiSkillDistance > (SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE / 3 * 2)) {
             // special case for acronyms
             if (noun.contains("-")) {
                 for (String part : noun.split("-")) {
                     if (StringUtils.isAllUpperCase(part.trim())) {
-                        skillDistance -= 1500;
+                        skillDistance -= (SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE / 2);
                     }
                 }
             } else if (StringUtils.isAllUpperCase(noun)) {
-                skillDistance -= 3000;
+                skillDistance -= SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE;
             }
         }
 
         // check diff
-        int distanceDiff = antiSkillDistance - skillDistance;
-        return new IntStringPair(distanceDiff, noun);
+        return antiSkillDistance - skillDistance;
     }
 
+    /**
+     * Calculates distance of given noun to entries of given dictionary.
+     *
+     * @param dictionary Dictionary to be used for comparison
+     * @param noun       Noun to be used for comparison
+     * @return IntStringPair of calculated distance and the word that has been analysed
+     */
     private IntStringPair getDictionaryNounDistance(TrieDictionary<String> dictionary, String noun) {
         // calculate max distance
         int nounLength = noun.length();
@@ -224,28 +205,13 @@ public class JobSkillsExtractor implements IExtractor {
         return NlpHelper.getInstance().calcDistanceWithDictionary(dictionary, noun, maxDistance);
     }
 
-    private void addSkill(List<String> formattedSkills, String skill) {
-        for (String formattedSkill : formattedSkills) {
-            String skillLowerCase = skill.toLowerCase();
-            String formattedSkillLowerCase = formattedSkill.toLowerCase();
-            if (formattedSkillLowerCase.contains(skillLowerCase)) {
-                // there is already a skill in the list containing this skill
-                // do nothing
-                return;
-
-            } else if (skillLowerCase.contains(formattedSkillLowerCase)) {
-                // there is a skill in the list that is contained by this skill
-                // replace it
-                formattedSkills.remove(formattedSkill);
-                formattedSkills.add(skill);
-                return;
-            }
-        }
-
-        // nothing special to handle, just add the new skill
-        formattedSkills.add(skill);
-    }
-
+    /**
+     * Extracts Lists of skills from given job offer and creates a Map with the title of the skill list as the key and
+     * the List of skills as the value.
+     *
+     * @param jobOffer Job offer to be parsed
+     * @return Map of skill Lists and their titles
+     */
     private Map<IntStringPair, List<String>> extractSkillListsByListParsing(JobOffer jobOffer) {
         Map<IntStringPair, List<String>> ratedSkillLists = new HashMap<>();
 
@@ -262,7 +228,7 @@ public class JobSkillsExtractor implements IExtractor {
         for (IntStringPair ratedListTitle : ratedSkillLists.keySet()) {
             List<String> listItems = ratedSkillLists.get(ratedListTitle);
             String listTitle = ratedListTitle.getString();
-            int rating = calculateSkillListRating(jobOffer, listTitle, listItems);
+            int rating = calcSkillListRating(jobOffer, listTitle, listItems);
             ratedListTitle.addInt(rating);
             ratedSkillListTitles.add(ratedListTitle);
         }
@@ -277,6 +243,13 @@ public class JobSkillsExtractor implements IExtractor {
         return ratedSkillLists;
     }
 
+    /**
+     * Extracts Lists of skills by checking the HTML List elements from given job offer and creates a Map with the title
+     * of the skill list as the key and the List of skills as the value.
+     *
+     * @param jobOffer Job offer to be parsed
+     * @return Map of skill Lists and their titles
+     */
     private Map<IntStringPair, List<String>> extractSkillListsByHtmlTags(JobOffer jobOffer) {
         Map<IntStringPair, List<String>> ratedSkillLists = new HashMap<>();
 
@@ -294,7 +267,7 @@ public class JobSkillsExtractor implements IExtractor {
                 continue;
             }
 
-            int rating = 100 + calculateHtmlSkillListItemsRating(listItems);
+            int rating = 100 + calcHtmlSkillListItemsRating(listItems);
 
             List<String> skills = new ArrayList<>();
             for (Element listItem : listItems) {
@@ -308,6 +281,13 @@ public class JobSkillsExtractor implements IExtractor {
         return ratedSkillLists;
     }
 
+    /**
+     * Extracts Lists of skills by checking for plain text lists of given job offer and creates a Map with the title of
+     * the skill list as the key and the List of skills as the value.
+     *
+     * @param jobOffer Job offer to be parsed
+     * @return Map of skill Lists and their titles
+     */
     private Map<IntStringPair, List<String>> extractSkillListsByPattern(JobOffer jobOffer) {
         Map<IntStringPair, List<String>> ratedSkillLists = new HashMap<>();
 
@@ -373,6 +353,13 @@ public class JobSkillsExtractor implements IExtractor {
         return ratedSkillLists;
     }
 
+    /**
+     * Extracts Lists of skills by checking for potential skill list titles in plaint text of given job offer and
+     * creates a Map with the title of the skill list as the key and the List of skills as the value.
+     *
+     * @param jobOffer Job offer to be parsed
+     * @return Map of skill Lists and their titles
+     */
     private Map<IntStringPair, List<String>> extractSkillListsBySentenceAnalyzing(JobOffer jobOffer) {
         Map<IntStringPair, List<String>> skillLists = new HashMap<>();
 
@@ -403,7 +390,7 @@ public class JobSkillsExtractor implements IExtractor {
                 continue;
             }
 
-            int rating = rateTitle(jobOffer, line);
+            int rating = calcSkillListTitleRating(jobOffer, line);
             if (rating > 0) {
                 parsingSkills = true;
                 lastTitle = new IntStringPair(0, line);
@@ -414,25 +401,15 @@ public class JobSkillsExtractor implements IExtractor {
         return skillLists;
     }
 
-
-    private String generateSkillListPrintout(Collection<String> skills) {
-        boolean isFirstLine = true;
-        StringBuilder sbSkills = new StringBuilder();
-        for (String skill : skills) {
-            if (!isFirstLine) {
-                sbSkills.append("\n");
-            }
-            sbSkills.append(skill);
-            isFirstLine = false;
-        }
-
-        return sbSkills.toString();
-    }
-
+    /**
+     * Extracts HTML list elements from given body element.
+     *
+     * @param body Body element to be extracted from
+     * @return Extracted list elements
+     */
     private Elements getListElements(Element body) {
         Elements listElements = new Elements();
 
-        // TODO check for sub lists
         // add ul elements
         listElements.addAll(body.getElementsByTag("ul"));
 
@@ -442,7 +419,13 @@ public class JobSkillsExtractor implements IExtractor {
         return listElements;
     }
 
-    private int calculateHtmlSkillListItemsRating(Elements listItems) {
+    /**
+     * Calculates skill list rating of given list.
+     *
+     * @param listItems List to be rated.
+     * @return Calculated rating
+     */
+    private int calcHtmlSkillListItemsRating(Elements listItems) {
         double probability = 0;
         int nofListItems = listItems.size();
         for (Element listItem : listItems) {
@@ -466,8 +449,15 @@ public class JobSkillsExtractor implements IExtractor {
         return (int) probability;
     }
 
-
-    private int calculateSkillListRating(JobOffer jobOffer, String skillListTitle, List<String> skills) {
+    /**
+     * Calculates skill list rating.
+     *
+     * @param jobOffer       Job offer object that will be used for the calculation
+     * @param skillListTitle Title of the skill list to be rated
+     * @param skills         List of skills to be rated
+     * @return Calculated rating
+     */
+    private int calcSkillListRating(JobOffer jobOffer, String skillListTitle, List<String> skills) {
         double rating = 0;
         int nofListItems = skills.size();
 
@@ -491,14 +481,21 @@ public class JobSkillsExtractor implements IExtractor {
         }
 
         // adjust rating based on list title ratings
-        rating += rateTitle(jobOffer, skillListTitle);
+        rating += calcSkillListTitleRating(jobOffer, skillListTitle);
 
         LOG.debug(rating + "\t" + skillListTitle);
 
         return (int) rating;
     }
 
-    private int rateTitle(JobOffer jobOffer, String title) {
+    /**
+     * Calculates rating of the skill list title.
+     *
+     * @param jobOffer Job offer element to be used for calculations
+     * @param title    Title of skill list to be rated
+     * @return Calculated rating
+     */
+    private int calcSkillListTitleRating(JobOffer jobOffer, String title) {
         // check if title is in suspicious element
         String regexSafeTitle = Pattern.quote(title);
         Elements titleElements = jobOffer.getDocument().getElementsMatchingOwnText(regexSafeTitle);
@@ -525,12 +522,12 @@ public class JobSkillsExtractor implements IExtractor {
             Collection<TypedDependency> typedDependencies = semanticGraph.typedDependencies();
             if (typedDependencies.size() == 1) {
                 for (TypedDependency typedDependency : typedDependencies) {
-                    rating += calculateSingleWordTitleDependencyRating(typedDependency);
+                    rating += calcSingleWordTitleDependencyRating(typedDependency);
                 }
 
             } else {
                 for (TypedDependency typedDependency : typedDependencies) {
-                    rating += calculateTitleDependencyRating(typedDependency);
+                    rating += calcTitleDependencyRating(typedDependency);
                 }
             }
 
@@ -539,7 +536,14 @@ public class JobSkillsExtractor implements IExtractor {
         return rating;
     }
 
-    private int calculateTitleDependencyRating(TypedDependency dependency) {
+    /**
+     * Calculates rating of given {@link TypedDependency} that is a part of a skill list title. Rating calculation is
+     * based on grammatical type of the word and the grammatical type of the dependency word and their meaning.
+     *
+     * @param dependency {@link TypedDependency} to be rated
+     * @return Calculated rating
+     */
+    private int calcTitleDependencyRating(TypedDependency dependency) {
         String shortName = dependency.reln().getShortName();
         String word = dependency.dep().backingLabel().value().toLowerCase();
 
@@ -549,49 +553,49 @@ public class JobSkillsExtractor implements IExtractor {
 
         if (EnglishGrammaticalRelations.DETERMINER.getShortName().equals(shortName)
                 && "NN".equals(govTag)) {
-            if (DETERMINERS_YOUR.contains(word)) {
-                if (wordContainsListItem(NOUNS_SKILL_SYNONYM, govWord)) {
+            if (SkillExtractorConstants.DETERMINERS_YOUR.contains(word)) {
+                if (wordContainsListItem(SkillExtractorConstants.NOUNS_SKILL_SYNONYM, govWord)) {
                     return 25;
-                } else if (wordContainsListItem(NOUNS_JOB_SYNONYM, govWord)) {
+                } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_JOB_SYNONYM, govWord)) {
                     return -25;
-                } else if (wordContainsListItem(NOUNS_POSSIBILITY_SYNONYM, govWord)) {
+                } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_POSSIBILITY_SYNONYM, govWord)) {
                     return -25;
                 }
-            } else if (DETERMINERS_OUR.contains(word)) {
-                if (wordContainsListItem(NOUNS_EXPECTATION_SYNONYM, govWord)) {
+            } else if (SkillExtractorConstants.DETERMINERS_OUR.contains(word)) {
+                if (wordContainsListItem(SkillExtractorConstants.NOUNS_EXPECTATION_SYNONYM, govWord)) {
                     return 25;
-                } else if (wordContainsListItem(NOUNS_OFFER_SYNONYM, govWord)) {
+                } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_OFFER_SYNONYM, govWord)) {
                     return -25;
                 }
             }
         } else if ((EnglishGrammaticalRelations.NOMINAL_SUBJECT.getShortName().equals(shortName) ||
                 EnglishGrammaticalRelations.DIRECT_OBJECT.getShortName().equals(shortName)) &&
                 "VVFIN".equals(govTag)) {
-            if (SUBJECTS_YOU.contains(word)) {
-                if (VERBS_OFFER.contains(govWord)) {
+            if (SkillExtractorConstants.SUBJECTS_YOU.contains(word)) {
+                if (SkillExtractorConstants.VERBS_OFFER.contains(govWord)) {
                     return 50;
-                } else if (VERBS_EXPECT.contains(govWord)) {
+                } else if (SkillExtractorConstants.VERBS_EXPECT.contains(govWord)) {
                     return -50;
                 }
-            } else if (SUBJECTS_WE.contains(word)) {
-                if (VERBS_EXPECT.contains(govWord)) {
+            } else if (SkillExtractorConstants.SUBJECTS_WE.contains(word)) {
+                if (SkillExtractorConstants.VERBS_EXPECT.contains(govWord)) {
                     return 50;
-                } else if (VERBS_OFFER.contains(govWord)) {
+                } else if (SkillExtractorConstants.VERBS_OFFER.contains(govWord)) {
                     return -50;
                 }
             }
         } else if ((EnglishGrammaticalRelations.PUNCTUATION.getShortName().equals(shortName) ||
                 "root".equals(shortName))
                 && "NN".equals(govTag)) {
-            if (wordContainsListItem(NOUNS_SKILL_SYNONYM, govWord)) {
+            if (wordContainsListItem(SkillExtractorConstants.NOUNS_SKILL_SYNONYM, govWord)) {
                 return 25;
-            } else if (wordContainsListItem(NOUNS_EXPECTATION_SYNONYM, govWord)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_EXPECTATION_SYNONYM, govWord)) {
                 return 25;
-            } else if (wordContainsListItem(NOUNS_JOB_SYNONYM, govWord)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_JOB_SYNONYM, govWord)) {
                 return -35;
-            } else if (wordContainsListItem(NOUNS_OFFER_SYNONYM, govWord)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_OFFER_SYNONYM, govWord)) {
                 return -35;
-            } else if (wordContainsListItem(NOUNS_POSSIBILITY_SYNONYM, govWord)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_POSSIBILITY_SYNONYM, govWord)) {
                 return -35;
             }
         }
@@ -599,26 +603,39 @@ public class JobSkillsExtractor implements IExtractor {
         return 0;
     }
 
-    private int calculateSingleWordTitleDependencyRating(TypedDependency dependency) {
+    /**
+     * Calculates rating of single word skill list title. Rating is based on grammatical type of the word.
+     *
+     * @param dependency {@link TypedDependency} of the word to be rated
+     * @return Calculated rating
+     */
+    private int calcSingleWordTitleDependencyRating(TypedDependency dependency) {
         String tag = dependency.dep().tag();
         String word = dependency.dep().backingLabel().value().toLowerCase();
 
         if ("NN".equals(tag)) {
-            if (wordContainsListItem(NOUNS_SKILL_SYNONYM, word)) {
+            if (wordContainsListItem(SkillExtractorConstants.NOUNS_SKILL_SYNONYM, word)) {
                 return 25;
-            } else if (wordContainsListItem(NOUNS_EXPECTATION_SYNONYM, word)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_EXPECTATION_SYNONYM, word)) {
                 return 25;
-            } else if (wordContainsListItem(NOUNS_JOB_SYNONYM, word)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_JOB_SYNONYM, word)) {
                 return -35;
-            } else if (wordContainsListItem(NOUNS_OFFER_SYNONYM, word)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_OFFER_SYNONYM, word)) {
                 return -35;
-            } else if (wordContainsListItem(NOUNS_POSSIBILITY_SYNONYM, word)) {
+            } else if (wordContainsListItem(SkillExtractorConstants.NOUNS_POSSIBILITY_SYNONYM, word)) {
                 return -35;
             }
         }
         return 0;
     }
 
+    /**
+     * Checks whether the given term contains an entry of the given List.
+     *
+     * @param list List of strings to be checked
+     * @param term String that might contain a word of the list
+     * @return <code>true</code> if the term contains an list entry, <code>false</code> otherwise
+     */
     private boolean wordContainsListItem(List<String> list, String term) {
         for (String listItem : list) {
             if (term.contains(listItem)) {
@@ -628,6 +645,13 @@ public class JobSkillsExtractor implements IExtractor {
         return false;
     }
 
+    /**
+     * Extracts title of the given List from the given job offer.
+     *
+     * @param jobOffer  Job offer object to be analysed
+     * @param listItems List whose title will be extracted
+     * @return Extracted list title or null if nothing found
+     */
     private String getListTitle(JobOffer jobOffer, Elements listItems) {
         String firstListText = null;
         for (Element listItem : listItems) {
@@ -648,8 +672,14 @@ public class JobSkillsExtractor implements IExtractor {
         return getLastLine(listTitle);
     }
 
+    /**
+     * Counts number of special characters in given text.
+     *
+     * @param text Text to be analysed
+     * @return Number of special characters
+     */
     private int getNumberOfSpecialChars(String text) {
-        Matcher specialCharMatcher = Pattern.compile("[^a-zA-Z .,:äöüÄÖÜ]").matcher(text);
+        Matcher specialCharMatcher = Pattern.compile(SkillExtractorConstants.SPECIAL_CHARACTER_REGEX).matcher(text);
         int specialCharCounter = 0;
         while (specialCharMatcher.find()) {
             specialCharCounter++;
@@ -657,12 +687,25 @@ public class JobSkillsExtractor implements IExtractor {
         return specialCharCounter;
     }
 
+    /**
+     * Checks whether the given potential skill list element contains suspicious HTML elements that should not be in a
+     * skill list element.
+     *
+     * @param listItem Skill list element to be checked
+     * @return <code>true</code> if the element contains suspicious elements, <code>false</code> otherwise
+     */
     private boolean containsSuspiciousChildren(Element listItem) {
         return listItem.getElementsByTag("a").size() > 0
                 || listItem.getElementsByTag("input").size() > 0
                 || listItem.getElementsByTag("button").size() > 0;
     }
 
+    /**
+     * Counts number of child elements in given element. Children of children are also included.
+     *
+     * @param element Element to be analysed
+     * @return Number of child elements
+     */
     private int getAllChildCount(Element element) {
         int childCounter = 0;
         for (Element child : element.children()) {
@@ -672,6 +715,12 @@ public class JobSkillsExtractor implements IExtractor {
         return childCounter;
     }
 
+    /**
+     * Extract last line of given text.
+     *
+     * @param text Text to be extracted from
+     * @return Extracted last line or null if nothing found
+     */
     private String getLastLine(String text) {
         text = text.trim();
         String[] lines = text.split("\n");
@@ -683,5 +732,26 @@ public class JobSkillsExtractor implements IExtractor {
             }
         }
         return null;
+    }
+
+    /**
+     * Creates a single String of the given skill List to be used as the return value of the {@link #parse(JobOffer)}
+     * method.
+     *
+     * @param skills List of skills to be formatted to a single String
+     * @return Single String of skills
+     */
+    private String generateSkillListPrintout(Collection<String> skills) {
+        boolean isFirstLine = true;
+        StringBuilder sbSkills = new StringBuilder();
+        for (String skill : skills) {
+            if (!isFirstLine) {
+                sbSkills.append(SkillExtractorConstants.SEPARATOR);
+            }
+            sbSkills.append(skill);
+            isFirstLine = false;
+        }
+
+        return sbSkills.toString();
     }
 }
