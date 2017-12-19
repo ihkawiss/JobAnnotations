@@ -212,7 +212,7 @@ public class LocationExtractor implements IExtractor {
      */
     private List<String> getPotentialJobLocationByZipCode(String plainText) {
         List<String> potentialLocations = new ArrayList<>();
-        Matcher zipCodeMatcher = Pattern.compile("\\d{4,5}\\s(.{2,})\\W").matcher(plainText);
+        Matcher zipCodeMatcher = Pattern.compile(LocationExtractorConstants.REGEX_ZIP_CODE).matcher(plainText);
         while (zipCodeMatcher.find()) {
             potentialLocations.add(zipCodeMatcher.group(1));
         }

@@ -7,6 +7,7 @@ package ch.fhnw.jobannotations.extractors.location;
  */
 class LocationExtractorConstants {
 
+    static final String REGEX_ZIP_CODE = "\\d{4,5}\\s(.{2,})\\W";
     static final String GEO_ADMIN_API_URL_TEMPLATE = "https://api3.geo.admin.ch/rest/services/api/SearchServer?type=locations&limit=1&searchText=%s";
     static final String[] ALLOWED_SPECIAL_LABELS_GEO_ADMIN_API = {"Ort", "Quartier", "Zug", "Bus"};
     static final int MAX_WORDS_IN_LOCATION_NAME = 10;
