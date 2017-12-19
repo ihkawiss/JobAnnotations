@@ -131,8 +131,6 @@ public class TitleExtractor implements IExtractor {
         List<IntStringPair> extractedRatedStrings = new ArrayList<>();
 
         for (String htmlLine : htmlLines) {
-            int additionalRating = 0;
-
             // extract all important tags
             String addedImportantTagContent = null;
             for (IntStringPair tagRating : TitleExtractorConstants.RATINGS_HIGH_PRIORITY_TAG) {
@@ -152,7 +150,7 @@ public class TitleExtractor implements IExtractor {
                         matchedString = Jsoup.parse(Jsoup.parse(htmlLine).text()).text();
 
                         // add extracted tag content and rating to list
-                        int rating = tagRating.getInt() + additionalRating;
+                        int rating = tagRating.getInt();
                         IntStringPair ratedString = new IntStringPair(rating, matchedString);
                         extractedRatedStrings.add(ratedString);
 
@@ -168,8 +166,8 @@ public class TitleExtractor implements IExtractor {
             htmlLine = Jsoup.parse(Jsoup.parse(htmlLine).text()).text();
 
             if (!htmlLine.isEmpty() && !htmlLine.equals(addedImportantTagContent)) {
-                // add remaining text with base rating of 0 (+ additionalRating)
-                IntStringPair ratedString = new IntStringPair(additionalRating, htmlLine);
+                // add remaining text with base rating of 0
+                IntStringPair ratedString = new IntStringPair(0, htmlLine);
                 extractedRatedStrings.add(ratedString);
             }
 
