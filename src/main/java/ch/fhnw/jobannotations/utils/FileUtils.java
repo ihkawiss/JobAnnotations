@@ -153,7 +153,9 @@ public class FileUtils {
 
             String line;
             while ((line = r.readLine()) != null) {
-                result.add(line);
+                if (!StringUtils.isEmpty(line)) {
+                    result.add(line);
+                }
             }
 
             return result;
