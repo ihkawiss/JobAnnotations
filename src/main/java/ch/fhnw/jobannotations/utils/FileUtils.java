@@ -52,6 +52,9 @@ public class FileUtils {
      */
     public static void addDataToTrainFile(String filename, String data) {
 
+        if(StringUtils.isEmpty(data))
+            return;
+
         try {
 
             // determine if quarantine is enabled
