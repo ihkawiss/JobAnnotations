@@ -62,13 +62,14 @@ public class SkillExtractor implements IExtractor {
 
     @Override
     public void learn(String data) {
-        data = data.replaceAll(SkillExtractorConstants.SEPARATOR, "\n");
-        FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.skills.train.positive"), data);
+        if (!StringUtils.isEmpty(data)) {
+            data = data.replaceAll(SkillExtractorConstants.SEPARATOR, "\n");
+            FileUtils.addDataToTrainFile(ConfigurationUtil.get("extraction.skills.train.positive"), data);
+        }
     }
 
     /**
      * Formats skills of given skill List Map by extracting nouns from the sentences.
-     *
      * @param ratedSkillLists Formatted skill List Map
      */
     private void formatSkills(Map<IntStringPair, List<String>> ratedSkillLists) {
@@ -111,13 +112,12 @@ public class SkillExtractor implements IExtractor {
 
         }
 
-        ratedSkillNouns.sort(Comparator.comparingInt(IntStringPair::getInt));
+        ratedSkillNouns.sort((o1, o2) -> o2.getInt() - o1.getInt());
 
+        LOG.debug("Rate skill nouns with dictionaries");
         List<String> skills = new ArrayList<>();
         for (IntStringPair ratedSkillNoun : ratedSkillNouns) {
-
-            LOG.debug("Rate skill noun with dictionary: " + ratedSkillNoun.getString() + " => " + ratedSkillNoun.getInt());
-
+            LOG.debug(ratedSkillNoun.getString() + " => " + ratedSkillNoun.getInt());
             skills.add(ratedSkillNoun.getString());
         }
 
@@ -137,14 +137,12 @@ public class SkillExtractor implements IExtractor {
         // dictionaries
         TrieDictionary<String> skillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
         TrieDictionary<String> antiSkillsDictionary = NlpHelper.getInstance().getAntiSkillsDictionary();
-        TrieDictionary<String> simplifiedSkillsDictionary = NlpHelper.getInstance().getSkillsDictionary();
-        TrieDictionary<String> simplifiedAntiSkillsDictionary = NlpHelper.getInstance().getAntiSkillsDictionary();
 
         // get distances
         IntStringPair skillWordDistance = getDictionaryNounDistance(skillsDictionary, noun);
         IntStringPair antiSkillWordDistance = getDictionaryNounDistance(antiSkillsDictionary, noun);
-        IntStringPair simplifiedSkillWordDistance = getDictionaryNounDistance(simplifiedSkillsDictionary, simplifiedNoun);
-        IntStringPair simplifiedAntiSkillWordDistance = getDictionaryNounDistance(simplifiedAntiSkillsDictionary, simplifiedNoun);
+        IntStringPair simplifiedSkillWordDistance = getDictionaryNounDistance(skillsDictionary, simplifiedNoun);
+        IntStringPair simplifiedAntiSkillWordDistance = getDictionaryNounDistance(antiSkillsDictionary, simplifiedNoun);
 
         // combine distances
         int skillDistance = 0;
@@ -176,11 +174,11 @@ public class SkillExtractor implements IExtractor {
             if (noun.contains("-")) {
                 for (String part : noun.split("-")) {
                     if (StringUtils.isAllUpperCase(part.trim())) {
-                        skillDistance -= (SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE / 2);
+                        skillDistance -= (SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE / 3);
                     }
                 }
             } else if (StringUtils.isAllUpperCase(noun)) {
-                skillDistance -= SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE;
+                skillDistance -= SkillExtractorConstants.SKILL_NOUN_DEFAULT_DISTANCE_ADJUST_VALUE / 2;
             }
         }
 
@@ -224,6 +222,7 @@ public class SkillExtractor implements IExtractor {
         ratedSkillLists.putAll(skillListsByPattern);
 
         // calculate rating for skill lists
+        LOG.debug("Rate skill list titles.");
         List<IntStringPair> ratedSkillListTitles = new ArrayList<>();
         for (IntStringPair ratedListTitle : ratedSkillLists.keySet()) {
             List<String> listItems = ratedSkillLists.get(ratedListTitle);
@@ -231,6 +230,7 @@ public class SkillExtractor implements IExtractor {
             int rating = calcSkillListRating(jobOffer, listTitle, listItems);
             ratedListTitle.addInt(rating);
             ratedSkillListTitles.add(ratedListTitle);
+            LOG.debug(listTitle + " => " + rating);
         }
 
         // remove lists with low ratings
@@ -482,9 +482,6 @@ public class SkillExtractor implements IExtractor {
 
         // adjust rating based on list title ratings
         rating += calcSkillListTitleRating(jobOffer, skillListTitle);
-
-        LOG.debug(rating + "\t" + skillListTitle);
-
         return (int) rating;
     }
 

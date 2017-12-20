@@ -52,7 +52,8 @@ class SkillExtractorConstants {
             "mitbringen",
             "mitbringst",
             "haben",
-            "hast"
+            "hast",
+            "begeistern"
     );
     static final List<String> VERBS_EXPECT = Arrays.asList(
             "erwarten",
