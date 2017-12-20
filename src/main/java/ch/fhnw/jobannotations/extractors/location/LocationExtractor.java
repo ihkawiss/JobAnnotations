@@ -212,7 +212,7 @@ public class LocationExtractor implements IExtractor {
      */
     private List<String> getPotentialJobLocationByZipCode(String plainText) {
         List<String> potentialLocations = new ArrayList<>();
-        Matcher zipCodeMatcher = Pattern.compile("\\d{4,5}\\s(.{2,})\\W").matcher(plainText);
+        Matcher zipCodeMatcher = Pattern.compile(LocationExtractorConstants.REGEX_ZIP_CODE).matcher(plainText);
         while (zipCodeMatcher.find()) {
             potentialLocations.add(zipCodeMatcher.group(1));
         }
@@ -279,7 +279,7 @@ public class LocationExtractor implements IExtractor {
 
         IntStringPair locationDistance = NlpHelper.getInstance().calcDistanceWithDictionary(locationsDictionary, locationName, maxDistance);
         if (locationDistance != null) {
-            int distance = (locationDistance.getInt() - 1000) / 20;
+            int distance = (locationDistance.getInt() - NlpHelper.DICTIONARY_DISTANCE_MIN_VALUE) / 20;
             if (distance < LocationExtractorConstants.MAX_RATING_DICTIONARY) {
                 rating += LocationExtractorConstants.MAX_RATING_DICTIONARY - distance;
             }
